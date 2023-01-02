@@ -23,22 +23,23 @@ import type { IExecutableSchemaDefinition } from "@graphql-tools/schema";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { composeResolvers } from "@graphql-tools/resolvers-composition";
 import type { IResolvers } from "@graphql-tools/utils";
-import { forEachField } from "@graphql-tools/utils";
+import { forEachField, printSchemaWithDirectives } from "@graphql-tools/utils";
 import { mergeResolvers } from "@graphql-tools/merge";
 import Debug from "debug";
 import type {
-    DriverConfig,
     CypherQueryOptions,
-    Neo4jGraphQLPlugins,
-    Neo4jGraphQLCallbacks,
+    DriverConfig,
     Neo4jFeaturesSettings,
+    Neo4jGraphQLCallbacks,
+    Neo4jGraphQLPlugins,
 } from "../types";
 import { makeAugmentedSchema } from "../schema";
 import type Node from "./Node";
 import type Relationship from "./Relationship";
 import checkNeo4jCompat from "./utils/verify-database";
-import type { AssertIndexesAndConstraintsOptions } from "./utils/asserts-indexes-and-constraints";
-import assertIndexesAndConstraints from "./utils/asserts-indexes-and-constraints";
+import assertIndexesAndConstraints, {
+    AssertIndexesAndConstraintsOptions,
+} from "./utils/asserts-indexes-and-constraints";
 import { wrapResolver, wrapSubscription } from "../schema/resolvers/wrapper";
 import { defaultFieldResolver } from "../schema/resolvers/field/defaultField";
 import { asArray } from "../utils/utils";
@@ -48,6 +49,7 @@ import { Executor, ExecutorConstructorParam } from "./Executor";
 import { getDocument } from "../schema/get-document";
 import { generateModel } from "../schema-model/generate-model";
 import type { Neo4jGraphQLSchemaModel } from "../schema-model/Neo4jGraphQLSchemaModel";
+import { lexicographicSortSchema } from "graphql/utilities";
 
 export interface Neo4jGraphQLConfig {
     driverConfig?: DriverConfig;
@@ -89,6 +91,14 @@ class Neo4jGraphQL {
         this.plugins = plugins;
         this.features = features;
         this.schemaDefinition = schemaDefinition;
+        global.lastSchema = {
+            inputSchema: schemaDefinition.typeDefs,
+            augmentedSchema: null,
+            config: {
+                enableRegex: config.enableRegex,
+            },
+            plugins,
+        };
 
         this.checkEnableDebug();
     }
@@ -251,6 +261,9 @@ class Neo4jGraphQL {
                 typeDefs,
                 resolvers: wrappedResolvers,
             });
+
+            // TODO write error
+            global.lastSchema.augmentedSchema = printSchemaWithDirectives(lexicographicSortSchema(schema));
 
             resolve(this.addDefaultFieldResolvers(schema));
         });
