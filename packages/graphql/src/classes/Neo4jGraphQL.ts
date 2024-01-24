@@ -18,16 +18,22 @@
  */
 
 import { mergeResolvers, mergeTypeDefs } from "@graphql-tools/merge";
+import type { Driver, SessionConfig } from "neo4j-driver";
+import type { DocumentNode, GraphQLSchema } from "graphql";
+import type { IExecutableSchemaDefinition } from "@graphql-tools/schema";
+import { addResolversToSchema, makeExecutableSchema } from "@graphql-tools/schema";
+import { composeResolvers } from "@graphql-tools/resolvers-composition";
+import { forEachField, getResolversFromSchema, printSchemaWithDirectives } from "@graphql-tools/utils";
 import Debug from "debug";
-import type { Neo4jFeaturesSettings, ContextFeatures, Neo4jGraphQLSubscriptionsEngine } from "../types";
+import type { ContextFeatures, Neo4jFeaturesSettings, Neo4jGraphQLSubscriptionsEngine } from "../types";
 import { makeAugmentedSchema } from "../schema";
 import type Node from "./Node";
 import type Relationship from "./Relationship";
 import checkNeo4jCompat from "./utils/verify-database";
 import type { AssertIndexesAndConstraintsOptions } from "./utils/asserts-indexes-and-constraints";
 import { assertIndexesAndConstraints } from "./utils/asserts-indexes-and-constraints";
-import { wrapQueryAndMutation } from "../schema/resolvers/composition/wrap-query-and-mutation";
 import type { WrapResolverArguments } from "../schema/resolvers/composition/wrap-query-and-mutation";
+import { wrapQueryAndMutation } from "../schema/resolvers/composition/wrap-query-and-mutation";
 import { defaultFieldResolver } from "../schema/resolvers/field/defaultField";
 import { asArray } from "../utils/utils";
 import { DEBUG_ALL } from "../constants";
@@ -37,12 +43,6 @@ import type { ExecutorConstructorParam, Neo4jGraphQLSessionConfig } from "./Exec
 import { Executor } from "./Executor";
 import { generateModel } from "../schema-model/generate-model";
 import type { Neo4jGraphQLSchemaModel } from "../schema-model/Neo4jGraphQLSchemaModel";
-import { composeResolvers } from "@graphql-tools/resolvers-composition";
-import type { IExecutableSchemaDefinition } from "@graphql-tools/schema";
-import { addResolversToSchema, makeExecutableSchema } from "@graphql-tools/schema";
-import { forEachField, getResolversFromSchema } from "@graphql-tools/utils";
-import type { DocumentNode, GraphQLSchema } from "graphql";
-import type { Driver, SessionConfig } from "neo4j-driver";
 import { validateDocument } from "../schema/validation";
 import { validateUserDefinition } from "../schema/validation/schema-validation";
 import { makeDocumentToAugment } from "../schema/make-document-to-augment";
@@ -50,6 +50,7 @@ import { Neo4jGraphQLAuthorization } from "./authorization/Neo4jGraphQLAuthoriza
 import { Neo4jGraphQLSubscriptionsDefaultEngine } from "./subscription/Neo4jGraphQLSubscriptionsDefaultEngine";
 import { wrapSubscription } from "../schema/resolvers/composition/wrap-subscription";
 import { getDefinitionNodes } from "../schema/get-definition-nodes";
+import { lexicographicSortSchema } from "graphql/utilities";
 
 type TypeDefinitions = string | DocumentNode | TypeDefinitions[] | (() => TypeDefinitions);
 
@@ -103,6 +104,22 @@ class Neo4jGraphQL {
         this.debug = debug;
         this.validate = validate;
         this.experimental = experimental;
+        global.lastSchema = {
+            inputSchema: typeDefs,
+            augmentedSchema: null,
+            features,
+            config: {
+                ...(experimental ? { experimental } : {}),
+                ...(features && (features.filters || features.subscriptions)
+                    ? {
+                          features: {
+                              ...(features?.filters ? { filters: features.filters } : {}),
+                              ...(features?.subscriptions ? { subscriptions: true } : {}),
+                          },
+                      }
+                    : {}),
+            },
+        };
 
         this.checkEnableDebug();
 
@@ -393,6 +410,9 @@ class Neo4jGraphQL {
                 typeDefs,
                 resolvers,
             });
+
+            // TODO write error
+            global.lastSchema.augmentedSchema = printSchemaWithDirectives(lexicographicSortSchema(schema));
 
             resolve(this.composeSchema(schema));
         });
