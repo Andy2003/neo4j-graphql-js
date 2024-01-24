@@ -16,4 +16,6 @@ module.exports = {
             },
         ],
     },
+    setupFiles: ["<rootDir>/packages/graphql/mockRandom.ts"],
+    testEnvironment: "<rootDir>/packages/graphql/my-custom-environment.ts",
 };

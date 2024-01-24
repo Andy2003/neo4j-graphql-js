@@ -125,6 +125,12 @@ export async function translateQuery(
         }
     }
 
+    global.testDebug.push({
+        query,
+        options,
+        cypher: driverBuilder.runFunction.calls[0]![0],
+        cypherParams: driverBuilder.runFunction.calls[0]![1],
+    });
     return {
         cypher,
         params,
