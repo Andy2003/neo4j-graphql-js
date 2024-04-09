@@ -17,25 +17,21 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/4450", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neo4jGraphql: Neo4jGraphQL;
+    const testHelper = new TestHelper();
 
-    const Actor = new UniqueType("Actor");
-    const Scene = new UniqueType("Scene");
-    const Location = new UniqueType("Location");
+    let Actor: UniqueType;
+    let Scene: UniqueType;
+    let Location: UniqueType;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        Actor = testHelper.createUniqueType("Actor");
+        Scene = testHelper.createUniqueType("Scene");
+        Location = testHelper.createUniqueType("Location");
+
         const typeDefs = /* GraphQL */ `
             type ${Actor} {
                 name: String
@@ -58,37 +54,22 @@ describe("https://github.com/neo4j/graphql/issues/4450", () => {
             }
         `;
 
-        neo4jGraphql = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
 
-        const session = await neo4j.getSession();
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                 CREATE (:${Actor} {name: "actor-1"})-[:IN_SCENE {cut: true}]->(:${Scene} {number: 1})-[:AT_LOCATION]->(:${Location} {city: "test"})
-                `,
-                {}
-            );
-        } finally {
-            await session.close();
-        }
+                `
+        );
     });
 
     afterAll(async () => {
-        const session = await neo4j.getSession();
-        try {
-            await cleanNodesUsingSession(session, [Actor, Scene, Location]);
-        } finally {
-            await session.close();
-        }
-        await driver.close();
+        await testHelper.close();
     });
 
     test("filtering through a connection to a many-to-1 relationship should work", async () => {
-        const schema = await neo4jGraphql.getSchema();
-
         const query = /* GraphQL */ `
             query {
                 ${Actor.plural}(where: { sceneConnection_SOME: { edge: { cut: true }, node: { location: { city: "test" } } } }) {
@@ -97,11 +78,7 @@ describe("https://github.com/neo4j/graphql/issues/4450", () => {
             }
         `;
 
-        const response = await graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const response = await testHelper.executeGraphQL(query);
 
         expect(response.errors).toBeFalsy();
         expect(response.data).toEqual({

@@ -17,34 +17,20 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import { cleanNodes } from "../../utils/clean-nodes";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/1348", () => {
-    const Series = new UniqueType("Series");
-    const Season = new UniqueType("Season");
-    const ProgrammeItem = new UniqueType("ProgrammeItem");
+    let Series: UniqueType;
+    let Season: UniqueType;
+    let ProgrammeItem: UniqueType;
 
-    let schema: GraphQLSchema;
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
+    const testHelper = new TestHelper();
 
-    async function graphqlQuery(query: string) {
-        return graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
-    }
-
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+    beforeEach(async () => {
+        Series = testHelper.createUniqueType("Series");
+        Season = testHelper.createUniqueType("Season");
+        ProgrammeItem = testHelper.createUniqueType("ProgrammeItem");
 
         const typeDefs = /* GraphQL */ `
             interface Product {
@@ -74,16 +60,11 @@ describe("https://github.com/neo4j/graphql/issues/1348", () => {
                 episodeNumber: Int
             }
         `;
-        const neoGraphql = new Neo4jGraphQL({ typeDefs, driver });
-        schema = await neoGraphql.getSchema();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
     });
 
     afterEach(async () => {
-        await cleanNodes(driver, [Series, Season, ProgrammeItem]);
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should also return node with no relationship in result set", async () => {
@@ -134,10 +115,10 @@ describe("https://github.com/neo4j/graphql/issues/1348", () => {
             }
         `;
 
-        const createProgrammeItemsResults = await graphqlQuery(createProgrammeItems);
+        const createProgrammeItemsResults = await testHelper.executeGraphQL(createProgrammeItems);
         expect(createProgrammeItemsResults.errors).toBeUndefined();
 
-        const updateProgrammeItemsResults = await graphqlQuery(updateProgrammeItems);
+        const updateProgrammeItemsResults = await testHelper.executeGraphQL(updateProgrammeItems);
         expect(updateProgrammeItemsResults.errors).toBeUndefined();
 
         const query = /* GraphQL */ `
@@ -152,7 +133,7 @@ describe("https://github.com/neo4j/graphql/issues/1348", () => {
                 }
             }
         `;
-        const queryResults = await graphqlQuery(query);
+        const queryResults = await testHelper.executeGraphQL(query);
         expect(queryResults.errors).toBeUndefined();
         expect(queryResults.data).toEqual({
             [ProgrammeItem.plural]: expect.toIncludeSameMembers([

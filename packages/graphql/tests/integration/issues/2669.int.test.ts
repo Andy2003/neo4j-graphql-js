@@ -17,28 +17,20 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/2669", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
-    let typeDefs: string;
+    const testHelper = new TestHelper();
 
-    const typeMovie = new UniqueType("Movie");
-    const typeActor = new UniqueType("Actor");
-
-    let neoSchema: Neo4jGraphQL;
+    let typeMovie: UniqueType;
+    let typeActor: UniqueType;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        typeMovie = testHelper.createUniqueType("Movie");
+        typeActor = testHelper.createUniqueType("Actor");
 
-        typeDefs = `
+        const typeDefs = `
         type ${typeMovie.name} {
             title: String
             actors: [${typeActor.name}!]! @relationship(type: "ACTED_IN", direction: IN, properties: "ActedIn")
@@ -55,15 +47,14 @@ describe("https://github.com/neo4j/graphql/issues/2669", () => {
         }
         `;
 
-        neoSchema = new Neo4jGraphQL({ typeDefs });
-        session = await neo4j.getSession();
-        await session.run(`CREATE (m:${typeMovie.name} { title: "Terminator"})<-[:ACTED_IN { screentime: 60, character: "Terminator" }]-(:${typeActor.name} { name: "Arnold", age: 54, born: datetime('1980-07-02')})
+        await testHelper.initNeo4jGraphQL({ typeDefs });
+
+        await testHelper.executeCypher(`CREATE (m:${typeMovie.name} { title: "Terminator"})<-[:ACTED_IN { screentime: 60, character: "Terminator" }]-(:${typeActor.name} { name: "Arnold", age: 54, born: datetime('1980-07-02')})
         CREATE (m)<-[:ACTED_IN { screentime: 120, character: "Sarah" }]-(:${typeActor.name} {name: "Linda", age:37, born: datetime('2000-02-02')})`);
     });
 
     afterAll(async () => {
-        await session.close();
-        await driver.close();
+        await testHelper.close();
     });
 
     test("Field Node Aggregation alias", async () => {
@@ -81,11 +72,7 @@ describe("https://github.com/neo4j/graphql/issues/2669", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeUndefined();
         expect((gqlResult as any).data[typeMovie.plural][0].actorsAggregate).toEqual({
@@ -112,11 +99,7 @@ describe("https://github.com/neo4j/graphql/issues/2669", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeUndefined();
         expect((gqlResult as any).data[typeMovie.plural][0].actorsAggregate).toEqual({

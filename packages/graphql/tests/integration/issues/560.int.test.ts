@@ -17,38 +17,21 @@
  * limitations under the License.
  */
 
-import type { Driver, Session } from "neo4j-driver";
-import { graphql } from "graphql";
 import { gql } from "graphql-tag";
 import { generate } from "randomstring";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/560", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
+    const testHelper = new TestHelper();
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
-    beforeEach(async () => {
-        session = await neo4j.getSession();
-    });
+    beforeEach(() => {});
 
     afterEach(async () => {
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should not throw when Point is null", async () => {
-        const testLog = new UniqueType("Log");
+        const testLog = testHelper.createUniqueType("Log");
 
         const typeDefs = gql`
             type ${testLog.name} {
@@ -57,7 +40,7 @@ describe("https://github.com/neo4j/graphql/issues/560", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const logId = generate({
             charset: "alphabetic",
@@ -78,15 +61,11 @@ describe("https://github.com/neo4j/graphql/issues/560", () => {
             }
         `;
 
-        await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (j:${testLog.name} { id: "${logId}" })
             `);
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         if (result.errors) {
             console.log(JSON.stringify(result.errors, null, 2));
@@ -105,7 +84,7 @@ describe("https://github.com/neo4j/graphql/issues/560", () => {
     });
 
     test("should not throw when CartesianPoint is null", async () => {
-        const testLog = new UniqueType("Log");
+        const testLog = testHelper.createUniqueType("Log");
 
         const typeDefs = gql`
             type ${testLog.name} {
@@ -114,7 +93,7 @@ describe("https://github.com/neo4j/graphql/issues/560", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const logId = generate({
             charset: "alphabetic",
@@ -135,15 +114,11 @@ describe("https://github.com/neo4j/graphql/issues/560", () => {
             }
         `;
 
-        await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (j:${testLog.name} { id: "${logId}" })
             `);
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         if (result.errors) {
             console.log(JSON.stringify(result.errors, null, 2));

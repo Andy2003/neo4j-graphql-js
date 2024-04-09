@@ -1,5 +1,41 @@
 # @neo4j/graphql
 
+## 5.3.2
+
+### Patch Changes
+
+-   [#4951](https://github.com/neo4j/graphql/pull/4951) [`1efa353`](https://github.com/neo4j/graphql/commit/1efa353c4a687d65ceb06fb10af8c25a72f34876) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Change order of overrides in context to preserve internal values
+
+## 5.3.1
+
+### Patch Changes
+
+-   [#4932](https://github.com/neo4j/graphql/pull/4932) [`cd700d0`](https://github.com/neo4j/graphql/commit/cd700d0888335ba34eaf929ccdba7690b685fd8d) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix `@cypher` parameters "replace" logic when parameters have similar names #4908
+
+## 5.3.0
+
+### Minor Changes
+
+-   [#4856](https://github.com/neo4j/graphql/pull/4856) [`1b52f83`](https://github.com/neo4j/graphql/commit/1b52f8372bbaa54048c56badc99420e4ae3f31fd) Thanks [@a-alle](https://github.com/a-alle)! - Add aggregate filter for relationships to interface types
+
+### Patch Changes
+
+-   [#4879](https://github.com/neo4j/graphql/pull/4879) [`8eb952c`](https://github.com/neo4j/graphql/commit/8eb952cc63263e57e52d950f7d3badb155c89d17) Thanks [@angrykoala](https://github.com/angrykoala)! - Ignores \_emptyField from input arguments
+
+## 5.2.0
+
+### Minor Changes
+
+-   [#4816](https://github.com/neo4j/graphql/pull/4816) [`6b547dd`](https://github.com/neo4j/graphql/commit/6b547ddc78f18606401f4caa9792f7cecab29ddd) Thanks [@a-alle](https://github.com/a-alle)! - Adds support for the `@authentication` directive on custom resolved fields of root types Query and Mutation
+
+-   [#4829](https://github.com/neo4j/graphql/pull/4829) [`720a5ee`](https://github.com/neo4j/graphql/commit/720a5ee5dd8bd361a9b2c5ed14ad65cdf29509e6) Thanks [@a-alle](https://github.com/a-alle)! - Add simple relationship filter for relationships to interface types
+
+### Patch Changes
+
+-   [#4848](https://github.com/neo4j/graphql/pull/4848) [`86fd1a9`](https://github.com/neo4j/graphql/commit/86fd1a9d8fa55941681540b5a37966661059408e) Thanks [@MacondoExpress](https://github.com/MacondoExpress)! - Fixed a bug that causes relationship direction to be wrongly generated during the resolution of interface relationship fields.
+
+-   [#4867](https://github.com/neo4j/graphql/pull/4867) [`d82ee15`](https://github.com/neo4j/graphql/commit/d82ee15f52c39a1fe93d42bbb0ccd59f050581ef) Thanks [@MacondoExpress](https://github.com/MacondoExpress)! - Fixed bug that caused an empty string and false boolean argument being evaluated as `NULL` when passed as an argument of a `@cypher` field.
+
 ## 5.1.0
 
 ### Minor Changes

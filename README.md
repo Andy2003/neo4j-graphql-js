@@ -5,7 +5,7 @@
 ___
 
 **GraphQL API for Aura**  
-We’ve been working to make GraphQL natively available in Aura and we are now ready to let people try it in an Early Access Program that will run from 1st April to end of May.  There will be at least one more iteration with additional features before a full release later this year.
+We’ve been working to make GraphQL natively available in [Aura](https://neo4j.com/cloud/platform/aura-graph-database/), Neo4j's Cloud based Graph Database service,  and we are now ready to let people try it in an Early Access Program that will run from April to the end of May.  There will be at least one more iteration with additional features before a full release later this year.
 
 This will offer
 
@@ -57,7 +57,7 @@ visit the [Contributing Guide](./CONTRIBUTING.md).
 * [`@neo4j/graphql-ogm`](./packages/ogm) - Use GraphQL Type Definitions to drive
    interactions with the database
 * [`@neo4j/introspector`](./packages/introspector) - Introspect schema from an existing Neo4j database
-* [`@neo4j/graphql-toolbox`](./packages/graphql-toolbox) - Experiment with your Neo4j GraphQL API on Neo4j Desktop.
+* [`@neo4j/graphql-toolbox`](https://www.github.com/neo4j/graphql-toolbox) - Experiment with your Neo4j GraphQL API on Neo4j Desktop.
 
 ## Media
 

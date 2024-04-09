@@ -17,33 +17,18 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { cleanNodes } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/4741", () => {
-    const Opportunity = new UniqueType("Opportunity");
-    const ListOli = new UniqueType("ListOli");
+    let Opportunity: UniqueType;
+    let ListOli: UniqueType;
 
-    let schema: GraphQLSchema;
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-
-    async function graphqlQuery(query: string) {
-        return graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
-    }
+    const testHelper = new TestHelper();
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        Opportunity = testHelper.createUniqueType("Opportunity");
+        ListOli = testHelper.createUniqueType("ListOli");
 
         const typeDefs = /* GraphQL */ `
             type ${Opportunity} {
@@ -55,10 +40,9 @@ describe("https://github.com/neo4j/graphql/issues/4741", () => {
                 name: String!
             }
         `;
-        const neoGraphql = new Neo4jGraphQL({ typeDefs, driver });
-        schema = await neoGraphql.getSchema();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
-        await neo4j.run(`
+        await testHelper.executeCypher(`
             CREATE (:${Opportunity} {country: "UK"})
             CREATE (o:${Opportunity} {country: "ES"})-[:HAS_LIST]->(:${ListOli} {name: "l1"})
             CREATE (o)-[:HAS_LIST]->(:${ListOli} {name: "l2"})
@@ -66,8 +50,7 @@ describe("https://github.com/neo4j/graphql/issues/4741", () => {
     });
 
     afterAll(async () => {
-        await cleanNodes(driver, [Opportunity, ListOli]);
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should return only one Opportunity filtering by count", async () => {
@@ -86,7 +69,7 @@ describe("https://github.com/neo4j/graphql/issues/4741", () => {
             }
         `;
 
-        const queryResults = await graphqlQuery(query);
+        const queryResults = await testHelper.executeGraphQL(query);
         expect(queryResults.errors).toBeUndefined();
         expect(queryResults.data).toEqual({
             [Opportunity.operations.connection]: {
@@ -120,7 +103,7 @@ describe("https://github.com/neo4j/graphql/issues/4741", () => {
             }
         `;
 
-        const queryResults = await graphqlQuery(query);
+        const queryResults = await testHelper.executeGraphQL(query);
         expect(queryResults.errors).toBeUndefined();
         expect(queryResults.data).toEqual({
             [Opportunity.operations.connection]: {

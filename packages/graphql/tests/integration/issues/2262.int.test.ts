@@ -17,31 +17,18 @@
  * limitations under the License.
  */
 
-import type { Driver, Session } from "neo4j-driver";
-import { graphql } from "graphql";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/2262", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
-    let session: Session;
+    const testHelper = new TestHelper();
 
     let Component: UniqueType;
     let Process: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
     beforeEach(async () => {
-        Component = new UniqueType("Component");
-        Process = new UniqueType("Process");
-
-        session = await neo4j.getSession();
+        Component = testHelper.createUniqueType("Component");
+        Process = testHelper.createUniqueType("Process");
 
         const typeDefs = `
             type ${Component} {
@@ -57,22 +44,17 @@ describe("https://github.com/neo4j/graphql/issues/2262", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
     });
 
     afterEach(async () => {
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("nested update with create while using subscriptions should generate valid Cypher", async () => {
-        await session.run(`CREATE(:${Component} {uuid: "c1"})<-[:OUTPUT]-(:${Process} {uuid: "p1"})`);
+        await testHelper.executeCypher(`CREATE(:${Component} {uuid: "c1"})<-[:OUTPUT]-(:${Process} {uuid: "p1"})`);
         const query = `
             query ComponentsProcesses {
                 ${Component.plural}(where: { uuid: "c1" }) {
@@ -95,11 +77,7 @@ describe("https://github.com/neo4j/graphql/issues/2262", () => {
             }
         `;
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         expect(result.errors).toBeFalsy();
         expect(result.data).toEqual({

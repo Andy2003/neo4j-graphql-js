@@ -30,16 +30,26 @@ export function replaceArgumentsInStatement({
     rawArguments: Record<string, any>;
     statement: string;
 }): string {
-    let cypherStatement = statement;
-    definedArguments.forEach((arg) => {
-        const value = rawArguments[arg.name];
-        if (value) {
-            const paramName = new Cypher.Param(value).getCypher(env);
-            cypherStatement = cypherStatement.replaceAll(`$${arg.name}`, paramName);
+    const argNames = definedArguments.map((arg) => arg.name);
+    if (argNames.length === 0) {
+        return statement;
+    }
+    const reg = new RegExp(`\\$(${argNames.join("|")})\\b`, "g");
+
+    const paramsRecord: Record<string, string> = {};
+
+    return statement.replaceAll(reg, (_match, arg): string => {
+        const value = rawArguments[arg];
+        if (value === undefined || value === null) {
+            return "NULL";
         } else {
-            cypherStatement = cypherStatement.replaceAll(`$${arg.name}`, "NULL");
+            const storedParamName = paramsRecord[value];
+            if (storedParamName) {
+                return storedParamName;
+            }
+            const paramName = new Cypher.Param(value).getCypher(env);
+            paramsRecord[value] = paramName;
+            return paramName;
         }
     });
-
-    return cypherStatement;
 }

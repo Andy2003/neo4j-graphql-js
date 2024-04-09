@@ -17,35 +17,22 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/1121", () => {
-    let schema: GraphQLSchema;
-    let neo4j: Neo4jHelper;
-    let driver: Driver;
-    let session: Session;
+    const testHelper = new TestHelper();
 
-    const Food = new UniqueType("Food");
-    const Banana = new UniqueType("Banana");
-    const Sugar = new UniqueType("Sugar");
-    const Syrup = new UniqueType("Syrup");
-
-    async function graphqlQuery(query: string) {
-        return graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
-    }
+    let Food: UniqueType;
+    let Banana: UniqueType;
+    let Sugar: UniqueType;
+    let Syrup: UniqueType;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        Food = testHelper.createUniqueType("Food");
+        Banana = testHelper.createUniqueType("Banana");
+        Sugar = testHelper.createUniqueType("Sugar");
+        Syrup = testHelper.createUniqueType("Syrup");
 
         const typeDefs = `
             type ${Food.name} {
@@ -85,15 +72,11 @@ describe("https://github.com/neo4j/graphql/issues/1121", () => {
             }
         `;
 
-        session = await neo4j.getSession();
-
-        const neoGraphql = new Neo4jGraphQL({ typeDefs, driver });
-        schema = await neoGraphql.getSchema();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
     });
 
     afterAll(async () => {
-        await session.close();
-        await driver.close();
+        await testHelper.close();
     });
 
     test("error should not be thrown", async () => {
@@ -125,7 +108,7 @@ describe("https://github.com/neo4j/graphql/issues/1121", () => {
             }
         `;
 
-        const mutationResult = await graphqlQuery(mutation);
+        const mutationResult = await testHelper.executeGraphQL(mutation);
         expect(mutationResult.errors).toBeUndefined();
 
         const query = `
@@ -144,7 +127,7 @@ describe("https://github.com/neo4j/graphql/issues/1121", () => {
             }
         `;
 
-        const queryResult = await graphqlQuery(query);
+        const queryResult = await testHelper.executeGraphQL(query);
         expect(queryResult.errors).toBeUndefined();
         expect(queryResult.data).toEqual({
             [Food.plural]: [

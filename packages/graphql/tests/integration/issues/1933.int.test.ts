@@ -17,25 +17,18 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/1933", () => {
-    const employeeType = new UniqueType("Employee");
-    const projectType = new UniqueType("Project");
+    let employeeType: UniqueType;
+    let projectType: UniqueType;
 
-    let schema: GraphQLSchema;
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
+    const testHelper = new TestHelper();
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        employeeType = testHelper.createUniqueType("Employee");
+        projectType = testHelper.createUniqueType("Project");
 
         const typeDefs = `
             type ${employeeType} {
@@ -58,8 +51,7 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
                     @relationship(type: "PARTICIPATES", direction: IN, properties: "EmployeeParticipationProperties")
             }
         `;
-        const neoGraphql = new Neo4jGraphQL({ typeDefs, driver });
-        schema = await neoGraphql.getSchema();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const cypher = `
             CREATE (e1:${employeeType} { employeeId: "3331", firstName: "Emp1", lastName: "EmpLast1" })
@@ -72,17 +64,11 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
             CREATE (e2)-[:PARTICIPATES { allocation: 20.0 }]->(p2)
         `;
 
-        session = await neo4j.getSession();
-
-        try {
-            await session.run(cypher);
-        } finally {
-            await session.close();
-        }
+        await testHelper.executeCypher(cypher);
     });
 
     afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should return the correct elements based on a relationship aggregation SUM_LTE filter, zero elements match", async () => {
@@ -107,12 +93,7 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
             }
         `;
 
-        const result = await graphql({
-            schema,
-            source: query,
-            variableValues: {},
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         expect(result.errors).toBeFalsy();
         expect(result?.data?.[employeeType.plural]).toEqual([]);
@@ -140,12 +121,7 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
             }
         `;
 
-        const result = await graphql({
-            schema,
-            source: query,
-            variableValues: {},
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         expect(result.errors).toBeFalsy();
         expect(result?.data?.[employeeType.plural]).toEqual([
@@ -181,12 +157,7 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
             }
         `;
 
-        const result = await graphql({
-            schema,
-            source: query,
-            variableValues: {},
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         expect(result.errors).toBeFalsy();
         expect(result?.data?.[employeeType.plural]).toEqual([

@@ -17,25 +17,18 @@
  * limitations under the License.
  */
 
-import type { Driver, Session } from "neo4j-driver";
-import { graphql } from "graphql";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/3394", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
+    const testHelper = new TestHelper();
 
-    let neoSchema: Neo4jGraphQL;
+    let Product: UniqueType;
+    let Employee: UniqueType;
 
-    const Product = new UniqueType("Product");
-    const Employee = new UniqueType("Employee");
-
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+    beforeEach(async () => {
+        Product = testHelper.createUniqueType("Product");
+        Employee = testHelper.createUniqueType("Employee");
 
         const typeDefs = `#graphql
             type ${Employee} {
@@ -49,14 +42,12 @@ describe("https://github.com/neo4j/graphql/issues/3394", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
         });
 
-        const session = await neo4j.getSession();
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (e:${Employee} {fg_item_id: "p1", description: "a p1", fg_item: "part1"})
                     CREATE (p1:${Product} {fg_item_id: "p1", description: "a p1", fg_item: "part1"})
                     CREATE (p2:${Product} {fg_item_id: "p2", description: "a p2", fg_item: "part2"})
@@ -64,21 +55,11 @@ describe("https://github.com/neo4j/graphql/issues/3394", () => {
                     CREATE (e)-[:CAN_ACCESS]->(p1)
                     CREATE (e)-[:CAN_ACCESS]->(p2)
                 `
-            );
-        } finally {
-            await session.close();
-        }
-    });
-
-    beforeEach(async () => {
-        session = await neo4j.getSession();
+        );
     });
 
     afterEach(async () => {
-        await session.close();
-    });
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should sort elements by aliased field", async () => {
@@ -92,11 +73,7 @@ describe("https://github.com/neo4j/graphql/issues/3394", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeFalsy();
         expect(gqlResult.data?.[Product.plural]).toEqual([
@@ -126,11 +103,7 @@ describe("https://github.com/neo4j/graphql/issues/3394", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeFalsy();
         expect(gqlResult.data?.[Employee.plural]).toEqual([
@@ -167,11 +140,7 @@ describe("https://github.com/neo4j/graphql/issues/3394", () => {
             }
         `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeFalsy();
             expect(gqlResult.data?.[Product.operations.connection]).toEqual({
@@ -211,11 +180,7 @@ describe("https://github.com/neo4j/graphql/issues/3394", () => {
             }
         `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeFalsy();
             expect(gqlResult.data?.[Employee.plural]).toEqual([

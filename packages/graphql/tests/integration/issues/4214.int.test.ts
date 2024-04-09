@@ -17,34 +17,23 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { createBearerToken } from "../../utils/create-bearer-token";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/4214", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
-    let session: Session;
+    const testHelper = new TestHelper();
     const secret = "secret";
 
     let User: UniqueType;
-    let Family: UniqueType;
-    let Person: UniqueType;
+    let Store: UniqueType;
+    let Transaction: UniqueType;
+    let TransactionItem: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-
-        session = await neo4j.getSession();
-
-        User = new UniqueType("User");
-        Family = new UniqueType("Family");
-        Person = new UniqueType("Person");
+    beforeEach(async () => {
+        User = testHelper.createUniqueType("User");
+        Store = testHelper.createUniqueType("Store");
+        Transaction = testHelper.createUniqueType("Transaction");
+        TransactionItem = testHelper.createUniqueType("TransactionItem");
 
         const typeDefs = `
             type JWT @jwt {
@@ -54,38 +43,38 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                 store: ID
             }
 
-            type User {
+            type ${User} {
                 id: ID! @id @unique
                 email: String!
                 roles: [String!]!
-                store: Store @relationship(type: "WORKS_AT", direction: OUT)
+                store: ${Store} @relationship(type: "WORKS_AT", direction: OUT)
             }
 
-            type Store {
+            type ${Store} {
                 id: ID! @id @unique
                 name: String!
-                employees: [User!]! @relationship(type: "WORKS_AT", direction: IN)
-                transactions: [Transaction!]! @relationship(type: "TRANSACTION", direction: IN)
+                employees: [${User}!]! @relationship(type: "WORKS_AT", direction: IN)
+                transactions: [${Transaction}!]! @relationship(type: "TRANSACTION", direction: IN)
             }
 
-            type Transaction {
+            type ${Transaction} {
                 id: ID! @id @unique
-                store: Store! @relationship(type: "TRANSACTION", direction: OUT)
+                store: ${Store}! @relationship(type: "TRANSACTION", direction: OUT)
                 type: String!
-                items: [TransactionItem!]! @relationship(type: "ITEM_TRANSACTED", direction: IN)
+                items: [${TransactionItem}!]! @relationship(type: "ITEM_TRANSACTED", direction: IN)
                 completed: Boolean
             }
 
-            type TransactionItem {
-                transaction: Transaction @relationship(type: "ITEM_TRANSACTED", direction: OUT)
+            type ${TransactionItem} {
+                transaction: ${Transaction} @relationship(type: "ITEM_TRANSACTED", direction: OUT)
                 name: String
                 price: Float
                 quantity: Int
             }
 
-            extend type Transaction @mutation(operations: [CREATE, UPDATE])
-            extend type Transaction @authentication
-            extend type Transaction
+            extend type ${Transaction} @mutation(operations: [CREATE, UPDATE])
+            extend type ${Transaction} @authentication
+            extend type ${Transaction}
                 @authorization(
                     validate: [
                         {
@@ -100,7 +89,7 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                         }
                     ]
                 )
-            extend type Transaction
+            extend type ${Transaction}
                 @authorization(
                     filter: [
                         { where: { jwt: { roles_INCLUDES: "admin" } } }
@@ -116,9 +105,9 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                     ]
                 )
 
-            extend type TransactionItem @mutation(operations: [CREATE, UPDATE])
-            extend type TransactionItem @authentication
-            extend type TransactionItem
+            extend type ${TransactionItem} @mutation(operations: [CREATE, UPDATE])
+            extend type ${TransactionItem} @authentication
+            extend type ${TransactionItem}
                 @authorization(
                     validate: [
                         {
@@ -133,7 +122,7 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                         }
                     ]
                 )
-            extend type TransactionItem
+            extend type ${TransactionItem}
                 @authorization(
                     filter: [
                         { where: { jwt: { roles_INCLUDES: "admin" } } }
@@ -150,9 +139,8 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                 )
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
             features: {
                 authorization: {
                     key: secret,
@@ -160,29 +148,27 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
             },
         });
 
-        await session.run(`
-        CREATE(u1:User {roles: ["store-owner"], id: "15cbd399-daaf-4579-ad2e-264bc956094c", email: "a@a.com"})
-        CREATE(u2:User {roles: ["store-owner"], id: "2856f385-46b4-4136-a608-2d5ad627133c", email: "b@b.com"})
-        CREATE(s1:Store {name: "Store", id: "8c8bb4bc-07dc-4808-bb20-f69d447a03b0"})
-        CREATE(s2:Store {name: "Other Store", id:"399bb9e2-bfdd-4085-8718-d78828e5875c" })
+        await testHelper.executeCypher(`
+        CREATE(u1:${User} {roles: ["store-owner"], id: "15cbd399-daaf-4579-ad2e-264bc956094c", email: "a@a.com"})
+        CREATE(u2:${User} {roles: ["store-owner"], id: "2856f385-46b4-4136-a608-2d5ad627133c", email: "b@b.com"})
+        CREATE(s1:${Store} {name: "Store", id: "8c8bb4bc-07dc-4808-bb20-f69d447a03b0"})
+        CREATE(s2:${Store} {name: "Other Store", id:"399bb9e2-bfdd-4085-8718-d78828e5875c" })
         
         MERGE (u1)-[:WORKS_AT]->(s1)
         MERGE (u2)-[:WORKS_AT]->(s2)
 
-        CREATE(:Transaction {completed: false, type: "inventory", id: "transactionid"})-[:TRANSACTION]->(s1)
+        CREATE(:${Transaction} {completed: false, type: "inventory", id: "transactionid"})-[:TRANSACTION]->(s1)
         `);
     });
 
-    afterAll(async () => {
-        await cleanNodesUsingSession(session, [User, Family, Person]);
-        await session.close();
-        await driver.close();
+    afterEach(async () => {
+        await testHelper.close();
     });
 
     test("should return aggregation of families only created by paid user role", async () => {
         const query = /* GraphQL */ `
             mutation SaveItems {
-                createTransactionItems(
+                ${TransactionItem.operations.create}(
                     input: {
                         name: "Milk"
                         price: 5
@@ -190,7 +176,7 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                         transaction: { connect: { where: { node: { id: "transactionid" } } } }
                     }
                 ) {
-                    transactionItems {
+                    ${TransactionItem.plural} {
                         name
                         transaction {
                             id
@@ -203,18 +189,14 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
             }
         `;
 
-        const token = createBearerToken(secret, {
+        const token = testHelper.createBearerToken(secret, {
             id: "15cbd399-daaf-4579-ad2e-264bc956094c",
             email: "a@a.com",
             roles: ["store-owner"],
             store: "8c8bb4bc-07dc-4808-bb20-f69d447a03b0",
         });
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues({ token }),
-        });
+        const result = await testHelper.executeGraphQLWithToken(query, token);
 
         expect(result.errors).toBeUndefined();
     });
@@ -222,7 +204,7 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
     test("should throw forbidden because admin does not have create rights", async () => {
         const query = /* GraphQL */ `
             mutation SaveItems {
-                createTransactionItems(
+                ${TransactionItem.operations.create}(
                     input: {
                         name: "Milk"
                         price: 5
@@ -230,7 +212,7 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
                         transaction: { connect: { where: { node: { id: "transactionid" } } } }
                     }
                 ) {
-                    transactionItems {
+                    ${TransactionItem.plural} {
                         name
                         transaction {
                             id
@@ -243,18 +225,14 @@ describe("https://github.com/neo4j/graphql/issues/4214", () => {
             }
         `;
 
-        const token = createBearerToken(secret, {
+        const token = testHelper.createBearerToken(secret, {
             id: "15cbd399-daaf-4579-ad2e-264bc956094c",
             email: "a@a.com",
             roles: ["admin"],
             store: "8c8bb4bc-07dc-4808-bb20-f69d447a03b0",
         });
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues({ token }),
-        });
+        const result = await testHelper.executeGraphQLWithToken(query, token);
 
         expect(result.errors).toBeDefined();
         expect(result.errors?.[0]?.message).toBe("Forbidden");

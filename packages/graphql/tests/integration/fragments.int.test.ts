@@ -17,25 +17,13 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import { gql } from "graphql-tag";
-import type { Driver } from "neo4j-driver";
-import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../src/classes";
-import { cleanNodesUsingSession } from "../utils/clean-nodes";
-import { getQuerySource } from "../utils/get-query-source";
-import { UniqueType } from "../utils/graphql-types";
-import Neo4jHelper from "./neo4j";
+import { TestHelper } from "../utils/tests-helper";
 
 describe("fragments", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let schema: GraphQLSchema;
-    const Movie = new UniqueType("Movie");
-    const Series = new UniqueType("Series");
-    const Actor = new UniqueType("Actor");
+    const testHelper = new TestHelper();
+    const Movie = testHelper.createUniqueType("Movie");
+    const Series = testHelper.createUniqueType("Series");
+    const Actor = testHelper.createUniqueType("Actor");
 
     const typeDefs = /* GraphQL */ `
         interface Production {
@@ -68,35 +56,21 @@ describe("fragments", () => {
         }
     `;
 
-    const actorName = generate({
-        readable: true,
-        charset: "alphabetic",
-    });
+    const actorName = "Marvin";
 
-    const movieTitle = generate({
-        readable: true,
-        charset: "alphabetic",
-    });
-    const movieRuntime = faker.number.int({ max: 100000 });
-    const movieScreenTime = faker.number.int({ max: 100000 });
+    const movieTitle = "The Hitchhiker's Guide to the Galaxy";
+    const movieRuntime = 1230;
+    const movieScreenTime = 3210;
 
-    const seriesTitle = generate({
-        readable: true,
-        charset: "alphabetic",
-    });
-    const seriesRuntime = faker.number.int({ max: 100000 });
-    const seriesEpisodes = faker.number.int({ max: 100000 });
-    const seriesScreenTime = faker.number.int({ max: 100000 });
+    const seriesTitle = "So Long, and Thanks for All the Fish";
+    const seriesRuntime = 112;
+    const seriesEpisodes = 113;
+    const seriesScreenTime = 114;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        const session = await neo4j.getSession();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
-        schema = await neoSchema.getSchema();
-
-        await session.run(
+        await testHelper.executeCypher(
             `
             CREATE (a:${Actor} { name: $actorName })
             CREATE (a)-[:ACTED_IN { screenTime: $movieScreenTime }]->(:${Movie} { title: $movieTitle, runtime:$movieRuntime })
@@ -113,17 +87,14 @@ describe("fragments", () => {
                 seriesScreenTime,
             }
         );
-        await session.close();
     });
 
     afterAll(async () => {
-        const session = await neo4j.getSession();
-        await cleanNodesUsingSession(session, [Actor, Movie, Series]);
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should be able project fragment on type", async () => {
-        const query = gql`
+        const query = /* GraphQL */ `
             query ($actorName: String!) {
                 ${Actor.plural}(where: { name: $actorName }) {
                     ...FragmentOnType
@@ -134,10 +105,7 @@ describe("fragments", () => {
                 name
             }
         `;
-        const graphqlResult = await graphql({
-            schema,
-            source: getQuerySource(query),
-            contextValue: neo4j.getContextValues(),
+        const graphqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { actorName },
         });
 
@@ -150,7 +118,7 @@ describe("fragments", () => {
     });
 
     test("should be able project fragment on interface", async () => {
-        const query = gql`
+        const query = /* GraphQL */ `
             query ($actorName: String!) {
                 ${Actor.plural}(where: { name: $actorName }) {
                     name
@@ -165,10 +133,7 @@ describe("fragments", () => {
             }
         `;
 
-        const graphqlResult = await graphql({
-            schema,
-            source: getQuerySource(query),
-            contextValue: neo4j.getContextValues(),
+        const graphqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { actorName },
         });
 
@@ -186,7 +151,7 @@ describe("fragments", () => {
     });
 
     test("should be able to project nested fragments", async () => {
-        const query = gql`
+        const query = `
             query ($actorName: String!) {
                 ${Actor.plural}(where: { name: $actorName }) {
                     name
@@ -208,10 +173,7 @@ describe("fragments", () => {
             }
         `;
 
-        const graphqlResult = await graphql({
-            schema,
-            source: getQuerySource(query),
-            contextValue: neo4j.getContextValues(),
+        const graphqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { actorName },
         });
 

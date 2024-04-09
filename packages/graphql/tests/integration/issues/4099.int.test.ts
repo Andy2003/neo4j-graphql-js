@@ -17,34 +17,19 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { createBearerToken } from "../../utils/create-bearer-token";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/4099", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
-    let session: Session;
+    const testHelper = new TestHelper();
     const secret = "secret";
 
     let User: UniqueType;
     let Person: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
     beforeEach(async () => {
-        session = await neo4j.getSession();
-
-        User = new UniqueType("User");
-        Person = new UniqueType("Person");
+        User = testHelper.createUniqueType("User");
+        Person = testHelper.createUniqueType("Person");
 
         const typeDefs = /* GraphQL */ `
             type JWT @jwt {
@@ -60,9 +45,8 @@ describe("https://github.com/neo4j/graphql/issues/4099", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
             features: {
                 authorization: {
                     key: secret,
@@ -72,19 +56,14 @@ describe("https://github.com/neo4j/graphql/issues/4099", () => {
     });
 
     beforeEach(async () => {
-        await session.run(`
+        await testHelper.executeCypher(`
             CREATE (:${User} { id: 1 })
             CREATE (:${Person} { id: 1 })
         `);
     });
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [User, Person]);
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("returns users if isAdmin true", async () => {
@@ -96,13 +75,9 @@ describe("https://github.com/neo4j/graphql/issues/4099", () => {
             }
         `;
 
-        const token = createBearerToken(secret, { isAdmin: true });
+        const token = testHelper.createBearerToken(secret, { isAdmin: true });
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues({ token }),
-        });
+        const result = await testHelper.executeGraphQLWithToken(query, token);
 
         expect(result.errors).toBeUndefined();
 
@@ -122,13 +97,9 @@ describe("https://github.com/neo4j/graphql/issues/4099", () => {
             }
         `;
 
-        const token = createBearerToken(secret, { isAdmin: false });
+        const token = testHelper.createBearerToken(secret, { isAdmin: false });
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues({ token }),
-        });
+        const result = await testHelper.executeGraphQLWithToken(query, token);
 
         expect(result.errors).toBeUndefined();
 
@@ -144,13 +115,9 @@ describe("https://github.com/neo4j/graphql/issues/4099", () => {
             }
         `;
 
-        const token = createBearerToken(secret, { isAdmin: false });
+        const token = testHelper.createBearerToken(secret, { isAdmin: false });
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues({ token }),
-        });
+        const result = await testHelper.executeGraphQLWithToken(query, token);
 
         expect(result.errors).toBeUndefined();
 
@@ -170,13 +137,9 @@ describe("https://github.com/neo4j/graphql/issues/4099", () => {
             }
         `;
 
-        const token = createBearerToken(secret, { isAdmin: true });
+        const token = testHelper.createBearerToken(secret, { isAdmin: true });
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues({ token }),
-        });
+        const result = await testHelper.executeGraphQLWithToken(query, token);
 
         expect(result.errors).toBeUndefined();
 

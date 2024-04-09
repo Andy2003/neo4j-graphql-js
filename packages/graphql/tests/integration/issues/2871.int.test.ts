@@ -17,18 +17,11 @@
  * limitations under the License.
  */
 
-import type { Driver, Session } from "neo4j-driver";
-import { graphql } from "graphql";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/2871", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
-    let session: Session;
+    const testHelper = new TestHelper();
 
     let FirstLevel: UniqueType;
     let SecondLevel: UniqueType;
@@ -71,19 +64,12 @@ describe("https://github.com/neo4j/graphql/issues/2871", () => {
         createdAt: new Date(90000000).toISOString(),
     };
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
     beforeEach(async () => {
-        session = await neo4j.getSession();
+        FirstLevel = testHelper.createUniqueType("FirstLevel");
+        SecondLevel = testHelper.createUniqueType("SecondLevel");
+        ThirdLevel = testHelper.createUniqueType("ThirdLevel");
 
-        FirstLevel = new UniqueType("FirstLevel");
-        SecondLevel = new UniqueType("SecondLevel");
-        ThirdLevel = new UniqueType("ThirdLevel");
-
-        await session.run(
+        await testHelper.executeCypher(
             `
             CREATE (f1:${FirstLevel})-[:HAS_SECOND_LEVEL]->(s1:${SecondLevel})-[:HAS_THIRD_LEVEL]->(t1:${ThirdLevel})
             CREATE (f2:${FirstLevel})-[:HAS_SECOND_LEVEL]->(s2:${SecondLevel})-[:HAS_THIRD_LEVEL]->(t2:${ThirdLevel})
@@ -127,19 +113,13 @@ describe("https://github.com/neo4j/graphql/issues/2871", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
     });
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [FirstLevel, SecondLevel, ThirdLevel]);
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should be able to filter by SOME nested within single relationship", async () => {
@@ -152,11 +132,7 @@ describe("https://github.com/neo4j/graphql/issues/2871", () => {
             }
         `;
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
         expect(result.errors).toBeFalsy();
         expect(result.data).toEqual({
             [FirstLevel.plural]: expect.toIncludeSameMembers([firstLevelInput2]),
@@ -182,16 +158,8 @@ describe("https://github.com/neo4j/graphql/issues/2871", () => {
             }
         `;
 
-        const resultExpectingEmptyList = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: queryExpectingEmptyList,
-            contextValue: neo4j.getContextValues(),
-        });
-        const resultExpectingData = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: queryExpectingData,
-            contextValue: neo4j.getContextValues(),
-        });
+        const resultExpectingEmptyList = await testHelper.executeGraphQL(queryExpectingEmptyList);
+        const resultExpectingData = await testHelper.executeGraphQL(queryExpectingData);
 
         expect(resultExpectingEmptyList.errors).toBeFalsy();
         expect(resultExpectingData.errors).toBeFalsy();
@@ -204,7 +172,7 @@ describe("https://github.com/neo4j/graphql/issues/2871", () => {
     });
 
     test("should not match if SOME second level relationships meet nested predicates", async () => {
-        await session.run(`
+        await testHelper.executeCypher(`
             CREATE (f4:${FirstLevel} {id: "22", createdAt: "1970-01-02T01:00:00.000Z"})-[:HAS_SECOND_LEVEL]->(s4:${SecondLevel} {id: "24", createdAt: "1970-01-02T01:00:00.000Z"})-[:HAS_THIRD_LEVEL]->(:${ThirdLevel} {id: "25", createdAt: "1970-01-02T01:00:00.000Z"})
             `);
 
@@ -217,11 +185,7 @@ describe("https://github.com/neo4j/graphql/issues/2871", () => {
             }
         `;
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         expect(result.errors).toBeFalsy();
         expect(result.data).toEqual({

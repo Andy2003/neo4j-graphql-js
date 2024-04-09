@@ -17,68 +17,57 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("Advanced Filtering", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
+    const testHelper = new TestHelper();
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        process.env.NEO4J_GRAPHQL_ENABLE_REGEX = "true";
+    beforeEach(() => {
+        process.env.NEO4J_GRAPHQL_ENABLE_REGEX = "true"; // this may cause race condition
     });
 
-    afterAll(async () => {
-        await driver.close();
+    afterEach(async () => {
+        await testHelper.close();
         delete process.env.NEO4J_GRAPHQL_ENABLE_REGEX;
     });
 
-    describe("String/ID Filtering", () => {
+    describe.each(["ID", "String"] as const)("%s Filtering", (type) => {
         test("should find Movies IN strings", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
-                    const randomType = new UniqueType("Movie");
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const randomValue1 = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const randomValue1 = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const randomValue2 = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const randomValue2 = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                         `,
-                            { value }
-                        );
+                { value }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_IN: ["${value}", "${randomValue1}", "${randomValue2}"] }) {
                                     property
@@ -86,60 +75,46 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect(gqlResult.errors).toBeUndefined();
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
         });
 
         test("should find Movies REGEX", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({
-                        typeDefs,
-                        features: {
-                            filters: {
-                                [type]: {
-                                    MATCHES: true,
-                                },
-                            },
+            await testHelper.initNeo4jGraphQL({
+                typeDefs,
+                features: {
+                    filters: {
+                        [type]: {
+                            MATCHES: true,
                         },
-                    });
+                    },
+                },
+            });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                         `,
-                            { value: `${value}${value}` }
-                        );
+                { value: `${value}${value}` }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_MATCHES: "(?i)${value}.*" }) {
                                     property
@@ -147,57 +122,43 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toBe(`${value}${value}`);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect(gqlResult.errors).toBeUndefined();
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toBe(`${value}${value}`);
         });
 
         test("should find Movies NOT string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const randomValue1 = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const randomValue1 = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $randomValue1})
                         `,
-                            { value, randomValue1 }
-                        );
+                { value, randomValue1 }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT: "${randomValue1}" }) {
                                     property
@@ -205,65 +166,51 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
 
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
         });
 
         test("should find Movies NOT_IN strings", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const randomValue1 = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const randomValue1 = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const randomValue2 = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const randomValue2 = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $randomValue1})
                             CREATE (:${randomType.name} {property: $randomValue2})
                         `,
-                            { value, randomValue1, randomValue2 }
-                        );
+                { value, randomValue1, randomValue2 }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT_IN: ["${randomValue1}", "${randomValue2}"] }) {
                                     property
@@ -271,57 +218,43 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
 
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
         });
 
         test("should find Movies CONTAINS string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const superValue = `${value}${value}`;
+            const superValue = `${value}${value}`;
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $superValue})
                             CREATE (:${randomType.name} {property: $superValue})
                             CREATE (:${randomType.name} {property: $superValue})
                         `,
-                            { superValue }
-                        );
+                { superValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_CONTAINS: "${value}" }) {
                                     property
@@ -329,60 +262,46 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(3);
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(3);
 
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(superValue);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(superValue);
         });
 
         test("should find Movies NOT_CONTAINS string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const notValue = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const notValue = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $notValue})
                             CREATE (:${randomType.name} {property: $notValue})
                         `,
-                            { value, notValue }
-                        );
+                { value, notValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT_CONTAINS: "${notValue}" }) {
                                     property
@@ -390,57 +309,43 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
 
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
         });
 
         test("should find Movies STARTS_WITH string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const superValue = `${value}${value}`;
+            const superValue = `${value}${value}`;
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $superValue})
                             CREATE (:${randomType.name} {property: $superValue})
                             CREATE (:${randomType.name} {property: $superValue})
                         `,
-                            { superValue }
-                        );
+                { superValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_STARTS_WITH: "${value}" }) {
                                     property
@@ -448,62 +353,48 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(3);
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(3);
 
-                        ((gqlResult.data as any)[randomType.plural] as any[]).forEach((x) => {
-                            expect(x.property).toEqual(superValue);
-                        });
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            ((gqlResult.data as any)[randomType.plural] as any[]).forEach((x) => {
+                expect(x.property).toEqual(superValue);
+            });
         });
 
         test("should find Movies NOT_STARTS_WITH string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const notValue = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const notValue = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $notValue})
                             CREATE (:${randomType.name} {property: $notValue})
                         `,
-                            { value, notValue }
-                        );
+                { value, notValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT_STARTS_WITH: "${notValue}" }) {
                                     property
@@ -511,60 +402,46 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
         });
 
         test("should find Movies ENDS_WITH string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const notValue = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const notValue = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const superValue = `${value}${value}`;
+            const superValue = `${value}${value}`;
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $notValue})
                             CREATE (:${randomType.name} {property: $superValue})
                         `,
-                            { value, notValue, superValue }
-                        );
+                { value, notValue, superValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_ENDS_WITH: "${value}" }) {
                                     property
@@ -572,60 +449,46 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(2);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(2);
         });
 
         test("should find Movies NOT_ENDS_WITH string", async () => {
-            await Promise.all(
-                ["ID", "String"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    const value = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const value = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const notValue = generate({
-                        readable: true,
-                        charset: "alphabetic",
-                    });
+            const notValue = generate({
+                readable: true,
+                charset: "alphabetic",
+            });
 
-                    const superValue = `${value}${value}`;
+            const superValue = `${value}${value}`;
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $notValue})
                             CREATE (:${randomType.name} {property: $superValue})
                         `,
-                            { value, notValue, superValue }
-                        );
+                { value, notValue, superValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT_ENDS_WITH: "${value}" }) {
                                     property
@@ -633,27 +496,18 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(notValue);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(notValue);
         });
+    });
 
+    describe("String Filtering", () => {
         test("should find Movies GT string", async () => {
-            const session = await neo4j.getSession();
-
-            const movieType = new UniqueType("Movie");
+            const movieType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                         type ${movieType.name} {
@@ -661,7 +515,7 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-            const neoSchema = new Neo4jGraphQL({
+            await testHelper.initNeo4jGraphQL({
                 features: {
                     filters: {
                         String: {
@@ -680,18 +534,17 @@ describe("Advanced Filtering", () => {
             const matrixReloaded = "The Matrix Reloaded";
             const matrixRevolutions = "The Matrix Revolutions";
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${movieType.name} {title: $animatrix})
                             CREATE (:${movieType.name} {title: $matrix})
                             CREATE (:${movieType.name} {title: $matrixReloaded})
                             CREATE (:${movieType.name} {title: $matrixRevolutions})
                         `,
-                    { animatrix, matrix, matrixReloaded, matrixRevolutions }
-                );
+                { animatrix, matrix, matrixReloaded, matrixRevolutions }
+            );
 
-                const query = `
+            const query = `
                             {
                                 ${movieType.plural}(where: { title_GT: "${matrix}" }) {
                                     title
@@ -699,31 +552,22 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                if (gqlResult.errors) {
-                    console.log(JSON.stringify(gqlResult.errors, null, 2));
-                }
-
-                expect(gqlResult.errors).toBeUndefined();
-
-                expect((gqlResult.data as any)[movieType.plural]).toHaveLength(2);
-                expect((gqlResult.data as any)[movieType.plural]).toEqual(
-                    expect.arrayContaining([{ title: matrixReloaded }, { title: matrixRevolutions }])
-                );
-            } finally {
-                await session.close();
+            if (gqlResult.errors) {
+                console.log(JSON.stringify(gqlResult.errors, null, 2));
             }
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            expect((gqlResult.data as any)[movieType.plural]).toHaveLength(2);
+            expect((gqlResult.data as any)[movieType.plural]).toEqual(
+                expect.arrayContaining([{ title: matrixReloaded }, { title: matrixRevolutions }])
+            );
         });
 
         test("should find Movies LT string", async () => {
-            const session = await neo4j.getSession();
-
-            const movieType = new UniqueType("Movie");
+            const movieType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                         type ${movieType.name} {
@@ -731,7 +575,7 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-            const neoSchema = new Neo4jGraphQL({
+            await testHelper.initNeo4jGraphQL({
                 features: {
                     filters: {
                         String: {
@@ -750,18 +594,17 @@ describe("Advanced Filtering", () => {
             const matrixRevolutions = "The Matrix Revolutions";
             const matrixResurrections = "The Matrix Resurrections";
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${movieType.name} {title: $matrix})
                             CREATE (:${movieType.name} {title: $matrixReloaded})
                             CREATE (:${movieType.name} {title: $matrixRevolutions})
                             CREATE (:${movieType.name} {title: $matrixResurrections})
                         `,
-                    { matrix, matrixReloaded, matrixRevolutions, matrixResurrections }
-                );
+                { matrix, matrixReloaded, matrixRevolutions, matrixResurrections }
+            );
 
-                const query = `
+            const query = `
                             {
                                 ${movieType.plural}(where: { title_LT: "${matrixRevolutions}" }) {
                                     title
@@ -769,35 +612,22 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                if (gqlResult.errors) {
-                    console.log(JSON.stringify(gqlResult.errors, null, 2));
-                }
-
-                expect(gqlResult.errors).toBeUndefined();
-
-                expect((gqlResult.data as any)[movieType.plural]).toHaveLength(3);
-                expect((gqlResult.data as any)[movieType.plural]).toEqual(
-                    expect.arrayContaining([
-                        { title: matrix },
-                        { title: matrixReloaded },
-                        { title: matrixResurrections },
-                    ])
-                );
-            } finally {
-                await session.close();
+            if (gqlResult.errors) {
+                console.log(JSON.stringify(gqlResult.errors, null, 2));
             }
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            expect((gqlResult.data as any)[movieType.plural]).toHaveLength(3);
+            expect((gqlResult.data as any)[movieType.plural]).toEqual(
+                expect.arrayContaining([{ title: matrix }, { title: matrixReloaded }, { title: matrixResurrections }])
+            );
         });
 
         test("should find Movies GTE string", async () => {
-            const session = await neo4j.getSession();
-
-            const movieType = new UniqueType("Movie");
+            const movieType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                         type ${movieType.name} {
@@ -805,7 +635,7 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-            const neoSchema = new Neo4jGraphQL({
+            await testHelper.initNeo4jGraphQL({
                 features: {
                     filters: {
                         String: {
@@ -824,18 +654,17 @@ describe("Advanced Filtering", () => {
             const matrixReloaded = "The Matrix Reloaded";
             const matrixRevolutions = "The Matrix Revolutions";
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${movieType.name} {title: $animatrix})
                             CREATE (:${movieType.name} {title: $matrix})
                             CREATE (:${movieType.name} {title: $matrixReloaded})
                             CREATE (:${movieType.name} {title: $matrixRevolutions})
                         `,
-                    { animatrix, matrix, matrixReloaded, matrixRevolutions }
-                );
+                { animatrix, matrix, matrixReloaded, matrixRevolutions }
+            );
 
-                const query = `
+            const query = `
                             {
                                 ${movieType.plural}(where: { title_GTE: "${matrix}" }) {
                                     title
@@ -843,31 +672,22 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                if (gqlResult.errors) {
-                    console.log(JSON.stringify(gqlResult.errors, null, 2));
-                }
-
-                expect(gqlResult.errors).toBeUndefined();
-
-                expect((gqlResult.data as any)[movieType.plural]).toHaveLength(3);
-                expect((gqlResult.data as any)[movieType.plural]).toEqual(
-                    expect.arrayContaining([{ title: matrix }, { title: matrixReloaded }, { title: matrixRevolutions }])
-                );
-            } finally {
-                await session.close();
+            if (gqlResult.errors) {
+                console.log(JSON.stringify(gqlResult.errors, null, 2));
             }
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            expect((gqlResult.data as any)[movieType.plural]).toHaveLength(3);
+            expect((gqlResult.data as any)[movieType.plural]).toEqual(
+                expect.arrayContaining([{ title: matrix }, { title: matrixReloaded }, { title: matrixRevolutions }])
+            );
         });
 
         test("should find Movies LTE string", async () => {
-            const session = await neo4j.getSession();
-
-            const movieType = new UniqueType("Movie");
+            const movieType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                         type ${movieType.name} {
@@ -875,7 +695,7 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-            const neoSchema = new Neo4jGraphQL({
+            await testHelper.initNeo4jGraphQL({
                 features: {
                     filters: {
                         String: {
@@ -894,19 +714,18 @@ describe("Advanced Filtering", () => {
             const matrixRevolutions = "The Matrix Revolutions";
             const matrixResurrections = "The Matrix Resurrections";
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${movieType.name} {title: $matrix})
                             CREATE (:${movieType.name} {title: $matrixReloaded})
                             CREATE (:${movieType.name} {title: $matrixRevolutions})
                             CREATE (:${movieType.name} {title: $matrixResurrections})
 
                         `,
-                    { matrix, matrixReloaded, matrixRevolutions, matrixResurrections }
-                );
+                { matrix, matrixReloaded, matrixRevolutions, matrixResurrections }
+            );
 
-                const query = `
+            const query = `
                             {
                                 ${movieType.plural}(where: { title_LTE: "${matrixRevolutions}" }) {
                                     title
@@ -914,75 +733,63 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                if (gqlResult.errors) {
-                    console.log(JSON.stringify(gqlResult.errors, null, 2));
-                }
-
-                expect(gqlResult.errors).toBeUndefined();
-
-                expect((gqlResult.data as any)[movieType.plural]).toHaveLength(4);
-                expect((gqlResult.data as any)[movieType.plural]).toEqual(
-                    expect.arrayContaining([
-                        { title: matrix },
-                        { title: matrixReloaded },
-                        { title: matrixRevolutions },
-                        { title: matrixResurrections },
-                    ])
-                );
-            } finally {
-                await session.close();
+            if (gqlResult.errors) {
+                console.log(JSON.stringify(gqlResult.errors, null, 2));
             }
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            expect((gqlResult.data as any)[movieType.plural]).toHaveLength(4);
+            expect((gqlResult.data as any)[movieType.plural]).toEqual(
+                expect.arrayContaining([
+                    { title: matrix },
+                    { title: matrixReloaded },
+                    { title: matrixRevolutions },
+                    { title: matrixResurrections },
+                ])
+            );
         });
     });
 
-    describe("Number/Float Filtering", () => {
+    describe.each(["Int", "Float"] as const)("%s Filtering", (type) => {
         test("should find Movies NOT number", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let property: number;
+            let property: number;
 
-                    if (type === "Int") {
-                        property = Math.floor(Math.random() * 9999);
-                    } else {
-                        property = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                property = Math.floor(Math.random() * 9999);
+            } else {
+                property = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    let notProperty: number;
+            let notProperty: number;
 
-                    if (type === "Int") {
-                        notProperty = Math.floor(Math.random() * 9999);
-                    } else {
-                        notProperty = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                notProperty = Math.floor(Math.random() * 9999);
+            } else {
+                notProperty = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $property})
                             CREATE (:${randomType.name} {property: $notProperty})
                         `,
-                            { property, notProperty }
-                        );
+                { property, notProperty }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT: ${notProperty} }) {
                                     property
@@ -990,71 +797,57 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(property);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(property);
         });
 
         test("should find Movies IN numbers", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let value: number;
+            let value: number;
 
-                    if (type === "Int") {
-                        value = Math.floor(Math.random() * 9999);
-                    } else {
-                        value = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                value = Math.floor(Math.random() * 9999);
+            } else {
+                value = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    let randomValue1: number;
+            let randomValue1: number;
 
-                    if (type === "Int") {
-                        randomValue1 = Math.floor(Math.random() * 9999);
-                    } else {
-                        randomValue1 = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                randomValue1 = Math.floor(Math.random() * 9999);
+            } else {
+                randomValue1 = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    let randomValue2: number;
+            let randomValue2: number;
 
-                    if (type === "Int") {
-                        randomValue2 = Math.floor(Math.random() * 9999);
-                    } else {
-                        randomValue2 = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                randomValue2 = Math.floor(Math.random() * 9999);
+            } else {
+                randomValue2 = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                         `,
-                            { value }
-                        );
+                { value }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_IN: [${value}, ${randomValue1}, ${randomValue2}] }) {
                                     property
@@ -1062,73 +855,59 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
         });
 
         test("should find Movies NOT_IN numbers", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let value: number;
+            let value: number;
 
-                    if (type === "Int") {
-                        value = Math.floor(Math.random() * 9999);
-                    } else {
-                        value = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                value = Math.floor(Math.random() * 9999);
+            } else {
+                value = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    let randomValue1: number;
+            let randomValue1: number;
 
-                    if (type === "Int") {
-                        randomValue1 = Math.floor(Math.random() * 99999);
-                    } else {
-                        randomValue1 = Math.floor(Math.random() * 99999) + 0.5;
-                    }
+            if (type === "Int") {
+                randomValue1 = Math.floor(Math.random() * 99999);
+            } else {
+                randomValue1 = Math.floor(Math.random() * 99999) + 0.5;
+            }
 
-                    let randomValue2: number;
+            let randomValue2: number;
 
-                    if (type === "Int") {
-                        randomValue2 = Math.floor(Math.random() * 99999);
-                    } else {
-                        randomValue2 = Math.floor(Math.random() * 99999) + 0.5;
-                    }
+            if (type === "Int") {
+                randomValue2 = Math.floor(Math.random() * 99999);
+            } else {
+                randomValue2 = Math.floor(Math.random() * 99999) + 0.5;
+            }
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $randomValue1})
                             CREATE (:${randomType.name} {property: $randomValue2})
                         `,
-                            { value, randomValue1, randomValue2 }
-                        );
+                { value, randomValue1, randomValue2 }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT_IN: [${randomValue1}, ${randomValue2}] }) {
                                     property
@@ -1136,58 +915,44 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(value);
         });
 
         test("should find Movies LT number", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let value: number;
+            let value: number;
 
-                    if (type === "Int") {
-                        value = Math.floor(Math.random() * 9999);
-                    } else {
-                        value = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                value = Math.floor(Math.random() * 9999);
+            } else {
+                value = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    const lessThanValue = value - (value + 1);
+            const lessThanValue = value - (value + 1);
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $lessThanValue})
                         `,
-                            { value, lessThanValue }
-                        );
+                { value, lessThanValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_LT: ${lessThanValue + 1} }) {
                                     property
@@ -1195,58 +960,44 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(lessThanValue);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(lessThanValue);
         });
 
         test("should find Movies LTE number", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let value: number;
+            let value: number;
 
-                    if (type === "Int") {
-                        value = Math.floor(Math.random() * 9999);
-                    } else {
-                        value = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                value = Math.floor(Math.random() * 9999);
+            } else {
+                value = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    const lessThanValue = value - (value + 1);
+            const lessThanValue = value - (value + 1);
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $lessThanValue})
                         `,
-                            { value, lessThanValue }
-                        );
+                { value, lessThanValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_LTE: ${value} }) {
                                     property
@@ -1254,57 +1005,43 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(2);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(2);
         });
 
         test("should find Movies GT number", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let value: number;
+            let value: number;
 
-                    if (type === "Int") {
-                        value = Math.floor(Math.random() * 9999);
-                    } else {
-                        value = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                value = Math.floor(Math.random() * 9999);
+            } else {
+                value = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    const graterThanValue = value + 1;
+            const graterThanValue = value + 1;
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $graterThanValue})
                         `,
-                            { value, graterThanValue }
-                        );
+                { value, graterThanValue }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_GT: ${graterThanValue - 1} }) {
                                     property
@@ -1312,58 +1049,44 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-                        expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(graterThanValue);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((gqlResult.data as any)[randomType.plural][0].property).toEqual(graterThanValue);
         });
 
         test("should find Movies GTE number", async () => {
-            await Promise.all(
-                ["Int", "Float"].map(async (type) => {
-                    const session = await neo4j.getSession();
+            const randomType = testHelper.createUniqueType("Movie");
 
-                    const randomType = new UniqueType("Movie");
-
-                    const typeDefs = `
+            const typeDefs = `
                         type ${randomType.name} {
                             property: ${type}
                         }
                     `;
 
-                    const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
-                    let value: number;
+            let value: number;
 
-                    if (type === "Int") {
-                        value = Math.floor(Math.random() * 9999);
-                    } else {
-                        value = Math.floor(Math.random() * 9999) + 0.5;
-                    }
+            if (type === "Int") {
+                value = Math.floor(Math.random() * 9999);
+            } else {
+                value = Math.floor(Math.random() * 9999) + 0.5;
+            }
 
-                    const greaterThan = value + 1;
+            const greaterThan = value + 1;
 
-                    try {
-                        await session.run(
-                            `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                             CREATE (:${randomType.name} {property: $greaterThan})
                         `,
-                            { value, greaterThan }
-                        );
+                { value, greaterThan }
+            );
 
-                        const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_GTE: ${value} }) {
                                     property
@@ -1371,28 +1094,17 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                        const gqlResult = await graphql({
-                            schema: await neoSchema.getSchema(),
-                            source: query,
-                            contextValue: neo4j.getContextValues(),
-                        });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                        expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                        expect((gqlResult.data as any)[randomType.plural]).toHaveLength(2);
-                    } finally {
-                        await session.close();
-                    }
-                })
-            );
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(2);
         });
     });
 
     describe("Boolean Filtering", () => {
         test("should find Movies equality equality", async () => {
-            const session = await neo4j.getSession();
-
-            const randomType = new UniqueType("Movie");
+            const randomType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                         type ${randomType.name} {
@@ -1400,19 +1112,18 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const value = false;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                         `,
-                    { value }
-                );
+                { value }
+            );
 
-                const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property: false }) {
                                     property
@@ -1420,24 +1131,15 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
-            } finally {
-                await session.close();
-            }
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(1);
         });
 
         test("should find Movies NOT boolean", async () => {
-            const session = await neo4j.getSession();
-
-            const randomType = new UniqueType("Movie");
+            const randomType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                         type ${randomType.name} {
@@ -1445,19 +1147,18 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const value = false;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (:${randomType.name} {property: $value})
                         `,
-                    { value }
-                );
+                { value }
+            );
 
-                const query = `
+            const query = `
                             {
                                 ${randomType.plural}(where: { property_NOT: false }) {
                                     property
@@ -1465,28 +1166,19 @@ describe("Advanced Filtering", () => {
                             }
                         `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                expect((gqlResult.data as any)[randomType.plural]).toHaveLength(0);
-            } finally {
-                await session.close();
-            }
+            expect((gqlResult.data as any)[randomType.plural]).toHaveLength(0);
         });
     });
 
     describe("Relationship/Connection Filtering", () => {
         describe("equality", () => {
             test("should find using relationship equality on node", async () => {
-                const session = await neo4j.getSession();
-
-                const randomType1 = new UniqueType("Movie");
-                const randomType2 = new UniqueType("Genre");
+                const randomType1 = testHelper.createUniqueType("Movie");
+                const randomType2 = testHelper.createUniqueType("Genre");
 
                 const typeDefs = `
                         type ${randomType1.name} {
@@ -1499,7 +1191,7 @@ describe("Advanced Filtering", () => {
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const rootId = generate({
                     charset: "alphabetic",
@@ -1513,19 +1205,18 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
+                await testHelper.executeCypher(
+                    `
                                 CREATE (root:${randomType1.name} {id: $rootId})
                                 CREATE (:${randomType1.name} {id: $randomId})
                                 CREATE (relation:${randomType2.name} {id: $relationId})
                                 CREATE (:${randomType2.name} {id: $randomId})
                                 MERGE (root)-[:IN_GENRE]->(relation)
                             `,
-                        { rootId, relationId, randomId }
-                    );
+                    { rootId, relationId, randomId }
+                );
 
-                    const query = `
+                const query = `
                         {
                             ${randomType1.plural}(where: { ${randomType2.plural}: { id: "${relationId}" } }) {
                                 id
@@ -1536,38 +1227,33 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.errors).toBeUndefined();
 
-                    expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
-                    expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
-                        id: rootId,
-                        [randomType2.plural]: [{ id: relationId }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
+                expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
+                    id: rootId,
+                    [randomType2.plural]: [{ id: relationId }],
+                });
             });
 
             test("should find using equality on node using connection", async () => {
-                const session = await neo4j.getSession();
+                const Movie = testHelper.createUniqueType("Movie");
+                const Genre = testHelper.createUniqueType("Genre");
+
                 const typeDefs = `
-                        type Movie {
+                        type ${Movie} {
                             id: ID
-                            genres: [Genre!]! @relationship(type: "IN_GENRE", direction: OUT)
+                            genres: [${Genre}!]! @relationship(type: "IN_GENRE", direction: OUT)
                         }
 
-                        type Genre {
+                        type ${Genre} {
                             id: ID
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const movieId = generate({
                     charset: "alphabetic",
@@ -1577,17 +1263,16 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
-                            CREATE (movie:Movie {id: $movieId})-[:IN_GENRE]->(:Genre {id:$genreId})
+                await testHelper.executeCypher(
+                    `
+                            CREATE (:${Movie} {id: $movieId})-[:IN_GENRE]->(:${Genre} {id:$genreId})
                         `,
-                        { movieId, genreId }
-                    );
+                    { movieId, genreId }
+                );
 
-                    const query = `
+                const query = `
                         {
-                            movies(where: { genresConnection: { node: { id: "${genreId}" } } }) {
+                            ${Movie.plural}(where: { genresConnection: { node: { id: "${genreId}" } } }) {
                                 id
                                 genres {
                                     id
@@ -1596,33 +1281,31 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.errors).toBeUndefined();
 
-                    expect((gqlResult.data as any).movies).toHaveLength(1);
-                    expect((gqlResult.data as any).movies[0]).toMatchObject({
-                        id: movieId,
-                        genres: [{ id: genreId }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect(gqlResult.data as any).toEqual({
+                    [Movie.plural]: [
+                        {
+                            id: movieId,
+                            genres: [{ id: genreId }],
+                        },
+                    ],
+                });
             });
 
             test("should find using equality on relationship using connection", async () => {
-                const session = await neo4j.getSession();
+                const Movie = testHelper.createUniqueType("Movie");
+                const Genre = testHelper.createUniqueType("Genre");
+
                 const typeDefs = `
-                        type Movie {
+                        type ${Movie} {
                             id: ID
-                            genres: [Genre!]! @relationship(type: "IN_GENRE", direction: OUT, properties: "ActedIn")
+                            genres: [${Genre}!]! @relationship(type: "IN_GENRE", direction: OUT, properties: "ActedIn")
                         }
 
-                        type Genre {
+                        type ${Genre} {
                             id: ID
                         }
 
@@ -1631,7 +1314,7 @@ describe("Advanced Filtering", () => {
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const movieId = generate({
                     charset: "alphabetic",
@@ -1645,17 +1328,16 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
-                            CREATE (movie:Movie {id: $movieId})-[:IN_GENRE {id:$actedInId}]->(:Genre {id:$genreId})
+                await testHelper.executeCypher(
+                    `
+                            CREATE (movie:${Movie} {id: $movieId})-[:IN_GENRE {id:$actedInId}]->(:${Genre} {id:$genreId})
                         `,
-                        { movieId, genreId, actedInId }
-                    );
+                    { movieId, genreId, actedInId }
+                );
 
-                    const query = `
+                const query = `
                         {
-                            movies(where: { genresConnection: { edge: { id: "${actedInId}" } } }) {
+                            ${Movie.plural}(where: { genresConnection: { edge: { id: "${actedInId}" } } }) {
                                 id
                                 genres {
                                     id
@@ -1664,32 +1346,30 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
-                    expect((gqlResult.data as any).movies).toHaveLength(1);
-                    expect((gqlResult.data as any).movies[0]).toMatchObject({
-                        id: movieId,
-                        genres: [{ id: genreId }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.data as any).toEqual({
+                    [Movie.plural]: [
+                        {
+                            id: movieId,
+                            genres: [{ id: genreId }],
+                        },
+                    ],
+                });
             });
 
             test("should find relationship and node property equality using connection", async () => {
-                const session = await neo4j.getSession();
+                const Movie = testHelper.createUniqueType("Movie");
+                const Genre = testHelper.createUniqueType("Genre");
+
                 const typeDefs = `
-                        type Movie {
+                        type ${Movie} {
                             id: ID
-                            genres: [Genre!]! @relationship(type: "IN_GENRE", direction: OUT, properties: "ActedIn")
+                            genres: [${Genre}!]! @relationship(type: "IN_GENRE", direction: OUT, properties: "ActedIn")
                         }
 
-                        type Genre {
+                        type ${Genre} {
                             id: ID
                         }
 
@@ -1698,7 +1378,7 @@ describe("Advanced Filtering", () => {
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const movieId = generate({
                     charset: "alphabetic",
@@ -1712,17 +1392,16 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
-                            CREATE (movie:Movie {id: $movieId})-[:IN_GENRE {id:$actedInId}]->(:Genre {id:$genreId})
+                await testHelper.executeCypher(
+                    `
+                            CREATE (:${Movie} {id: $movieId})-[:IN_GENRE {id:$actedInId}]->(:${Genre} {id:$genreId})
                         `,
-                        { movieId, genreId, actedInId }
-                    );
+                    { movieId, genreId, actedInId }
+                );
 
-                    const query = `
+                const query = `
                         {
-                            movies(where: { genresConnection: { node: { id: "${genreId}" } edge: { id: "${actedInId}" } } }) {
+                            ${Movie.plural}(where: { genresConnection: { node: { id: "${genreId}" } edge: { id: "${actedInId}" } } }) {
                                 id
                                 genres {
                                     id
@@ -1731,31 +1410,25 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.errors).toBeUndefined();
 
-                    expect((gqlResult.data as any).movies).toHaveLength(1);
-                    expect((gqlResult.data as any).movies[0]).toMatchObject({
-                        id: movieId,
-                        genres: [{ id: genreId }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect(gqlResult.data as any).toEqual({
+                    [Movie.plural]: [
+                        {
+                            id: movieId,
+                            genres: [{ id: genreId }],
+                        },
+                    ],
+                });
             });
         });
 
         describe("NOT", () => {
             test("should find using NOT on relationship", async () => {
-                const session = await neo4j.getSession();
-
-                const randomType1 = new UniqueType("Movie");
-                const randomType2 = new UniqueType("Genre");
+                const randomType1 = testHelper.createUniqueType("Movie");
+                const randomType2 = testHelper.createUniqueType("Genre");
 
                 const typeDefs = `
                         type ${randomType1.name} {
@@ -1768,7 +1441,7 @@ describe("Advanced Filtering", () => {
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const rootId1 = generate({
                     charset: "alphabetic",
@@ -1784,9 +1457,8 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
+                await testHelper.executeCypher(
+                    `
                                 CREATE (root1:${randomType1.name} {id: $rootId1})
                                 CREATE (root2:${randomType1.name} {id: $rootId2})
                                 CREATE (relation1:${randomType2.name} {id: $relationId1})
@@ -1794,10 +1466,10 @@ describe("Advanced Filtering", () => {
                                 MERGE (root1)-[:IN_GENRE]->(relation1)
                                 MERGE (root2)-[:IN_GENRE]->(relation2)
                             `,
-                        { rootId1, rootId2, relationId1, relationId2 }
-                    );
+                    { rootId1, rootId2, relationId1, relationId2 }
+                );
 
-                    const query = `
+                const query = `
                         {
                             ${randomType1.plural}(where: { ${randomType2.plural}_NOT: { id: "${relationId2}" } }) {
                                 id
@@ -1808,29 +1480,20 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.errors).toBeUndefined();
 
-                    expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
-                    expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
-                        id: rootId1,
-                        [randomType2.plural]: [{ id: relationId1 }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
+                expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
+                    id: rootId1,
+                    [randomType2.plural]: [{ id: relationId1 }],
+                });
             });
 
             test("should find using NOT on connections", async () => {
-                const session = await neo4j.getSession();
-
-                const randomType1 = new UniqueType("Movie");
-                const randomType2 = new UniqueType("Genre");
+                const randomType1 = testHelper.createUniqueType("Movie");
+                const randomType2 = testHelper.createUniqueType("Genre");
 
                 const typeDefs = `
                         type ${randomType1.name} {
@@ -1843,7 +1506,7 @@ describe("Advanced Filtering", () => {
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const rootId1 = generate({
                     charset: "alphabetic",
@@ -1859,16 +1522,15 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
+                await testHelper.executeCypher(
+                    `
                             CREATE (root1:${randomType1.name} {id: $rootId1})-[:IN_GENRE]->(relation1:${randomType2.name} {id: $relationId1})
                             CREATE (root2:${randomType1.name} {id: $rootId2})-[:IN_GENRE]->(relation2:${randomType2.name} {id: $relationId2})
                         `,
-                        { rootId1, rootId2, relationId1, relationId2 }
-                    );
+                    { rootId1, rootId2, relationId1, relationId2 }
+                );
 
-                    const query = `
+                const query = `
                         {
                             ${randomType1.plural}(where: { ${randomType2.plural}Connection_NOT: { node: { id: "${relationId2}" } } }) {
                                 id
@@ -1879,29 +1541,20 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.errors).toBeUndefined();
 
-                    expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
-                    expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
-                        id: rootId1,
-                        [randomType2.plural]: [{ id: relationId1 }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
+                expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
+                    id: rootId1,
+                    [randomType2.plural]: [{ id: relationId1 }],
+                });
             });
 
             test("should find using relationship properties and connections", async () => {
-                const session = await neo4j.getSession();
-
-                const randomType1 = new UniqueType("Movie");
-                const randomType2 = new UniqueType("Genre");
+                const randomType1 = testHelper.createUniqueType("Movie");
+                const randomType2 = testHelper.createUniqueType("Genre");
 
                 const typeDefs = `
                         type ${randomType1.name} {
@@ -1918,7 +1571,7 @@ describe("Advanced Filtering", () => {
                         }
                 `;
 
-                const neoSchema = new Neo4jGraphQL({ typeDefs });
+                await testHelper.initNeo4jGraphQL({ typeDefs });
 
                 const rootId1 = generate({
                     charset: "alphabetic",
@@ -1937,16 +1590,15 @@ describe("Advanced Filtering", () => {
                     charset: "alphabetic",
                 });
 
-                try {
-                    await session.run(
-                        `
+                await testHelper.executeCypher(
+                    `
                             CREATE (:${randomType1.name} {id: $rootId1})-[:IN_GENRE {id: $actedInId}]->(:${randomType2.name} {id: $relationId1})
                             CREATE (:${randomType1.name} {id: $rootId2})-[:IN_GENRE {id: randomUUID()}]->(:${randomType2.name} {id: $relationId2})
                         `,
-                        { rootId1, rootId2, relationId1, relationId2, actedInId }
-                    );
+                    { rootId1, rootId2, relationId1, relationId2, actedInId }
+                );
 
-                    const query = `
+                const query = `
                         {
                             ${randomType1.plural}(where: { ${randomType2.plural}Connection_NOT: { edge: { id: "${actedInId}" } } }) {
                                 id
@@ -1957,45 +1609,21 @@ describe("Advanced Filtering", () => {
                         }
                     `;
 
-                    const gqlResult = await graphql({
-                        schema: await neoSchema.getSchema(),
-                        source: query,
-                        contextValue: neo4j.getContextValues(),
-                    });
+                const gqlResult = await testHelper.executeGraphQL(query);
 
-                    expect(gqlResult.errors).toBeUndefined();
+                expect(gqlResult.errors).toBeUndefined();
 
-                    expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
-                    expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
-                        id: rootId2,
-                        [randomType2.plural]: [{ id: relationId2 }],
-                    });
-                } finally {
-                    await session.close();
-                }
+                expect((gqlResult.data as any)[randomType1.plural]).toHaveLength(1);
+                expect((gqlResult.data as any)[randomType1.plural][0]).toMatchObject({
+                    id: rootId2,
+                    [randomType2.plural]: [{ id: relationId2 }],
+                });
             });
         });
 
         describe("List Predicates", () => {
-            let schema: GraphQLSchema;
-
-            const testLabel = generate({ charset: "alphabetic" });
-
-            const typeDefs = `
-                type Movie {
-                    id: ID! @id @unique
-                    budget: Int!
-                    actors: [Actor!]! @relationship(type: "ACTED_IN", direction: IN)
-                }
-
-                type Actor {
-                    id: ID! @id @unique
-                    flag: Boolean!
-                    actedIn: [Movie!]! @relationship(type: "ACTED_IN", direction: OUT)
-                }
-            `;
-
-            const neoSchema = new Neo4jGraphQL({ typeDefs, driver });
+            let Movie: UniqueType;
+            let Actor: UniqueType;
 
             const movies = [
                 ...Array(4)
@@ -2008,18 +1636,35 @@ describe("Advanced Filtering", () => {
                     .map((_, i) => ({ id: generate(), flag: i % 2 === 0 })),
             ];
 
-            beforeAll(async () => {
-                const session = await neo4j.getSession();
-                await session.run(
+            beforeEach(async () => {
+                Movie = testHelper.createUniqueType("Movie");
+                Actor = testHelper.createUniqueType("Actor");
+
+                const typeDefs = `
+                type ${Movie} {
+                    id: ID! @id @unique
+                    budget: Int!
+                    actors: [${Actor}!]! @relationship(type: "ACTED_IN", direction: IN)
+                }
+
+                type ${Actor} {
+                    id: ID! @id @unique
+                    flag: Boolean!
+                    actedIn: [${Movie}!]! @relationship(type: "ACTED_IN", direction: OUT)
+                }
+            `;
+
+                await testHelper.initNeo4jGraphQL({ typeDefs });
+                await testHelper.executeCypher(
                     `
-                    CREATE (m1:Movie:${testLabel}) SET m1 = $movies[0]
-                    CREATE (m2:Movie:${testLabel}) SET m2 = $movies[1]
-                    CREATE (m3:Movie:${testLabel}) SET m3 = $movies[2]
-                    CREATE (m4:Movie:${testLabel}) SET m4 = $movies[3]
-                    CREATE (a1:Actor:${testLabel}) SET a1 = $actors[0]
-                    CREATE (a2:Actor:${testLabel}) SET a2 = $actors[1]
-                    CREATE (a3:Actor:${testLabel}) SET a3 = $actors[2]
-                    CREATE (a4:Actor:${testLabel}) SET a4 = $actors[3]
+                    CREATE (m1:${Movie}) SET m1 = $movies[0]
+                    CREATE (m2:${Movie}) SET m2 = $movies[1]
+                    CREATE (m3:${Movie}) SET m3 = $movies[2]
+                    CREATE (m4:${Movie}) SET m4 = $movies[3]
+                    CREATE (a1:${Actor}) SET a1 = $actors[0]
+                    CREATE (a2:${Actor}) SET a2 = $actors[1]
+                    CREATE (a3:${Actor}) SET a3 = $actors[2]
+                    CREATE (a4:${Actor}) SET a4 = $actors[3]
                     MERGE (a1)-[:ACTED_IN]->(m1)<-[:ACTED_IN]-(a3)
                     MERGE (a2)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(a3)
                     MERGE (a2)-[:ACTED_IN]->(m3)<-[:ACTED_IN]-(a4)
@@ -2028,19 +1673,13 @@ describe("Advanced Filtering", () => {
                 `,
                     { movies, actors }
                 );
-                schema = await neoSchema.getSchema();
-            });
-
-            afterAll(async () => {
-                const session = await neo4j.getSession();
-                await session.run(`MATCH (n:${testLabel}) DETACH DELETE n`);
-                await session.close();
             });
 
             describe("on relationship", () => {
-                const generateQuery = (predicate: "ALL" | "NONE" | "SINGLE" | "SOME") => `
+                function generateQuery(predicate: "ALL" | "NONE" | "SINGLE" | "SOME") {
+                    return `
                     query($movieIds: [ID!]!) {
-                        movies(where: { AND: [{ id_IN: $movieIds }, { actors_${predicate}: { flag_NOT: false } }] }) {
+                        ${Movie.plural}(where: { AND: [{ id_IN: $movieIds }, { actors_${predicate}: { flag_NOT: false } }] }) {
                             id
                             actors(where: { flag_NOT: false }) {
                                 id
@@ -2049,18 +1688,16 @@ describe("Advanced Filtering", () => {
                         }
                     }
                 `;
+                }
 
                 test("ALL", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("ALL"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("ALL"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2070,16 +1707,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("NONE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("NONE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("NONE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2089,16 +1723,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SINGLE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SINGLE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SINGLE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2108,16 +1739,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SOME", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SOME"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SOME"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(3);
                     expect(gqlMovies).toContainEqual({
@@ -2138,7 +1766,7 @@ describe("Advanced Filtering", () => {
             describe("on relationship using NOT operator", () => {
                 const generateQuery = (predicate: "ALL" | "NONE" | "SINGLE" | "SOME") => `
                     query($movieIds: [ID!]!) {
-                        movies(where: { AND: [{ id_IN: $movieIds }, { actors_${predicate}: { NOT: { flag: false } } }] }) {
+                        ${Movie.plural}(where: { AND: [{ id_IN: $movieIds }, { actors_${predicate}: { NOT: { flag: false } } }] }) {
                             id
                             actors(where: { NOT: { flag: false } }) {
                                 id
@@ -2149,16 +1777,13 @@ describe("Advanced Filtering", () => {
                 `;
 
                 test("ALL", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("ALL"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("ALL"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2168,16 +1793,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("NONE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("NONE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("NONE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2187,16 +1809,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SINGLE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SINGLE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SINGLE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2206,16 +1825,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SOME", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SOME"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SOME"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(3);
                     expect(gqlMovies).toContainEqual({
@@ -2236,7 +1852,7 @@ describe("Advanced Filtering", () => {
             describe("on connection", () => {
                 const generateQuery = (predicate: "ALL" | "NONE" | "SINGLE" | "SOME") => `
                     query($movieIds: [ID!]!) {
-                        movies(where: { AND: [{ id_IN: $movieIds }, { actorsConnection_${predicate}: { node: { flag_NOT: false } } }] }) {
+                        ${Movie.plural}(where: { AND: [{ id_IN: $movieIds }, { actorsConnection_${predicate}: { node: { flag_NOT: false } } }] }) {
                             id
                             actors(where: {flag_NOT: false}) {
                                 id
@@ -2247,16 +1863,13 @@ describe("Advanced Filtering", () => {
                 `;
 
                 test("ALL", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("ALL"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("ALL"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2266,16 +1879,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("NONE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("NONE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("NONE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2285,16 +1895,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SINGLE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SINGLE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SINGLE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2304,16 +1911,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SOME", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SOME"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SOME"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(3);
                     expect(gqlMovies).toContainEqual({
@@ -2334,7 +1938,7 @@ describe("Advanced Filtering", () => {
             describe("on connection using NOT operator", () => {
                 const generateQuery = (predicate: "ALL" | "NONE" | "SINGLE" | "SOME") => `
                     query($movieIds: [ID!]!) {
-                        movies(where: { AND: [{ id_IN: $movieIds }, { actorsConnection_${predicate}: { node: { NOT: { flag: false } } } }] }) {
+                        ${Movie.plural}(where: { AND: [{ id_IN: $movieIds }, { actorsConnection_${predicate}: { node: { NOT: { flag: false } } } }] }) {
                             id
                             actors(where: { NOT: { flag: false }}) {
                                 id
@@ -2345,16 +1949,13 @@ describe("Advanced Filtering", () => {
                 `;
 
                 test("ALL", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("ALL"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("ALL"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2364,16 +1965,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("NONE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("NONE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("NONE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2383,16 +1981,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SINGLE", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SINGLE"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SINGLE"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(1);
                     expect(gqlMovies).toContainEqual({
@@ -2402,16 +1997,13 @@ describe("Advanced Filtering", () => {
                 });
 
                 test("SOME", async () => {
-                    const gqlResult = await graphql({
-                        schema,
-                        source: generateQuery("SOME"),
-                        contextValue: neo4j.getContextValues(),
+                    const gqlResult = await testHelper.executeGraphQL(generateQuery("SOME"), {
                         variableValues: { movieIds: movies.map(({ id }) => id) },
                     });
 
                     expect(gqlResult.errors).toBeUndefined();
 
-                    const gqlMovies = gqlResult.data?.movies;
+                    const gqlMovies = gqlResult.data?.[Movie.plural];
 
                     expect(gqlMovies).toHaveLength(3);
                     expect(gqlMovies).toContainEqual({
@@ -2431,10 +2023,8 @@ describe("Advanced Filtering", () => {
         });
 
         test("should test for not null", async () => {
-            const session = await neo4j.getSession();
-
-            const randomType1 = new UniqueType("Movie");
-            const randomType2 = new UniqueType("Genre");
+            const randomType1 = testHelper.createUniqueType("Movie");
+            const randomType2 = testHelper.createUniqueType("Genre");
 
             const typeDefs = `
                     type ${randomType1.name} {
@@ -2447,7 +2037,7 @@ describe("Advanced Filtering", () => {
                     }
             `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const rootId = generate({
                 charset: "alphabetic",
@@ -2461,19 +2051,18 @@ describe("Advanced Filtering", () => {
                 charset: "alphabetic",
             });
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                             CREATE (root:${randomType1.name} {id: $rootId})
                             CREATE (:${randomType1.name} {id: $randomId})
                             CREATE (relation:${randomType2.name} {id: $relationId})
                             CREATE (:${randomType2.name} {id: $randomId})
                             MERGE (root)-[:IN_GENRE]->(relation)
                         `,
-                    { rootId, relationId, randomId }
-                );
+                { rootId, relationId, randomId }
+            );
 
-                const nullQuery = `
+            const nullQuery = `
                     {
                         ${randomType1.plural}(where: { ${randomType2.plural}: null }) {
                             id
@@ -2481,24 +2070,20 @@ describe("Advanced Filtering", () => {
                     }
                 `;
 
-                // Test null checking (nodes without any related nodes on the specified field)
+            // Test null checking (nodes without any related nodes on the specified field)
 
-                const nullResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: nullQuery,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const nullResult = await testHelper.executeGraphQL(nullQuery);
 
-                expect(nullResult.errors).toBeUndefined();
+            expect(nullResult.errors).toBeUndefined();
 
-                expect((nullResult.data as any)[randomType1.plural]).toHaveLength(1);
-                expect((nullResult.data as any)[randomType1.plural][0]).toMatchObject({
-                    id: randomId,
-                });
+            expect((nullResult.data as any)[randomType1.plural]).toHaveLength(1);
+            expect((nullResult.data as any)[randomType1.plural][0]).toMatchObject({
+                id: randomId,
+            });
 
-                // Test not null checking (nodes without any related nodes on the specified field)
+            // Test not null checking (nodes without any related nodes on the specified field)
 
-                const notNullQuery = `
+            const notNullQuery = `
                     {
                         ${randomType1.plural}(where: { ${randomType2.plural}_NOT: null }) {
                             id
@@ -2506,30 +2091,21 @@ describe("Advanced Filtering", () => {
                     }
                 `;
 
-                const notNullResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: notNullQuery,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const notNullResult = await testHelper.executeGraphQL(notNullQuery);
 
-                expect(notNullResult.errors).toBeUndefined();
+            expect(notNullResult.errors).toBeUndefined();
 
-                expect((notNullResult.data as any)[randomType1.plural]).toHaveLength(1);
-                expect((notNullResult.data as any)[randomType1.plural][0]).toMatchObject({
-                    id: rootId,
-                });
-            } finally {
-                await session.close();
-            }
+            expect((notNullResult.data as any)[randomType1.plural]).toHaveLength(1);
+            expect((notNullResult.data as any)[randomType1.plural][0]).toMatchObject({
+                id: rootId,
+            });
         });
     });
 
     describe("NULL Filtering", () => {
         // TODO: split in 2 tests
         test("should work for existence and non-existence", async () => {
-            const session = await neo4j.getSession();
-
-            const randomType = new UniqueType("Movie");
+            const randomType = testHelper.createUniqueType("Movie");
 
             const typeDefs = `
                 type ${randomType.name} {
@@ -2538,7 +2114,7 @@ describe("Advanced Filtering", () => {
                 }
             `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const id1 = generate({
                 readable: true,
@@ -2555,18 +2131,17 @@ describe("Advanced Filtering", () => {
                 charset: "alphabetic",
             });
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (:${randomType.name} {id: $id1})
                         CREATE (:${randomType.name} {id: $id2, optional: $optionalValue})
                     `,
-                    { id1, id2, optionalValue }
-                );
+                { id1, id2, optionalValue }
+            );
 
-                // Test NULL checking
+            // Test NULL checking
 
-                const nullQuery = `
+            const nullQuery = `
                     {
                         ${randomType.plural}(where: { optional: null }) {
                             id
@@ -2574,21 +2149,17 @@ describe("Advanced Filtering", () => {
                     }
                 `;
 
-                const nullResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: nullQuery,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const nullResult = await testHelper.executeGraphQL(nullQuery);
 
-                expect(nullResult.errors).toBeUndefined();
+            expect(nullResult.errors).toBeUndefined();
 
-                expect((nullResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((nullResult.data as any)[randomType.plural]).toHaveLength(1);
 
-                expect((nullResult.data as any)[randomType.plural][0].id).toEqual(id1);
+            expect((nullResult.data as any)[randomType.plural][0].id).toEqual(id1);
 
-                // Test NOT NULL checking
+            // Test NOT NULL checking
 
-                const notNullQuery = `
+            const notNullQuery = `
                     {
                         ${randomType.plural}(where: { optional_NOT: null }) {
                             id
@@ -2596,20 +2167,13 @@ describe("Advanced Filtering", () => {
                     }
                 `;
 
-                const notNullResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: notNullQuery,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const notNullResult = await testHelper.executeGraphQL(notNullQuery);
 
-                expect(notNullResult.errors).toBeUndefined();
+            expect(notNullResult.errors).toBeUndefined();
 
-                expect((notNullResult.data as any)[randomType.plural]).toHaveLength(1);
+            expect((notNullResult.data as any)[randomType.plural]).toHaveLength(1);
 
-                expect((notNullResult.data as any)[randomType.plural][0].id).toEqual(id2);
-            } finally {
-                await session.close();
-            }
+            expect((notNullResult.data as any)[randomType.plural][0].id).toEqual(id2);
         });
     });
 });

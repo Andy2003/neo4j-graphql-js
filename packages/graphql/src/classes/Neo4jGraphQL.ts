@@ -200,10 +200,14 @@ class Neo4jGraphQL {
             this.dbInfo = await this.getNeo4jDatabaseInfo(neo4jDriver, sessionConfig);
         }
 
+        if (!this.schemaModel) {
+            throw new Error("Schema Model is not defined");
+        }
+
         await assertIndexesAndConstraints({
             driver: neo4jDriver,
             sessionConfig,
-            nodes: this.nodes,
+            schemaModel: this.schemaModel,
             options: options,
         });
     }

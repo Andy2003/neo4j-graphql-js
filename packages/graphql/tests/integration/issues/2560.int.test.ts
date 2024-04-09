@@ -17,38 +17,23 @@
  * limitations under the License.
  */
 
-import type { Driver, Session } from "neo4j-driver";
-import { graphql } from "graphql";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/2560", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
+    const testHelper = new TestHelper();
 
     let User: UniqueType;
     let Person: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
+    beforeEach(() => {});
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [User, Person]);
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should accept resolvers which are an array of objects - one resolver object", async () => {
-        session = await neo4j.getSession();
-        User = new UniqueType("User");
+        User = testHelper.createUniqueType("User");
 
         const typeDefs = `
             type ${User} {
@@ -69,9 +54,8 @@ describe("https://github.com/neo4j/graphql/issues/2560", () => {
             },
         ];
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
             resolvers,
         });
 
@@ -87,11 +71,7 @@ describe("https://github.com/neo4j/graphql/issues/2560", () => {
             }
         `;
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: mutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(mutation);
 
         expect(result.errors).toBeFalsy();
         expect(result.data).toEqual({
@@ -108,9 +88,8 @@ describe("https://github.com/neo4j/graphql/issues/2560", () => {
     });
 
     test("should accept resolvers which are an array of objects - two resolver objects", async () => {
-        session = await neo4j.getSession();
-        User = new UniqueType("User");
-        Person = new UniqueType("Person");
+        User = testHelper.createUniqueType("User");
+        Person = testHelper.createUniqueType("Person");
 
         const typeDefs = `
             type ${User} {
@@ -143,9 +122,8 @@ describe("https://github.com/neo4j/graphql/issues/2560", () => {
             },
         ];
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
             resolvers,
         });
 
@@ -160,11 +138,7 @@ describe("https://github.com/neo4j/graphql/issues/2560", () => {
             }
         `;
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: mutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(mutation);
 
         expect(result.errors).toBeFalsy();
         expect(result.data).toEqual({

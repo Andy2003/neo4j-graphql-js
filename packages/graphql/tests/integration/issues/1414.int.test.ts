@@ -17,34 +17,20 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/1414", () => {
-    const testProduct = new UniqueType("Product");
-    const testProgrammeItem = new UniqueType("ProgrammeItem");
+    let testProduct: UniqueType;
+    let testProgrammeItem: UniqueType;
 
     let counter = 0;
 
-    let schema: GraphQLSchema;
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-
-    async function graphqlQuery(query: string) {
-        return graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
-    }
+    const testHelper = new TestHelper();
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        testProduct = testHelper.createUniqueType("Product");
+        testProgrammeItem = testHelper.createUniqueType("ProgrammeItem");
 
         const typeDefs = `
             interface ${testProduct.name} {
@@ -57,9 +43,8 @@ describe("https://github.com/neo4j/graphql/issues/1414", () => {
                 productTitle: String!
             }
         `;
-        const neoGraphql = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
             features: {
                 populatedBy: {
                     callbacks: {
@@ -72,11 +57,10 @@ describe("https://github.com/neo4j/graphql/issues/1414", () => {
                 },
             },
         });
-        schema = await neoGraphql.getSchema();
     });
 
     afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("callbacks should only be called for specified operations", async () => {
@@ -102,7 +86,7 @@ describe("https://github.com/neo4j/graphql/issues/1414", () => {
             }
         `;
 
-        const createProgrammeItemsResults = await graphqlQuery(createProgrammeItems);
+        const createProgrammeItemsResults = await testHelper.executeGraphQL(createProgrammeItems);
         expect(createProgrammeItemsResults.errors).toBeUndefined();
         expect(createProgrammeItemsResults.data as any).toEqual({
             [testProgrammeItem.operations.create]: {
@@ -115,7 +99,7 @@ describe("https://github.com/neo4j/graphql/issues/1414", () => {
             },
         });
 
-        const updateProgrammeItemsResults = await graphqlQuery(updateProgrammeItems);
+        const updateProgrammeItemsResults = await testHelper.executeGraphQL(updateProgrammeItems);
         expect(updateProgrammeItemsResults.errors).toBeUndefined();
         expect(updateProgrammeItemsResults.data as any).toEqual({
             [testProgrammeItem.operations.update]: {

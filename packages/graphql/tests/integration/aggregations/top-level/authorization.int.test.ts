@@ -17,32 +17,22 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../../src/classes";
 import { createBearerToken } from "../../../utils/create-bearer-token";
-import { UniqueType } from "../../../utils/graphql-types";
-import Neo4jHelper from "../../neo4j";
+import { TestHelper } from "../../../utils/tests-helper";
 
 describe("aggregations-top_level authorization", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
+    const testHelper = new TestHelper();
     const secret = "secret";
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
+    beforeEach(() => {});
 
-    afterAll(async () => {
-        await driver.close();
+    afterEach(async () => {
+        await testHelper.close();
     });
 
     test("should throw forbidden when incorrect allow on aggregate count", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
-        const randomType = new UniqueType("Movie");
+        const randomType = testHelper.createUniqueType("Movie");
 
         const typeDefs = `
             type ${randomType.name} {
@@ -64,7 +54,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -73,28 +63,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:${randomType.name} {id: "${userId}"})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should append auth where to predicate and return post count for this user", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type User {
                 id: ID
@@ -121,7 +101,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -130,34 +110,24 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:User {id: "${userId}"})-[:POSTED]->(:Post {content: randomUUID()})
             `);
 
-            const token = createBearerToken(secret, { sub: userId });
+        const token = createBearerToken(secret, { sub: userId });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect(gqlResult.data).toEqual({
-                postsAggregate: {
-                    count: 1,
-                },
-            });
-        } finally {
-            await session.close();
-        }
+        expect(gqlResult.data).toEqual({
+            postsAggregate: {
+                count: 1,
+            },
+        });
     });
 
     test("should throw when invalid allow when aggregating a Int field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -189,7 +159,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -198,28 +168,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", imdbRatingInt: rand()})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should throw when invalid allow when aggregating a ID field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -251,7 +211,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -260,28 +220,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", someId: "some-random-string"})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should throw when invalid allow when aggregating a String field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -313,7 +263,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -322,28 +272,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", someString: "some-random-string"})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should throw when invalid allow when aggregating a Float field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -375,7 +315,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -384,28 +324,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", imdbRatingFloat: rand()})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should throw when invalid allow when aggregating a BigInt field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -437,7 +367,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -446,28 +376,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", imdbRatingBigInt: rand()})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should throw when invalid allow when aggregating a DateTime field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -499,7 +419,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -508,28 +428,18 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", createdAt: datetime()})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 
     test("should throw when invalid allow when aggregating a Duration field", async () => {
-        const session = await neo4j.getSession({ defaultAccessMode: "WRITE" });
-
         const typeDefs = `
             type Movie {
                 id: ID
@@ -561,7 +471,7 @@ describe("aggregations-top_level authorization", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 authorization: {
@@ -570,22 +480,14 @@ describe("aggregations-top_level authorization", () => {
             },
         });
 
-        try {
-            await session.run(`
+        await testHelper.executeCypher(`
                 CREATE (:Person {id: "${userId}"})-[:DIRECTED]->(:Movie {id: "${movieId}", createdAt: datetime()})
             `);
 
-            const token = createBearerToken(secret, { sub: "invalid" });
+        const token = createBearerToken(secret, { sub: "invalid" });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues({ token }),
-            });
+        const gqlResult = await testHelper.executeGraphQLWithToken(query, token);
 
-            expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.errors as any[])[0].message).toBe("Forbidden");
     });
 });

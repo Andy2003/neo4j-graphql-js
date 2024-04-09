@@ -17,25 +17,21 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/4477", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neo4jGraphql: Neo4jGraphQL;
+    const testHelper = new TestHelper();
 
-    const Brand = new UniqueType("Brand");
-    const Service = new UniqueType("Service");
-    const Collection = new UniqueType("Collection");
+    let Brand: UniqueType;
+    let Service: UniqueType;
+    let Collection: UniqueType;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        Brand = testHelper.createUniqueType("Brand");
+        Service = testHelper.createUniqueType("Service");
+        Collection = testHelper.createUniqueType("Collection");
+
         const typeDefs = /* GraphQL */ `
             type ${Brand} {
                 services: [${Service}!]! @relationship(type: "HAS_SERVICE", direction: OUT)
@@ -51,15 +47,12 @@ describe("https://github.com/neo4j/graphql/issues/4477", () => {
             }
         `;
 
-        neo4jGraphql = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
 
-        const session = await neo4j.getSession();
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE
                         (brand1:${Brand} {name: 'brand1'}),
                         (brand2:${Brand} {name: 'brand2'}),
@@ -77,26 +70,15 @@ describe("https://github.com/neo4j/graphql/issues/4477", () => {
                         (collection1)-[:HAS_SERVICE]->(service2),
                         (collection2)-[:HAS_SERVICE]->(service3)
                 `,
-                {}
-            );
-        } finally {
-            await session.close();
-        }
+            {}
+        );
     });
 
     afterAll(async () => {
-        const session = await neo4j.getSession();
-        try {
-            await cleanNodesUsingSession(session, [Brand, Service, Collection]);
-        } finally {
-            await session.close();
-        }
-        await driver.close();
+        await testHelper.close();
     });
 
     test("filtering by count on an aggregate should work", async () => {
-        const schema = await neo4jGraphql.getSchema();
-
         const query = /* GraphQL */ `
             query {
                 ${Brand.plural} {
@@ -110,11 +92,7 @@ describe("https://github.com/neo4j/graphql/issues/4477", () => {
             }
         `;
 
-        const response = await graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const response = await testHelper.executeGraphQL(query);
 
         expect(response.errors).toBeFalsy();
         expect(response.data).toEqual({

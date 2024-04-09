@@ -23,11 +23,9 @@ import { gql } from "graphql-tag";
 import type { Driver } from "neo4j-driver";
 import { int, isInt } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { delay } from "../../../src/utils/utils";
-import { UniqueType } from "../../utils/graphql-types";
+import type { UniqueType } from "../../utils/graphql-types";
 import { isMultiDbUnsupportedError } from "../../utils/is-multi-db-unsupported-error";
-import Neo4jHelper from "../neo4j";
+import { TestHelper } from "../../utils/tests-helper";
 
 // Adapted from BigInt
 const PositiveInt = new GraphQLScalarType({
@@ -80,22 +78,20 @@ const PositiveInt = new GraphQLScalarType({
 
 describe("https://github.com/neo4j/graphql/issues/915", () => {
     let driver: Driver;
-    let neo4j: Neo4jHelper;
     let databaseName: string;
     let MULTIDB_SUPPORT = true;
     let Order: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        Order = new UniqueType("Order");
+    const testHelper = new TestHelper();
+
+    beforeEach(async () => {
+        driver = await testHelper.getDriver();
+        Order = testHelper.createUniqueType("Order");
 
         databaseName = generate({ readable: true, charset: "alphabetic" });
 
-        const cypher = `CREATE DATABASE ${databaseName} WAIT`;
-        const session = driver.session();
         try {
-            await session.run(cypher);
+            await testHelper.createDatabase(databaseName);
         } catch (e) {
             if (e instanceof Error) {
                 if (isMultiDbUnsupportedError(e)) {
@@ -105,26 +101,16 @@ describe("https://github.com/neo4j/graphql/issues/915", () => {
                     throw e;
                 }
             }
-        } finally {
-            await session.close();
         }
-
-        await delay(5000);
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         if (MULTIDB_SUPPORT) {
-            const cypher = `DROP DATABASE ${databaseName}`;
-
-            const session = await neo4j.getSession();
-            try {
-                await session.run(cypher);
-            } finally {
-                await session.close();
-            }
+            await testHelper.dropDatabase();
         }
-        await driver.close();
+        await testHelper.close();
     });
+
     test("should create a constraint on custom scalar if it doesn't exist and specified in options, and then throw an error in the event of constraint validation", async () => {
         // Skip if multi-db not supported
         if (!MULTIDB_SUPPORT) {
@@ -143,7 +129,7 @@ describe("https://github.com/neo4j/graphql/issues/915", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({
+        const neoSchema = await testHelper.initNeo4jGraphQL({
             typeDefs,
             resolvers: {
                 PositiveInt,

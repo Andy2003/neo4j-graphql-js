@@ -17,34 +17,20 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import Neo4jHelper from "../neo4j";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/832", () => {
-    let schema: GraphQLSchema;
-    let neo4j: Neo4jHelper;
-    let driver: Driver;
-    let session: Session;
+    const testHelper = new TestHelper();
 
-    const Person = new UniqueType("Person");
-    const Place = new UniqueType("Place");
-    const Interaction = new UniqueType("Interaction");
+    let Person: UniqueType;
+    let Place: UniqueType;
+    let Interaction: UniqueType;
 
-    async function graphqlQuery(query: string) {
-        return graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
-    }
-
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+    beforeEach(async () => {
+        Person = testHelper.createUniqueType("Person");
+        Place = testHelper.createUniqueType("Place");
+        Interaction = testHelper.createUniqueType("Interaction");
 
         const typeDefs = `
             interface Entity {
@@ -69,14 +55,9 @@ describe("https://github.com/neo4j/graphql/issues/832", () => {
             }
         `;
 
-        session = await neo4j.getSession();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
-        const neoGraphql = new Neo4jGraphQL({ typeDefs, driver });
-        schema = await neoGraphql.getSchema();
-    });
-
-    beforeEach(async () => {
-        await session.run(`
+        await testHelper.executeCypher(`
             CREATE (:${Person.name} { id: "adam", name: "Adam" })
             CREATE (:${Person.name} { id: "eve", name: "Eve" })
             CREATE (:${Person.name} { id: "cain", name: "Cain" })
@@ -85,19 +66,7 @@ describe("https://github.com/neo4j/graphql/issues/832", () => {
     });
 
     afterEach(async () => {
-        await session.run(`
-            MATCH (p:${Person.name})
-            DETACH DELETE p
-        `);
-        await session.run(`
-            MATCH (i:${Interaction.name})
-            DETACH DELETE i
-        `);
-    });
-
-    afterAll(async () => {
-        await session.close();
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should not create duplicate nodes when creating multiple interactions in separate mutations", async () => {
@@ -123,9 +92,9 @@ describe("https://github.com/neo4j/graphql/issues/832", () => {
             }
         `;
 
-        const mutation0Result = await graphqlQuery(mutation0);
-        expect((mutation0Result.data?.[Interaction.operations.create] as any).info.nodesCreated).toBe(1);
-        expect((mutation0Result.data?.[Interaction.operations.create] as any).info.relationshipsCreated).toBe(3);
+        const mutation0Result = await testHelper.executeGraphQL(mutation0);
+        expect((mutation0Result.data as any)?.[Interaction.operations.create].info.nodesCreated).toBe(1);
+        expect((mutation0Result.data as any)?.[Interaction.operations.create].info.relationshipsCreated).toBe(3);
 
         const mutation1 = `
             mutation {
@@ -149,9 +118,9 @@ describe("https://github.com/neo4j/graphql/issues/832", () => {
             }
         `;
 
-        const mutation1Result = await graphqlQuery(mutation1);
-        expect((mutation1Result.data?.[Interaction.operations.create] as any).info.nodesCreated).toBe(1);
-        expect((mutation1Result.data?.[Interaction.operations.create] as any).info.relationshipsCreated).toBe(3);
+        const mutation1Result = await testHelper.executeGraphQL(mutation1);
+        expect((mutation1Result.data as any)?.[Interaction.operations.create].info.nodesCreated).toBe(1);
+        expect((mutation1Result.data as any)?.[Interaction.operations.create].info.relationshipsCreated).toBe(3);
     });
 
     test("should not create duplicate nodes when creating multiple interactions in one", async () => {
@@ -182,9 +151,9 @@ describe("https://github.com/neo4j/graphql/issues/832", () => {
             }
         `;
 
-        const mutationResult = await graphqlQuery(mutation);
-        expect((mutationResult.data?.[Interaction.operations.create] as any).info.nodesCreated).toBe(2);
-        expect((mutationResult.data?.[Interaction.operations.create] as any).info.relationshipsCreated).toBe(6);
+        const mutationResult = await testHelper.executeGraphQL(mutation);
+        expect((mutationResult.data as any)?.[Interaction.operations.create].info.nodesCreated).toBe(2);
+        expect((mutationResult.data as any)?.[Interaction.operations.create].info.relationshipsCreated).toBe(6);
     });
 
     test("should not create duplicate nodes with no relationships following interface relationship creation", async () => {
@@ -212,8 +181,8 @@ describe("https://github.com/neo4j/graphql/issues/832", () => {
             }
         `;
 
-        const mutationResult = await graphqlQuery(mutation);
-        expect((mutationResult.data?.[Interaction.operations.create] as any).info.nodesCreated).toBe(2);
-        expect((mutationResult.data?.[Interaction.operations.create] as any).info.relationshipsCreated).toBe(2);
+        const mutationResult = await testHelper.executeGraphQL(mutation);
+        expect((mutationResult.data as any)?.[Interaction.operations.create].info.nodesCreated).toBe(2);
+        expect((mutationResult.data as any)?.[Interaction.operations.create].info.relationshipsCreated).toBe(2);
     });
 });

@@ -17,30 +17,21 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
 import { gql } from "graphql-tag";
-import type { Driver, Session } from "neo4j-driver";
 import { int } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
 import { TestSubscriptionsEngine } from "../../utils/TestSubscriptionsEngine";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("Subscriptions to spatial types", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
-    let neoSchema: Neo4jGraphQL;
-    let plugin: TestSubscriptionsEngine;
+    const testHelper = new TestHelper();
 
-    const typeMovie = new UniqueType("Movie");
+    let plugin: TestSubscriptionsEngine;
+    let typeMovie: UniqueType;
 
     beforeEach(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
         plugin = new TestSubscriptionsEngine();
+        typeMovie = testHelper.createUniqueType("Movie");
         const typeDefs = gql`
             type ${typeMovie} {
                 title: String!
@@ -50,28 +41,25 @@ describe("Subscriptions to spatial types", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 subscriptions: plugin,
             },
         });
-        session = await neo4j.getSession();
     });
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [typeMovie]);
-        await session.close();
-        await driver.close();
+        await testHelper.close();
     });
 
     test("create type with Point field", async () => {
-        const longitude1 = parseFloat(faker.location.longitude().toString());
-        const longitude2 = parseFloat(faker.location.longitude().toString());
-        const latitude1 = parseFloat(faker.location.latitude().toString());
-        const latitude2 = parseFloat(faker.location.latitude().toString());
-        const height1 = faker.number.float();
-        const height2 = faker.number.float();
+        const longitude1 = parseFloat("-71.0007");
+        const longitude2 = parseFloat("139.1539");
+        const latitude1 = parseFloat("48.1706");
+        const latitude2 = parseFloat("-50.9324");
+        const height1 = 0.34409760613925755;
+        const height2 = 0.19406892964616418;
 
         const query = `
         mutation CreateMovie($longitude1: Float!, $latitude1: Float!, $height1: Float!, $longitude2: Float!, $latitude2: Float!, $height2: Float!)  {
@@ -101,10 +89,7 @@ describe("Subscriptions to spatial types", () => {
         }
         `;
 
-        const gqlResult: any = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult: any = await testHelper.executeGraphQL(query, {
             variableValues: { longitude1, latitude1, longitude2, latitude2, height1, height2 },
         });
 
@@ -130,25 +115,42 @@ describe("Subscriptions to spatial types", () => {
             },
         ]);
 
-        const result = await session.run(`
+        const result = await testHelper.executeCypher(`
                 MATCH (m: ${typeMovie})
                 WHERE m.title = "As good as it gets" OR  m.title = "Avatar"
                 RETURN m { .title, .filmedIn } as m
             `);
 
-        expect((result.records[0]?.toObject() as any).m.filmedIn.x).toEqual(longitude1);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.y).toEqual(latitude1);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.z).toEqual(height1);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.srid).toEqual(int(4979));
-        expect((result.records[1]?.toObject() as any).m.filmedIn.x).toEqual(longitude2);
-        expect((result.records[1]?.toObject() as any).m.filmedIn.y).toEqual(latitude2);
-        expect((result.records[1]?.toObject() as any).m.filmedIn.z).toEqual(height2);
-        expect((result.records[1]?.toObject() as any).m.filmedIn.srid).toEqual(int(4979));
+        const records = result.records.map((r) => r.toObject());
+        expect(records).toIncludeSameMembers([
+            {
+                m: {
+                    filmedIn: {
+                        x: longitude1,
+                        y: latitude1,
+                        z: height1,
+                        srid: int(4979),
+                    },
+                    title: "As good as it gets",
+                },
+            },
+            {
+                m: {
+                    filmedIn: {
+                        x: longitude2,
+                        y: latitude2,
+                        z: height2,
+                        srid: int(4979),
+                    },
+                    title: "Avatar",
+                },
+            },
+        ]);
 
         expect(plugin.eventList).toEqual(
             expect.arrayContaining([
                 {
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     timestamp: expect.any(Number),
                     event: "create",
                     properties: {
@@ -161,7 +163,7 @@ describe("Subscriptions to spatial types", () => {
                     typename: typeMovie.name,
                 },
                 {
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     timestamp: expect.any(Number),
                     event: "create",
                     properties: {
@@ -177,12 +179,12 @@ describe("Subscriptions to spatial types", () => {
         );
     });
     test("update type with Point field", async () => {
-        const longitude1 = parseFloat(faker.location.longitude().toString());
-        const latitude1 = parseFloat(faker.location.latitude().toString());
-        const height1 = faker.number.float();
-        const newLatitude = parseFloat(faker.location.latitude().toString());
+        const longitude1 = parseFloat("-38.9491");
+        const latitude1 = parseFloat("-75.8207");
+        const height1 = 0.8940616026520729;
+        const newLatitude = parseFloat("-42.7308");
 
-        await session.run(`
+        await testHelper.executeCypher(`
             CALL {
                 CREATE (m:${typeMovie})
                 SET m.title = "As good as it gets"
@@ -212,10 +214,7 @@ describe("Subscriptions to spatial types", () => {
                 }
             }
         `;
-        const gqlResult: any = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult: any = await testHelper.executeGraphQL(query, {
             variableValues: { longitude1, newLatitude, latitude1, height1 },
         });
 
@@ -232,20 +231,28 @@ describe("Subscriptions to spatial types", () => {
             },
         ]);
 
-        const result = await session.run(`
+        const result = await testHelper.executeCypher(`
                 MATCH (m: ${typeMovie})
                 WHERE m.title = "As good as it gets"
                 RETURN m { .title, .filmedIn } as m
             `);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.x).toEqual(longitude1);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.y).toEqual(newLatitude);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.z).toEqual(height1);
-        expect((result.records[0]?.toObject() as any).m.filmedIn.srid).toEqual(int(4979));
+
+        expect(result.records[0]?.toObject()).toEqual({
+            m: {
+                filmedIn: {
+                    x: longitude1,
+                    y: newLatitude,
+                    z: height1,
+                    srid: int(4979),
+                },
+                title: "As good as it gets",
+            },
+        });
 
         expect(plugin.eventList).toEqual(
             expect.arrayContaining([
                 {
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     timestamp: expect.any(Number),
                     event: "update",
                     properties: {
@@ -264,10 +271,10 @@ describe("Subscriptions to spatial types", () => {
         );
     });
     test("query type with Point field and filters", async () => {
-        const longitude = parseFloat(faker.location.longitude().toString());
-        const latitude = parseFloat(faker.location.latitude().toString());
+        const longitude = parseFloat("154.8561");
+        const latitude = parseFloat("73.8678");
 
-        await session.run(`
+        await testHelper.executeCypher(`
             CALL {
                 CREATE (m:${typeMovie})
                 SET m.title = "Up"
@@ -293,10 +300,7 @@ describe("Subscriptions to spatial types", () => {
             }
         `;
 
-        const equalsResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: equalityFilterQuery,
-            contextValue: neo4j.getContextValues(),
+        const equalsResult = await testHelper.executeGraphQL(equalityFilterQuery, {
             variableValues: { longitude, latitude },
         });
 
@@ -326,16 +330,13 @@ describe("Subscriptions to spatial types", () => {
                 }
             `;
 
-        const inResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: inFilterQuery,
-            contextValue: neo4j.getContextValues(),
+        const inResult = await testHelper.executeGraphQL(inFilterQuery, {
             variableValues: {
                 locations: [
                     { longitude, latitude },
                     {
-                        longitude: parseFloat(faker.location.longitude().toString()),
-                        latitude: parseFloat(faker.location.latitude().toString()),
+                        longitude: parseFloat("51.8962"),
+                        latitude: parseFloat("-9.6844"),
                     },
                 ],
             },
@@ -367,19 +368,16 @@ describe("Subscriptions to spatial types", () => {
                 }
             `;
 
-        const notInResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: notInFilterQuery,
-            contextValue: neo4j.getContextValues(),
+        const notInResult = await testHelper.executeGraphQL(notInFilterQuery, {
             variableValues: {
                 locations: [
                     {
-                        longitude: parseFloat(faker.location.longitude().toString()),
-                        latitude: parseFloat(faker.location.latitude().toString()),
+                        longitude: parseFloat("12.4692"),
+                        latitude: parseFloat("55.2318"),
                     },
                     {
-                        longitude: parseFloat(faker.location.longitude().toString()),
-                        latitude: parseFloat(faker.location.latitude().toString()),
+                        longitude: parseFloat("162.6476"),
+                        latitude: parseFloat("-10.2548"),
                     },
                 ],
             },
@@ -398,10 +396,10 @@ describe("Subscriptions to spatial types", () => {
     });
 
     test("create type with CartesianPoint field", async () => {
-        const x1 = faker.number.float();
-        const y1 = faker.number.float();
-        const x2 = faker.number.float();
-        const y2 = faker.number.float();
+        const x1 = 0.8607480155769736;
+        const y1 = 0.6322691068053246;
+        const x2 = 0.21531713823787868;
+        const y2 = 0.8199794858228415;
 
         const query = `
         mutation CreateMovie($x1: Float!, $x2: Float!, $y1: Float!, $y2: Float!)  {
@@ -431,10 +429,7 @@ describe("Subscriptions to spatial types", () => {
         }
         `;
 
-        const gqlResult: any = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult: any = await testHelper.executeGraphQL(query, {
             variableValues: { x1, x2, y1, y2 },
         });
 
@@ -460,58 +455,73 @@ describe("Subscriptions to spatial types", () => {
             },
         ]);
 
-        const result = await session.run(`
+        const result = await testHelper.executeCypher(`
                 MATCH (m: ${typeMovie})
                 WHERE m.title = "As good as it gets" OR  m.title = "Avatar"
                 RETURN m { .title, .location } as m
             `);
 
-        expect((result.records[0]?.toObject() as any).m.location.x).toEqual(x1);
-        expect((result.records[0]?.toObject() as any).m.location.y).toEqual(y1);
-        expect((result.records[0]?.toObject() as any).m.location.z).toBeUndefined();
-        expect((result.records[0]?.toObject() as any).m.location.srid).toEqual(int(7203));
-        expect((result.records[1]?.toObject() as any).m.location.x).toEqual(x2);
-        expect((result.records[1]?.toObject() as any).m.location.y).toEqual(y2);
-        expect((result.records[1]?.toObject() as any).m.location.z).toBeUndefined();
-        expect((result.records[1]?.toObject() as any).m.location.srid).toEqual(int(7203));
+        const records = result.records.map((r) => r.toObject());
+        expect(records).toIncludeSameMembers([
+            {
+                m: {
+                    location: {
+                        x: x1,
+                        y: y1,
+                        z: undefined,
+                        srid: int(7203),
+                    },
+                    title: "As good as it gets",
+                },
+            },
+            {
+                m: {
+                    location: {
+                        x: x2,
+                        y: y2,
+                        z: undefined,
+                        srid: int(7203),
+                    },
+                    title: "Avatar",
+                },
+            },
+        ]);
 
-        expect(plugin.eventList).toEqual(
-            expect.arrayContaining([
-                {
-                    id: expect.any(Number),
-                    timestamp: expect.any(Number),
-                    event: "create",
-                    properties: {
-                        old: undefined,
-                        new: {
-                            title: "As good as it gets",
-                            location: { x: x1, y: y1, z: undefined, srid: { high: 0, low: 7203 } },
-                        },
+        expect(plugin.eventList).toIncludeSameMembers([
+            {
+                id: expect.any(String),
+                timestamp: expect.any(Number),
+                event: "create",
+                properties: {
+                    old: undefined,
+                    new: {
+                        title: "As good as it gets",
+                        location: { x: x1, y: y1, z: undefined, srid: { high: 0, low: 7203 } },
                     },
-                    typename: typeMovie.name,
                 },
-                {
-                    id: expect.any(Number),
-                    timestamp: expect.any(Number),
-                    event: "create",
-                    properties: {
-                        old: undefined,
-                        new: {
-                            title: "Avatar",
-                            location: { x: x2, y: y2, z: undefined, srid: { high: 0, low: 7203 } },
-                        },
+                typename: typeMovie.name,
+            },
+            {
+                id: expect.any(String),
+                timestamp: expect.any(Number),
+                event: "create",
+                properties: {
+                    old: undefined,
+                    new: {
+                        title: "Avatar",
+                        location: { x: x2, y: y2, z: undefined, srid: { high: 0, low: 7203 } },
                     },
-                    typename: typeMovie.name,
                 },
-            ])
-        );
+                typename: typeMovie.name,
+            },
+        ]);
     });
     test("update type with CartesianPoint field", async () => {
-        const x = faker.number.float();
-        const y = faker.number.float();
-        const newY = faker.number.float();
+        const x = 0.8504534482490271;
+        const y = 0.8674011980183423;
+        const newY = 0.142022400861606;
 
-        await session.run(`
+        await testHelper.executeCypher(`
             CALL {
                 CREATE (m:${typeMovie})
                 SET m.title = "As good as it gets"
@@ -541,10 +551,7 @@ describe("Subscriptions to spatial types", () => {
                 }
             }
         `;
-        const gqlResult: any = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult: any = await testHelper.executeGraphQL(query, {
             variableValues: { x, y, newY },
         });
 
@@ -561,21 +568,28 @@ describe("Subscriptions to spatial types", () => {
             },
         ]);
 
-        const result = await session.run(`
+        const result = await testHelper.executeCypher(`
                 MATCH (m: ${typeMovie})
                 WHERE m.title = "As good as it gets" OR  m.title = "Avatar"
                 RETURN m { .title, .location } as m
             `);
 
-        expect((result.records[0]?.toObject() as any).m.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).m.location.y).toEqual(newY);
-        expect((result.records[0]?.toObject() as any).m.location.z).toBeUndefined();
-        expect((result.records[0]?.toObject() as any).m.location.srid).toEqual(int(7203));
+        expect(result.records[0]?.toObject()).toEqual({
+            m: {
+                location: {
+                    x: x,
+                    y: newY,
+                    z: undefined,
+                    srid: int(7203),
+                },
+                title: "As good as it gets",
+            },
+        });
 
         expect(plugin.eventList).toEqual(
             expect.arrayContaining([
                 {
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     timestamp: expect.any(Number),
                     event: "update",
                     properties: {
@@ -595,10 +609,10 @@ describe("Subscriptions to spatial types", () => {
     });
 
     test("query type with CartesianPoint field and filters", async () => {
-        const x = faker.number.float();
-        const y = faker.number.float();
+        const x = 0.8776046128477901;
+        const y = 0.01593078044243157;
 
-        await session.run(`
+        await testHelper.executeCypher(`
             CALL {
                 CREATE (m:${typeMovie})
                 SET m.title = "Up"
@@ -624,10 +638,7 @@ describe("Subscriptions to spatial types", () => {
             }
         `;
 
-        const equalsResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: equalityFilterQuery,
-            contextValue: neo4j.getContextValues(),
+        const equalsResult = await testHelper.executeGraphQL(equalityFilterQuery, {
             variableValues: { x, y },
         });
 
@@ -657,16 +668,13 @@ describe("Subscriptions to spatial types", () => {
                 }
             `;
 
-        const inResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: inFilterQuery,
-            contextValue: neo4j.getContextValues(),
+        const inResult = await testHelper.executeGraphQL(inFilterQuery, {
             variableValues: {
                 locations: [
                     { x, y },
                     {
-                        x: faker.number.float(),
-                        y: faker.number.float(),
+                        x: 0.425140418112278,
+                        y: 0.5120728241745383,
                     },
                 ],
             },
@@ -698,19 +706,16 @@ describe("Subscriptions to spatial types", () => {
                 }
             `;
 
-        const notInResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: notInFilterQuery,
-            contextValue: neo4j.getContextValues(),
+        const notInResult = await testHelper.executeGraphQL(notInFilterQuery, {
             variableValues: {
                 locations: [
                     {
-                        x: faker.number.float(),
-                        y: faker.number.float(),
+                        x: 0.13677962007932365,
+                        y: 0.05952018848620355,
                     },
                     {
-                        x: faker.number.float(),
-                        y: faker.number.float(),
+                        x: 0.993210831657052,
+                        y: 0.3956587021239102,
                     },
                 ],
             },

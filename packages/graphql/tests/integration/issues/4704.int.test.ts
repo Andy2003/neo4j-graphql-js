@@ -17,20 +17,12 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
 import { gql } from "graphql-tag";
-import type { Driver, Session } from "neo4j-driver";
-import Neo4jGraphQL from "../../../src/classes/Neo4jGraphQL";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/4704", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
-    let neoSchema: Neo4jGraphQL;
+    const testHelper = new TestHelper();
 
     let Movie: UniqueType;
     let Series: UniqueType;
@@ -52,17 +44,11 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
     let seriesScreenTime;
     let episodeNr;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
     beforeEach(async () => {
-        Movie = new UniqueType("Movie");
-        Series = new UniqueType("Series");
-        Actor = new UniqueType("Actor");
-        Episode = new UniqueType("Episode");
-        session = await neo4j.getSession();
+        Movie = testHelper.createUniqueType("Movie");
+        Series = testHelper.createUniqueType("Series");
+        Actor = testHelper.createUniqueType("Actor");
+        Episode = testHelper.createUniqueType("Episode");
 
         const typeDefs = gql`
             type ${Episode} {
@@ -103,7 +89,7 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
         });
         actorName = "actor1";
@@ -113,15 +99,15 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
 
         movieTitle = "movie1";
         movieTitle2 = "movie2";
-        movieRuntime = faker.number.int({ max: 100000 });
-        movieScreenTime = faker.number.int({ max: 100000 });
+        movieRuntime = 32607;
+        movieScreenTime = 16903;
 
         seriesTitle = "series1";
-        seriesEpisodes = faker.number.int({ max: 100000 });
-        seriesScreenTime = faker.number.int({ max: 100000 });
-        episodeNr = faker.number.int({ max: 100000 });
+        seriesEpisodes = 42394;
+        seriesScreenTime = 2922;
+        episodeNr = 47931;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${Actor} { name: $actorName })
                 CREATE (a2:${Actor} { name: $actorName2 })
@@ -157,12 +143,7 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
     });
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [Movie, Series, Actor, Episode]);
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("Connection ALL operator should be true for all the shows implementations", async () => {
@@ -178,12 +159,7 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-            variableValues: {},
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeFalsy();
         expect(gqlResult.data?.[Actor.plural]).toEqual(
@@ -208,12 +184,7 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-            variableValues: {},
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeFalsy();
         expect(gqlResult.data?.[Actor.plural]).toEqual([
@@ -238,12 +209,7 @@ describe("https://github.com/neo4j/graphql/issues/4704", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-            variableValues: {},
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeFalsy();
         expect(gqlResult.data?.[Actor.plural]).toEqual(

@@ -17,29 +17,21 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/1249", () => {
-    let schema: GraphQLSchema;
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
+    const testHelper = new TestHelper();
 
     let Bulk: UniqueType;
     let Material: UniqueType;
     let Supplier: UniqueType;
     let typeDefs: string;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        Bulk = new UniqueType("Bulk");
-        Material = new UniqueType("Material");
-        Supplier = new UniqueType("Supplier");
+    beforeAll(() => {
+        Bulk = testHelper.createUniqueType("Bulk");
+        Material = testHelper.createUniqueType("Material");
+        Supplier = testHelper.createUniqueType("Supplier");
         typeDefs = `
         type ${Bulk}
             @mutation(operations: [])
@@ -70,15 +62,13 @@ describe("https://github.com/neo4j/graphql/issues/1249", () => {
     });
 
     afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should pass the cypherParams from the context correctly at the top level translate", async () => {
-        const neoGraphql = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
-        schema = await neoGraphql.getSchema();
 
         const query = /* GraphQL */ `
             query {
@@ -101,10 +91,8 @@ describe("https://github.com/neo4j/graphql/issues/1249", () => {
             }
         `;
 
-        const res = await graphql({
-            schema,
-            source: query,
-            contextValue: neo4j.getContextValues({ cypherParams: { tenant: "BULK" } }),
+        const res = await testHelper.executeGraphQL(query, {
+            contextValue: { cypherParams: { tenant: "BULK" } },
         });
 
         expect(res.errors).toBeUndefined();

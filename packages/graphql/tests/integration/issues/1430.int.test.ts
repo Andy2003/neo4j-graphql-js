@@ -17,25 +17,20 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/1430", () => {
-    const testAbce = new UniqueType("ABCE");
-    const testChildOne = new UniqueType("ChildOne");
-    const testChildTwo = new UniqueType("ChildTwo");
+    let testAbce: UniqueType;
+    let testChildOne: UniqueType;
+    let testChildTwo: UniqueType;
 
-    let schema: GraphQLSchema;
-    let neo4j: Neo4jHelper;
-    let driver: Driver;
+    const testHelper = new TestHelper();
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        testAbce = testHelper.createUniqueType("ABCE");
+        testChildOne = testHelper.createUniqueType("ChildOne");
+        testChildTwo = testHelper.createUniqueType("ChildTwo");
 
         const typeDefs = `
             type ${testAbce.name} {
@@ -62,16 +57,13 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const neoGraphql = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
-
-        schema = await neoGraphql.getSchema();
     });
 
     afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should not allow to create more than one node for a one-to-one relationship", async () => {
@@ -104,11 +96,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const createMutationResults = await graphql({
-            schema,
-            source: createMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const createMutationResults = await testHelper.executeGraphQL(createMutation);
 
         expect(createMutationResults.errors).toHaveLength(1);
         expect(createMutationResults.errors?.[0]?.message).toBe(
@@ -146,11 +134,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const createMutationResults = await graphql({
-            schema,
-            source: createMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const createMutationResults = await testHelper.executeGraphQL(createMutation);
 
         expect(createMutationResults.errors).toBeUndefined();
         expect(createMutationResults.data as any).toEqual({
@@ -188,11 +172,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const updateMutationResults = await graphql({
-            schema,
-            source: updateMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const updateMutationResults = await testHelper.executeGraphQL(updateMutation);
 
         expect(updateMutationResults.errors).toHaveLength(1);
         expect(updateMutationResults.errors?.[0]?.message).toContain(
@@ -230,11 +210,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const createMutationResults = await graphql({
-            schema,
-            source: createMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const createMutationResults = await testHelper.executeGraphQL(createMutation);
 
         expect(createMutationResults.errors).toBeUndefined();
         expect(createMutationResults.data as any).toEqual({
@@ -273,11 +249,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const updateMutationResults = await graphql({
-            schema,
-            source: updateMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const updateMutationResults = await testHelper.executeGraphQL(updateMutation);
 
         expect(updateMutationResults.errors).toHaveLength(1);
         expect(updateMutationResults.errors?.[0]?.message).toContain(
@@ -315,11 +287,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const createMutationResults = await graphql({
-            schema,
-            source: createMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const createMutationResults = await testHelper.executeGraphQL(createMutation);
 
         expect(createMutationResults.errors).toBeUndefined();
         expect(createMutationResults.data as any).toEqual({
@@ -358,11 +326,7 @@ describe("https://github.com/neo4j/graphql/issues/1430", () => {
             }
         `;
 
-        const updateMutationResults = await graphql({
-            schema,
-            source: updateMutation,
-            contextValue: neo4j.getContextValues(),
-        });
+        const updateMutationResults = await testHelper.executeGraphQL(updateMutation);
 
         expect(updateMutationResults.errors).toHaveLength(1);
         expect(updateMutationResults.errors?.[0]?.message).toContain(

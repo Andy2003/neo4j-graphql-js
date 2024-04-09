@@ -17,63 +17,65 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../../../src/classes";
-import { UniqueType } from "../../../../utils/graphql-types";
-import Neo4jHelper from "../../../neo4j";
+import type { UniqueType } from "../../../../utils/graphql-types";
+import { TestHelper } from "../../../../utils/tests-helper";
 
 describe("aggregations-where-node-int", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
+    let testHelper: TestHelper;
     let User: UniqueType;
     let Post: UniqueType;
+    let Person: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        User = new UniqueType("User");
-        Post = new UniqueType("Post");
+    beforeEach(async () => {
+        testHelper = new TestHelper();
+        User = testHelper.createUniqueType("User");
+        Post = testHelper.createUniqueType("Post");
+        Person = testHelper.createUniqueType("Person");
+
         const typeDefs = `
-            type ${User} {
+        interface Human {
+            testString: String!
+            someInt: Int!
+        }
+
+        type ${Person} implements Human {
+            testString: String!
+            someInt: Int!
+        }
+            type ${User} implements Human {
                 testString: String!
                 someInt: Int!
             }
     
             type ${Post} {
               testString: String!
-              likes: [${User}!]! @relationship(type: "LIKES", direction: IN)
+              likes: [Human!]! @relationship(type: "LIKES", direction: IN)
             }
         `;
-        neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
     });
 
-    afterAll(async () => {
-        await driver.close();
+    afterEach(async () => {
+        await testHelper.close();
     });
 
     test("should return posts where a like Int is EQUAL to", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(67883);
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_EQUAL: ${someInt} } } }) {
                         testString
@@ -85,45 +87,35 @@ describe("aggregations-where-node-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString, someInt }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
     });
 
     test("should return posts where a like Float is GT than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(38531);
         const someIntGt = someInt - 1;
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_GT: ${someIntGt} } } }) {
                         testString
@@ -135,44 +127,34 @@ describe("aggregations-where-node-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString, someInt }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
     });
 
     test("should return posts where a like Float is GTE than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(33494);
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_GTE: ${someInt} } } }) {
                         testString
@@ -184,45 +166,35 @@ describe("aggregations-where-node-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString, someInt }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
     });
 
     test("should return posts where a like Float is LT than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(64621);
         const someIntLT = someInt + 1;
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_LT: ${someIntLT} } } }) {
                         testString
@@ -234,44 +206,34 @@ describe("aggregations-where-node-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString, someInt }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
     });
 
     test("should return posts where a like Float is LTE than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(84082);
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_LTE: ${someInt} } } }) {
                         testString
@@ -283,23 +245,16 @@ describe("aggregations-where-node-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString, someInt }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
     });
 
     describe("AVERAGE", () => {
@@ -308,8 +263,6 @@ describe("aggregations-where-node-int", () => {
         const someInt3 = 3;
 
         test("should return posts where the average of like Int's is EQUAL to", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -317,18 +270,17 @@ describe("aggregations-where-node-int", () => {
 
             const avg = (someInt1 + someInt2 + someInt3) / 3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_EQUAL: ${avg} } } }) {
                             testString
@@ -340,25 +292,15 @@ describe("aggregations-where-node-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
+            expect(gqlResult.errors).toBeUndefined();
 
-                expect(gqlResult.errors).toBeUndefined();
-
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of like Int's is GT than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -367,18 +309,17 @@ describe("aggregations-where-node-int", () => {
             const avg = (someInt1 + someInt2 + someInt3) / 3;
             const avgGT = avg - 1;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_GT: ${avgGT} } } }) {
                             testString
@@ -390,25 +331,16 @@ describe("aggregations-where-node-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of like Int's is GTE than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -416,18 +348,17 @@ describe("aggregations-where-node-int", () => {
 
             const avg = (someInt1 + someInt2 + someInt3) / 3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_GTE: ${avg} } } }) {
                             testString
@@ -439,25 +370,16 @@ describe("aggregations-where-node-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of like Int's is LT than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -466,18 +388,17 @@ describe("aggregations-where-node-int", () => {
             const avg = (someInt1 + someInt2 + someInt3) / 3;
             const avgLT = avg + 1;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_LT: ${avgLT} } } }) {
                             testString
@@ -489,25 +410,16 @@ describe("aggregations-where-node-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of like Int's is LTE than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -515,18 +427,17 @@ describe("aggregations-where-node-int", () => {
 
             const avg = (someInt1 + someInt2 + someInt3) / 3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_LTE: ${avg} } } }) {
                             testString
@@ -538,27 +449,17 @@ describe("aggregations-where-node-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
+            expect(gqlResult.errors).toBeUndefined();
 
-                expect(gqlResult.errors).toBeUndefined();
-
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
     });
 
     describe("sum", () => {
         test("should return posts where the sum of like Int's is EQUAL to", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -570,18 +471,17 @@ describe("aggregations-where-node-int", () => {
 
             const sum = someInt1 + someInt2 + someInt3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
                         CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_SUM_EQUAL: ${sum} } } }) {
                             testString
@@ -593,20 +493,496 @@ describe("aggregations-where-node-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
+        });
+    });
+});
+
+describe("aggregations-where-node-int interface relationships of concrete types", () => {
+    let testHelper: TestHelper;
+    let User: UniqueType;
+    let Post: UniqueType;
+    let Person: UniqueType;
+
+    beforeEach(async () => {
+        testHelper = new TestHelper();
+        User = testHelper.createUniqueType("User");
+        Post = testHelper.createUniqueType("Post");
+        Person = testHelper.createUniqueType("Person");
+        const typeDefs = `
+        interface Human {
+            testString: String!
+            someInt: Int!
+        }
+
+        type ${Person} implements Human {
+            testString: String!
+            someInt: Int!
+        }
+            type ${User} implements Human {
+                testString: String!
+                someInt: Int!
             }
+    
+            type ${Post} {
+              testString: String!
+              likes: [Human!]! @relationship(type: "LIKES", direction: IN)
+            }
+        `;
+        await testHelper.initNeo4jGraphQL({ typeDefs });
+    });
+
+    afterEach(async () => {
+        await testHelper.close();
+    });
+
+    test("should return posts where a like Int is EQUAL to", async () => {
+        const testString = generate({
+            charset: "alphabetic",
+            readable: true,
+        });
+
+        const someInt = Number(10628);
+
+        await testHelper.executeCypher(
+            `
+                    CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
+                    CREATE (:${Post} {testString: "${testString}"})
+                `
+        );
+
+        const query = `
+                {
+                    ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_EQUAL: ${someInt} } } }) {
+                        testString
+                        likes {
+                            testString
+                            someInt
+                        }
+                    }
+                }
+            `;
+
+        const gqlResult = await testHelper.executeGraphQL(query);
+
+        expect(gqlResult.errors).toBeUndefined();
+
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
+    });
+
+    test("should return posts where a like Float is GT than", async () => {
+        const testString = generate({
+            charset: "alphabetic",
+            readable: true,
+        });
+
+        const someInt = Number(28724);
+        const someIntGt = someInt - 1;
+
+        await testHelper.executeCypher(
+            `
+                    CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
+                    CREATE (:${Post} {testString: "${testString}"})
+                `
+        );
+
+        const query = `
+                {
+                    ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_GT: ${someIntGt} } } }) {
+                        testString
+                        likes {
+                            testString
+                            someInt
+                        }
+                    }
+                }
+            `;
+
+        const gqlResult = await testHelper.executeGraphQL(query);
+
+        expect(gqlResult.errors).toBeUndefined();
+
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
+    });
+
+    test("should return posts where a like Float is GTE than", async () => {
+        const testString = generate({
+            charset: "alphabetic",
+            readable: true,
+        });
+
+        const someInt = Number(86262);
+
+        await testHelper.executeCypher(
+            `
+                    CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
+                    CREATE (:${Post} {testString: "${testString}"})
+                `
+        );
+
+        const query = `
+                {
+                    ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_GTE: ${someInt} } } }) {
+                        testString
+                        likes {
+                            testString
+                            someInt
+                        }
+                    }
+                }
+            `;
+
+        const gqlResult = await testHelper.executeGraphQL(query);
+
+        expect(gqlResult.errors).toBeUndefined();
+
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
+    });
+
+    test("should return posts where a like Float is LT than", async () => {
+        const testString = generate({
+            charset: "alphabetic",
+            readable: true,
+        });
+
+        const someInt = Number(89902);
+        const someIntLT = someInt + 1;
+
+        await testHelper.executeCypher(
+            `
+                    CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
+                    CREATE (:${Post} {testString: "${testString}"})
+                `
+        );
+
+        const query = `
+                {
+                    ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_LT: ${someIntLT} } } }) {
+                        testString
+                        likes {
+                            testString
+                            someInt
+                        }
+                    }
+                }
+            `;
+
+        const gqlResult = await testHelper.executeGraphQL(query);
+
+        expect(gqlResult.errors).toBeUndefined();
+
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
+    });
+
+    test("should return posts where a like Float is LTE than", async () => {
+        const testString = generate({
+            charset: "alphabetic",
+            readable: true,
+        });
+
+        const someInt = Number(78777);
+
+        await testHelper.executeCypher(
+            `
+                    CREATE (:${Post} {testString: "${testString}"})<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt}})
+                    CREATE (:${Post} {testString: "${testString}"})
+                `
+        );
+
+        const query = `
+                {
+                    ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_LTE: ${someInt} } } }) {
+                        testString
+                        likes {
+                            testString
+                            someInt
+                        }
+                    }
+                }
+            `;
+
+        const gqlResult = await testHelper.executeGraphQL(query);
+
+        expect(gqlResult.errors).toBeUndefined();
+
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString, someInt }],
+            },
+        ]);
+    });
+
+    describe("AVERAGE", () => {
+        const someInt1 = 1;
+        const someInt2 = 2;
+        const someInt3 = 3;
+
+        test("should return posts where the average of like Int's is EQUAL to", async () => {
+            const testString = generate({
+                charset: "alphabetic",
+                readable: true,
+            });
+
+            const avg = (someInt1 + someInt2 + someInt3) / 3;
+
+            await testHelper.executeCypher(
+                `
+                        CREATE (p:${Post} {testString: "${testString}"})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
+                        CREATE (:${Post} {testString: "${testString}"})
+                    `
+            );
+
+            const query = `
+                    {
+                        ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_EQUAL: ${avg} } } }) {
+                            testString
+                            likes {
+                                testString
+                                someInt
+                            }
+                        }
+                    }
+                `;
+
+            const gqlResult = await testHelper.executeGraphQL(query);
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
+        });
+
+        test("should return posts where the average of like Int's is GT than", async () => {
+            const testString = generate({
+                charset: "alphabetic",
+                readable: true,
+            });
+
+            const avg = (someInt1 + someInt2 + someInt3) / 3;
+            const avgGT = avg - 1;
+
+            await testHelper.executeCypher(
+                `
+                        CREATE (p:${Post} {testString: "${testString}"})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
+                        CREATE (:${Post} {testString: "${testString}"})
+                    `
+            );
+
+            const query = `
+                    {
+                        ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_GT: ${avgGT} } } }) {
+                            testString
+                            likes {
+                                testString
+                                someInt
+                            }
+                        }
+                    }
+                `;
+
+            const gqlResult = await testHelper.executeGraphQL(query);
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
+        });
+
+        test("should return posts where the average of like Int's is GTE than", async () => {
+            const testString = generate({
+                charset: "alphabetic",
+                readable: true,
+            });
+
+            const avg = (someInt1 + someInt2 + someInt3) / 3;
+
+            await testHelper.executeCypher(
+                `
+                        CREATE (p:${Post} {testString: "${testString}"})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
+                        CREATE (:${Post} {testString: "${testString}"})
+                    `
+            );
+
+            const query = `
+                    {
+                        ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_GTE: ${avg} } } }) {
+                            testString
+                            likes {
+                                testString
+                                someInt
+                            }
+                        }
+                    }
+                `;
+
+            const gqlResult = await testHelper.executeGraphQL(query);
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
+        });
+
+        test("should return posts where the average of like Int's is LT than", async () => {
+            const testString = generate({
+                charset: "alphabetic",
+                readable: true,
+            });
+
+            const avg = (someInt1 + someInt2 + someInt3) / 3;
+            const avgLT = avg + 1;
+
+            await testHelper.executeCypher(
+                `
+                        CREATE (p:${Post} {testString: "${testString}"})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
+                        CREATE (:${Post} {testString: "${testString}"})
+                    `
+            );
+
+            const query = `
+                    {
+                        ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_LT: ${avgLT} } } }) {
+                            testString
+                            likes {
+                                testString
+                                someInt
+                            }
+                        }
+                    }
+                `;
+
+            const gqlResult = await testHelper.executeGraphQL(query);
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
+        });
+
+        test("should return posts where the average of like Int's is LTE than", async () => {
+            const testString = generate({
+                charset: "alphabetic",
+                readable: true,
+            });
+
+            const avg = (someInt1 + someInt2 + someInt3) / 3;
+
+            await testHelper.executeCypher(
+                `
+                        CREATE (p:${Post} {testString: "${testString}"})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
+                        CREATE (:${Post} {testString: "${testString}"})
+                    `
+            );
+
+            const query = `
+                    {
+                        ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_AVERAGE_LTE: ${avg} } } }) {
+                            testString
+                            likes {
+                                testString
+                                someInt
+                            }
+                        }
+                    }
+                `;
+
+            const gqlResult = await testHelper.executeGraphQL(query);
+
+            expect(gqlResult.errors).toBeUndefined();
+
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
+        });
+    });
+
+    describe("sum", () => {
+        test("should return posts where the sum of like Int's is EQUAL to", async () => {
+            const testString = generate({
+                charset: "alphabetic",
+                readable: true,
+            });
+
+            const someInt1 = 1;
+            const someInt2 = 2;
+            const someInt3 = 3;
+
+            const sum = someInt1 + someInt2 + someInt3;
+
+            await testHelper.executeCypher(
+                `
+                        CREATE (p:${Post} {testString: "${testString}"})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt1}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt2}})
+                        CREATE (p)<-[:LIKES]-(:${User} {testString: "${testString}", someInt: ${someInt3}})
+                        CREATE (:${Post} {testString: "${testString}"})
+                    `
+            );
+
+            const query = `
+                    {
+                        ${Post.plural}(where: { testString: "${testString}", likesAggregate: { node: { someInt_SUM_EQUAL: ${sum} } } }) {
+                            testString
+                            likes {
+                                testString
+                                someInt
+                            }
+                        }
+                    }
+                `;
+
+            const gqlResult = await testHelper.executeGraphQL(query);
+            expect(gqlResult.errors).toBeUndefined();
+
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
     });
 });

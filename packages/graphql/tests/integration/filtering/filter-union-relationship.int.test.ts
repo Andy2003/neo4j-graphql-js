@@ -17,35 +17,21 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("union relationships", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
-    let neoSchema: Neo4jGraphQL;
+    const testHelper = new TestHelper();
 
     let typeMovie: UniqueType;
     let typeSeries: UniqueType;
     let typeActor: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
     beforeEach(async () => {
-        typeMovie = new UniqueType("Movie");
-        typeSeries = new UniqueType("Series");
-        typeActor = new UniqueType("Actor");
-        session = await neo4j.getSession();
+        typeMovie = testHelper.createUniqueType("Movie");
+        typeSeries = testHelper.createUniqueType("Series");
+        typeActor = testHelper.createUniqueType("Actor");
 
         const typeDefs = /* GraphQL */ `
         type ${typeMovie}  {
@@ -71,17 +57,13 @@ describe("union relationships", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
         });
     });
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [typeActor, typeMovie, typeSeries]);
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should read and return union relationship fields with union relationship filter SOME", async () => {
@@ -102,15 +84,15 @@ describe("union relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const movieScreenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 18723;
+        const movieScreenTime = 83582;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
-        const seriesEpisodes = faker.number.int({ max: 100000 });
-        const seriesScreenTime = faker.number.int({ max: 100000 });
+        const seriesEpisodes = 50148;
+        const seriesScreenTime = 8697;
 
         const query = /* GraphQL */ `
             query Actors($title: String) {
@@ -130,7 +112,7 @@ describe("union relationships", () => {
             }
         `;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${typeActor} { name: $actorName })
                 CREATE (a)-[:ACTED_IN { screenTime: $movieScreenTime }]->(:${typeMovie} { title: $movieTitle, runtime:$movieRuntime })
@@ -151,10 +133,7 @@ describe("union relationships", () => {
             }
         );
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { title: movieTitle2 },
         });
 
@@ -189,15 +168,15 @@ describe("union relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const movieScreenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 61632;
+        const movieScreenTime = 69036;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
-        const seriesEpisodes = faker.number.int({ max: 100000 });
-        const seriesScreenTime = faker.number.int({ max: 100000 });
+        const seriesEpisodes = 61753;
+        const seriesScreenTime = 51960;
 
         const query = /* GraphQL */ `
             query Actors($title: String) {
@@ -217,7 +196,7 @@ describe("union relationships", () => {
             }
         `;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${typeActor} { name: $actorName })
                 CREATE (m:${typeMovie} { title: $movieTitle, runtime:$movieRuntime })
@@ -238,10 +217,7 @@ describe("union relationships", () => {
             }
         );
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { title: movieTitle },
         });
 
@@ -289,15 +265,15 @@ describe("union relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const movieScreenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 25423;
+        const movieScreenTime = 26354;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
-        const seriesEpisodes = faker.number.int({ max: 100000 });
-        const seriesScreenTime = faker.number.int({ max: 100000 });
+        const seriesEpisodes = 36248;
+        const seriesScreenTime = 74985;
 
         const query = /* GraphQL */ `
             query Actors($title: String) {
@@ -317,7 +293,7 @@ describe("union relationships", () => {
             }
         `;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${typeActor} { name: $actorName })
                 CREATE (m:${typeMovie} { title: $movieTitle, runtime:$movieRuntime })
@@ -339,10 +315,7 @@ describe("union relationships", () => {
             }
         );
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { title: movieTitle },
         });
 
@@ -381,15 +354,15 @@ describe("union relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const movieScreenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 24426;
+        const movieScreenTime = 65872;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
-        const seriesEpisodes = faker.number.int({ max: 100000 });
-        const seriesScreenTime = faker.number.int({ max: 100000 });
+        const seriesEpisodes = 84714;
+        const seriesScreenTime = 26046;
 
         const query = /* GraphQL */ `
             query Actors($title: String) {
@@ -409,7 +382,7 @@ describe("union relationships", () => {
             }
         `;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${typeActor} { name: $actorName })
                 CREATE (m:${typeMovie} { title: $movieTitle, runtime:$movieRuntime })
@@ -430,10 +403,7 @@ describe("union relationships", () => {
             }
         );
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { title: movieTitle },
         });
 
@@ -462,15 +432,15 @@ describe("union relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const movieScreenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 55815;
+        const movieScreenTime = 86611;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
-        const seriesEpisodes = faker.number.int({ max: 100000 });
-        const seriesScreenTime = faker.number.int({ max: 100000 });
+        const seriesEpisodes = 61405;
+        const seriesScreenTime = 64097;
 
         const query = /* GraphQL */ `
             query Actors($title: String) {
@@ -490,7 +460,7 @@ describe("union relationships", () => {
             }
         `;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${typeActor} { name: $actorName })
                 CREATE (m:${typeMovie} { title: $movieTitle, runtime:$movieRuntime })
@@ -513,10 +483,7 @@ describe("union relationships", () => {
             }
         );
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { title: movieTitle2 },
         });
 
@@ -559,15 +526,15 @@ describe("union relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const movieScreenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 9931;
+        const movieScreenTime = 29383;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
-        const seriesEpisodes = faker.number.int({ max: 100000 });
-        const seriesScreenTime = faker.number.int({ max: 100000 });
+        const seriesEpisodes = 15912;
+        const seriesScreenTime = 72093;
 
         const query = /* GraphQL */ `
             query Actors($title: String) {
@@ -587,7 +554,7 @@ describe("union relationships", () => {
             }
         `;
 
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${typeActor} { name: $actorName })
                 CREATE (m:${typeMovie} { title: $movieTitle, runtime:$movieRuntime })
@@ -610,10 +577,7 @@ describe("union relationships", () => {
             }
         );
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { title: movieTitle2 },
         });
 

@@ -17,36 +17,26 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../../src/classes";
 import { TestSubscriptionsEngine } from "../../../utils/TestSubscriptionsEngine";
-import { cleanNodesUsingSession } from "../../../utils/clean-nodes";
-import { UniqueType } from "../../../utils/graphql-types";
-import Neo4jHelper from "../../neo4j";
+import type { UniqueType } from "../../../utils/graphql-types";
+import { TestHelper } from "../../../utils/tests-helper";
 
 describe("interface relationships", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
+    const testHelper = new TestHelper();
     let subscriptionsPlugin: TestSubscriptionsEngine;
     let typeDefs: string;
-    let session: Session;
+
     let Episode: UniqueType;
     let Movie: UniqueType;
     let Series: UniqueType;
     let Actor: UniqueType;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-
-        Episode = new UniqueType("Episode");
-        Movie = new UniqueType("Movie");
-        Series = new UniqueType("Series");
-        Actor = new UniqueType("Actor");
+    beforeAll(() => {
+        Episode = testHelper.createUniqueType("Episode");
+        Movie = testHelper.createUniqueType("Movie");
+        Series = testHelper.createUniqueType("Series");
+        Actor = testHelper.createUniqueType("Actor");
 
         typeDefs = /* GraphQL */ `
             type ${Episode} {
@@ -82,9 +72,9 @@ describe("interface relationships", () => {
         `;
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
         subscriptionsPlugin = new TestSubscriptionsEngine();
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
             features: {
                 subscriptions: subscriptionsPlugin,
@@ -92,18 +82,8 @@ describe("interface relationships", () => {
         });
     });
 
-    beforeEach(async () => {
-        session = await neo4j.getSession();
-    });
-
     afterEach(async () => {
-        await session.close();
-    });
-
-    afterAll(async () => {
-        const session = await neo4j.getSession();
-        await cleanNodesUsingSession(session, [Actor, Movie, Series, Episode]);
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should create create nested nodes using interface relationship fields", async () => {
@@ -120,15 +100,15 @@ describe("interface relationships", () => {
             readable: true,
             charset: "alphabetic",
         });
-        const movieRuntime = faker.number.int({ max: 100000 });
-        const screenTime = faker.number.int({ max: 100000 });
+        const movieRuntime = 44706;
+        const screenTime = 70531;
 
         const seriesTitle = generate({
             readable: true,
             charset: "alphabetic",
         });
 
-        const episodeRuntime = faker.number.int({ max: 100000 });
+        const episodeRuntime = 27151;
 
         const query = `
             mutation CreateActorConnectMovie(
@@ -196,10 +176,7 @@ describe("interface relationships", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: {
                 name1,
                 name2,
@@ -240,7 +217,7 @@ describe("interface relationships", () => {
             expect.arrayContaining([
                 {
                     event: "create",
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     properties: {
                         new: {
                             name: name2,
@@ -252,7 +229,7 @@ describe("interface relationships", () => {
                 },
                 {
                     event: "create",
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     properties: {
                         new: {
                             runtime: movieRuntime,
@@ -265,7 +242,7 @@ describe("interface relationships", () => {
                 },
                 {
                     event: "create",
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     properties: {
                         new: {
                             runtime: episodeRuntime,
@@ -277,7 +254,7 @@ describe("interface relationships", () => {
                 },
                 {
                     event: "create",
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     properties: {
                         new: {
                             title: seriesTitle,
@@ -289,7 +266,7 @@ describe("interface relationships", () => {
                 },
                 {
                     event: "create",
-                    id: expect.any(Number),
+                    id: expect.any(String),
                     properties: {
                         new: {
                             name: name1,

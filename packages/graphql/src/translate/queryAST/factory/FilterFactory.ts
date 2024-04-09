@@ -153,6 +153,7 @@ export class FilterFactory {
                         return this.createInterfaceNodeFilters({
                             entity,
                             whereFields: value,
+                            relationship: rel,
                         });
                     }
                     return this.createNodeFilters(entity, value);
@@ -164,12 +165,14 @@ export class FilterFactory {
 
     protected createPropertyFilter({
         attribute,
+        relationship,
         comparisonValue,
         operator,
         isNot,
         attachedTo,
     }: {
         attribute: AttributeAdapter;
+        relationship?: RelationshipAdapter;
         comparisonValue: unknown;
         operator: WhereOperator | undefined;
         isNot: boolean;
@@ -197,6 +200,7 @@ export class FilterFactory {
 
         return new PropertyFilter({
             attribute,
+            relationship,
             comparisonValue,
             isNot,
             operator: filterOperator,
@@ -267,10 +271,12 @@ export class FilterFactory {
         entity,
         targetEntity,
         whereFields,
+        relationship,
     }: {
         entity: InterfaceEntityAdapter;
         targetEntity?: ConcreteEntityAdapter;
         whereFields: Record<string, any>;
+        relationship?: RelationshipAdapter;
     }): Filter[] {
         const filters = filterTruthy(
             Object.entries(whereFields).flatMap(([key, value]): Filter | Filter[] | undefined => {
@@ -317,6 +323,7 @@ export class FilterFactory {
                 }
                 return this.createPropertyFilter({
                     attribute: attr,
+                    relationship,
                     comparisonValue: value,
                     isNot,
                     operator,
@@ -527,7 +534,8 @@ export class FilterFactory {
                 if (fieldName === "node") {
                     return this.createAggregationNodeFilters(
                         value as Record<string, any>,
-                        relationship.target as ConcreteEntityAdapter
+                        relationship.target as InterfaceEntityAdapter | ConcreteEntityAdapter,
+                        relationship
                     );
                 }
 
@@ -552,11 +560,12 @@ export class FilterFactory {
 
     private createAggregationNodeFilters(
         where: Record<string, any>,
-        entity: ConcreteEntityAdapter | RelationshipAdapter
+        entity: ConcreteEntityAdapter | RelationshipAdapter | InterfaceEntityAdapter,
+        relationship?: RelationshipAdapter
     ): Array<AggregationPropertyFilter | LogicalFilter> {
         const filters = Object.entries(where).map(([key, value]) => {
             if (isLogicalOperator(key)) {
-                return this.createAggregateLogicalFilter(key, value, entity);
+                return this.createAggregateLogicalFilter(key, value, entity, relationship);
             }
             // NOTE: if aggregationOperator is undefined, maybe we could return a normal PropertyFilter instead
             const { fieldName, logicalOperator, aggregationOperator } = parseAggregationWhereFields(key);
@@ -578,6 +587,7 @@ export class FilterFactory {
 
             return new AggregationPropertyFilter({
                 attribute: attr,
+                relationship,
                 comparisonValue: value,
                 logicalOperator: logicalOperator || "EQUAL",
                 aggregationOperator: aggregationOperator,
@@ -612,10 +622,11 @@ export class FilterFactory {
     private createAggregateLogicalFilter(
         operation: "OR" | "AND" | "NOT",
         where: GraphQLWhereArg[] | GraphQLWhereArg,
-        entity: ConcreteEntityAdapter | RelationshipAdapter
+        entity: ConcreteEntityAdapter | RelationshipAdapter | InterfaceEntityAdapter,
+        relationship?: RelationshipAdapter
     ): LogicalFilter {
         const filters = asArray(where).flatMap((nestedWhere) => {
-            return this.createAggregationNodeFilters(nestedWhere, entity);
+            return this.createAggregationNodeFilters(nestedWhere, entity, relationship);
         });
         return new LogicalFilter({
             operation,

@@ -17,44 +17,24 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
 import { gql } from "graphql-tag";
-import type { Driver, Session } from "neo4j-driver";
 import { generate } from "randomstring";
-
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("array-push", () => {
-    let driver: Driver;
-    let session: Session;
-    let neo4j: Neo4jHelper;
-
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
-    afterAll(async () => {
-        await driver.close();
-    });
-
-    beforeEach(async () => {
-        session = await neo4j.getSession();
-    });
+    const testHelper = new TestHelper();
 
     afterEach(async () => {
-        await session.close();
+        await testHelper.close();
     });
 
-    const date = new Date().toISOString();
+    const date = "2024-03-25T11:07:37.122Z";
     const expectedDateOutput = date.split("T")[0];
-    const time = faker.date.past().toISOString().split("T")[1] as string;
+    const time = "11:38:56.222Z";
+
     const expectedTimeOutput = `${time.slice(0, -1)}000000Z`;
-    const localTime = `${faker.date.past().toISOString().split("T")[1]?.split("Z")[0]}`;
-    const localDateTime = `${faker.date.past().toISOString().split("Z")[0]}`;
+    const localTime = "22:53:54.955";
+    const localDateTime = "2023-05-23T16:26:45.826";
     // Expected localTime and localDateTime may cause flakiness with the ms precision.
     const expectedLocalTime = expect.stringContaining(localTime);
     const expectedLocalDateTime = expect.stringContaining(localDateTime);
@@ -238,7 +218,7 @@ describe("array-push", () => {
     ] as const)(
         "should push $description on to an existing array",
         async ({ inputType, inputValue, expectedOutputValue }) => {
-            const typeMovie = new UniqueType("Movie");
+            const typeMovie = testHelper.createUniqueType("Movie");
 
             const typeDefs = gql`
             type ${typeMovie} {
@@ -247,7 +227,7 @@ describe("array-push", () => {
             }
         `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const movieTitle = generate({
                 charset: "alphabetic",
@@ -268,13 +248,9 @@ describe("array-push", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags: []})
         `;
 
-            await session.run(cypher, { movieTitle });
+            await testHelper.executeCypher(cypher, { movieTitle });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: update,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(update);
 
             if (gqlResult.errors) {
                 console.log(JSON.stringify(gqlResult.errors, null, 2));
@@ -289,9 +265,9 @@ describe("array-push", () => {
     );
 
     const point = {
-        longitude: parseFloat(faker.location.longitude().toString()),
-        latitude: parseFloat(faker.location.latitude().toString()),
-        height: faker.number.float(),
+        longitude: 142.2235,
+        latitude: -36.7462,
+        height: 0.06816366873681545,
     };
 
     test.each([
@@ -316,7 +292,7 @@ describe("array-push", () => {
     ] as const)(
         "should push $description on to an existing array",
         async ({ inputType, inputValue, expectedOutputValue }) => {
-            const typeMovie = new UniqueType("Movie");
+            const typeMovie = testHelper.createUniqueType("Movie");
 
             const typeDefs = gql`
             type ${typeMovie} {
@@ -325,7 +301,7 @@ describe("array-push", () => {
             }
         `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const movieTitle = generate({
                 charset: "alphabetic",
@@ -350,12 +326,9 @@ describe("array-push", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags: []})
         `;
 
-            await session.run(cypher, { movieTitle });
+            await testHelper.executeCypher(cypher, { movieTitle });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: update,
-                contextValue: neo4j.getContextValues(),
+            const gqlResult = await testHelper.executeGraphQL(update, {
                 variableValues: { inputValue },
             });
 
@@ -371,10 +344,7 @@ describe("array-push", () => {
         }
     );
 
-    const cartesianPoint = {
-        x: faker.number.float(),
-        y: faker.number.float(),
-    };
+    const cartesianPoint = { x: 0.2822351506911218, y: 0.6583783773239702 };
 
     test.each([
         {
@@ -398,7 +368,7 @@ describe("array-push", () => {
     ] as const)(
         "should push $description on to an existing array",
         async ({ inputType, inputValue, expectedOutputValue }) => {
-            const typeMovie = new UniqueType("Movie");
+            const typeMovie = testHelper.createUniqueType("Movie");
 
             const typeDefs = gql`
             type ${typeMovie} {
@@ -407,7 +377,7 @@ describe("array-push", () => {
             }
         `;
 
-            const neoSchema = new Neo4jGraphQL({ typeDefs });
+            await testHelper.initNeo4jGraphQL({ typeDefs });
 
             const movieTitle = generate({
                 charset: "alphabetic",
@@ -431,12 +401,9 @@ describe("array-push", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags: []})
         `;
 
-            await session.run(cypher, { movieTitle });
+            await testHelper.executeCypher(cypher, { movieTitle });
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: update,
-                contextValue: neo4j.getContextValues(),
+            const gqlResult = await testHelper.executeGraphQL(update, {
                 variableValues: { inputValue },
             });
 
@@ -453,7 +420,7 @@ describe("array-push", () => {
     );
 
     test("should push to two different arrays in the same update", async () => {
-        const typeMovie = new UniqueType("Movie");
+        const typeMovie = testHelper.createUniqueType("Movie");
 
         const typeDefs = gql`
             type ${typeMovie} {
@@ -463,7 +430,7 @@ describe("array-push", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const movieTitle = generate({
             charset: "alphabetic",
@@ -485,13 +452,9 @@ describe("array-push", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags: [], moreTags: [] })
         `;
 
-        await session.run(cypher, { movieTitle });
+        await testHelper.executeCypher(cypher, { movieTitle });
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(update);
 
         if (gqlResult.errors) {
             console.log(JSON.stringify(gqlResult.errors, null, 2));
@@ -506,8 +469,8 @@ describe("array-push", () => {
 
     test("should be able to push in a nested update", async () => {
         const actorName = "Luigino";
-        const movie = new UniqueType("Movie");
-        const actor = new UniqueType("Actor");
+        const movie = testHelper.createUniqueType("Movie");
+        const actor = testHelper.createUniqueType("Actor");
         const typeDefs = `
             type ${movie.name} {
                 viewers: [Int]!
@@ -520,7 +483,7 @@ describe("array-push", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const id = generate({
             charset: "alphabetic",
@@ -556,16 +519,13 @@ describe("array-push", () => {
             WITH a,b CREATE (a)<-[worksInMovies: WORKED_IN]-(b)
         `;
 
-        await session.run(cypher, {
+        await testHelper.executeCypher(cypher, {
             id,
             initialViewers: [],
             name: actorName,
         });
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(update, {
             variableValues: { value: [1, 2, 3, 4], id },
         });
 
@@ -578,8 +538,8 @@ describe("array-push", () => {
     test("should be possible to update relationship properties", async () => {
         const initialPay = 100;
         const payIncrement = 50;
-        const movie = new UniqueType("Movie");
-        const actor = new UniqueType("Actor");
+        const movie = testHelper.createUniqueType("Movie");
+        const actor = testHelper.createUniqueType("Actor");
         const typeDefs = `
             type ${movie.name} {
                 title: String
@@ -597,7 +557,7 @@ describe("array-push", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const id = generate({
             charset: "alphabetic",
@@ -634,7 +594,7 @@ describe("array-push", () => {
         `;
 
         // Create new movie
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${movie.name} {title: "The Matrix"}), (b:${actor.name} {id: $id, name: "Keanu"}) WITH a,b CREATE (a)<-[actedIn: ACTED_IN{ pay: $initialPay }]-(b) RETURN a, actedIn, b
                 `,
@@ -644,15 +604,12 @@ describe("array-push", () => {
             }
         );
         // Update movie
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { id, payIncrement },
-            contextValue: neo4j.getContextValues(),
         });
 
         expect(gqlResult.errors).toBeUndefined();
-        const storedValue = await session.run(
+        const storedValue = await testHelper.executeCypher(
             `
                 MATCH(b: ${actor.name}{id: $id}) -[c: ACTED_IN]-> (a: ${movie.name}) RETURN c.pay as pay
                 `,
@@ -664,8 +621,8 @@ describe("array-push", () => {
     });
 
     test("should be possible to update Point relationship properties", async () => {
-        const movie = new UniqueType("Movie");
-        const actor = new UniqueType("Actor");
+        const movie = testHelper.createUniqueType("Movie");
+        const actor = testHelper.createUniqueType("Actor");
         const typeDefs = `
             type ${movie.name} {
                 title: String
@@ -683,7 +640,7 @@ describe("array-push", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const id = generate({
             charset: "alphabetic",
@@ -724,7 +681,7 @@ describe("array-push", () => {
         `;
 
         // Create new movie
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${movie.name} {title: "The Matrix"}), (b:${actor.name} {id: $id, name: "Keanu"}) WITH a,b CREATE (a)<-[actedIn: ACTED_IN{ locations: [] }]-(b) RETURN a, actedIn, b
                 `,
@@ -733,11 +690,8 @@ describe("array-push", () => {
             }
         );
         // Update movie
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { id, location: [point] },
-            contextValue: neo4j.getContextValues(),
         });
 
         expect(gqlResult.errors).toBeUndefined();
@@ -750,5 +704,54 @@ describe("array-push", () => {
                 },
             ])
         );
+    });
+
+    test("should push a single LocalTime element on to an existing array with time ending in 0, which is rounded in response", async () => {
+        const localTime = "09:36:55.000";
+        const expectedOutputValue = ["09:36:55"];
+
+        const typeMovie = testHelper.createUniqueType("Movie");
+
+        const typeDefs = gql`
+        type ${typeMovie} {
+            title: String
+            tags: [LocalTime]
+        }
+    `;
+
+        await testHelper.initNeo4jGraphQL({ typeDefs });
+
+        const movieTitle = generate({
+            charset: "alphabetic",
+        });
+
+        const update = `
+        mutation {
+            ${typeMovie.operations.update} (update: { tags_PUSH: "${localTime}" }) {
+                ${typeMovie.plural} {
+                    title
+                    tags
+                }
+            }
+        }
+    `;
+
+        const cypher = `
+        CREATE (m:${typeMovie} {title:$movieTitle, tags: []})
+    `;
+
+        await testHelper.executeCypher(cypher, { movieTitle });
+
+        const gqlResult = await testHelper.executeGraphQL(update);
+
+        if (gqlResult.errors) {
+            console.log(JSON.stringify(gqlResult.errors, null, 2));
+        }
+
+        expect(gqlResult.errors).toBeUndefined();
+
+        expect((gqlResult.data as any)[typeMovie.operations.update][typeMovie.plural]).toEqual([
+            { title: movieTitle, tags: expectedOutputValue },
+        ]);
     });
 });

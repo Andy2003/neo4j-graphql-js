@@ -17,26 +17,18 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
-import type { Driver } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../../../../src/classes";
-import { UniqueType } from "../../../../utils/graphql-types";
-import Neo4jHelper from "../../../neo4j";
+import type { UniqueType } from "../../../../utils/graphql-types";
+import { TestHelper } from "../../../../utils/tests-helper";
 
 describe("aggregations-where-edge-int", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
+    const testHelper = new TestHelper();
     let User: UniqueType;
     let Post: UniqueType;
-    let neoSchema: Neo4jGraphQL;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        User = new UniqueType("User");
-        Post = new UniqueType("Post");
+    beforeEach(async () => {
+        User = testHelper.createUniqueType("User");
+        Post = testHelper.createUniqueType("Post");
 
         const typeDefs = `
             type ${User} {
@@ -52,32 +44,29 @@ describe("aggregations-where-edge-int", () => {
                 someInt: Int
             }
         `;
-        neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
     });
 
-    afterAll(async () => {
-        await driver.close();
+    afterEach(async () => {
+        await testHelper.close();
     });
 
     test("should return posts where a edge like Int is EQUAL to", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(234);
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES { someInt: ${someInt} }]-(:${User} {testString: "${testString}"})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_EQUAL: ${someInt} } } }) {
                         testString
@@ -88,45 +77,35 @@ describe("aggregations-where-edge-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString }],
+            },
+        ]);
     });
 
     test("should return posts where a edge like Float is GT than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(5454);
         const someIntGt = someInt - 1;
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES { someInt: ${someInt} }]-(:${User} {testString: "${testString}"})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_GT: ${someIntGt} } } }) {
                         testString
@@ -137,44 +116,34 @@ describe("aggregations-where-edge-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString }],
+            },
+        ]);
     });
 
     test("should return posts where a edge like Float is GTE than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(100000);
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES { someInt: ${someInt} }]-(:${User} {testString: "${testString}"})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_GTE: ${someInt} } } }) {
                         testString
@@ -185,45 +154,35 @@ describe("aggregations-where-edge-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString }],
+            },
+        ]);
     });
 
     test("should return posts where a edge like Float is LT than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(2);
         const someIntLT = someInt + 1;
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES { someInt: ${someInt} }]-(:${User} {testString: "${testString}"})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_LT: ${someIntLT} } } }) {
                         testString
@@ -234,44 +193,34 @@ describe("aggregations-where-edge-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString }],
+            },
+        ]);
     });
 
     test("should return posts where a edge like Float is LTE than", async () => {
-        const session = await neo4j.getSession();
-
         const testString = generate({
             charset: "alphabetic",
             readable: true,
         });
 
-        const someInt = Number(faker.number.int({ max: 100000 }));
+        const someInt = Number(572);
 
-        try {
-            await session.run(
-                `
+        await testHelper.executeCypher(
+            `
                     CREATE (:${Post} {testString: "${testString}"})<-[:LIKES { someInt: ${someInt} }]-(:${User} {testString: "${testString}"})
                     CREATE (:${Post} {testString: "${testString}"})
                 `
-            );
+        );
 
-            const query = `
+        const query = `
                 {
                     ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_LTE: ${someInt} } } }) {
                         testString
@@ -282,23 +231,16 @@ describe("aggregations-where-edge-int", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
-            expect(gqlResult.errors).toBeUndefined();
+        expect(gqlResult.errors).toBeUndefined();
 
-            expect((gqlResult.data as any)[Post.plural]).toEqual([
-                {
-                    testString,
-                    likes: [{ testString }],
-                },
-            ]);
-        } finally {
-            await session.close();
-        }
+        expect((gqlResult.data as any)[Post.plural]).toEqual([
+            {
+                testString,
+                likes: [{ testString }],
+            },
+        ]);
     });
 
     describe("AVERAGE", () => {
@@ -307,8 +249,6 @@ describe("aggregations-where-edge-int", () => {
         const someInt3 = 3;
 
         test("should return posts where the average of a edge like Int's is EQUAL to", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -316,18 +256,17 @@ describe("aggregations-where-edge-int", () => {
 
             const avg = (someInt1 + someInt2 + someInt3) / 3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt1} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt2} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt3} }]-(:${User} {testString: "${testString}"})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_AVERAGE_EQUAL: ${avg} } } }) {
                             testString
@@ -338,25 +277,16 @@ describe("aggregations-where-edge-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of a edge like Int's is GT than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -365,18 +295,17 @@ describe("aggregations-where-edge-int", () => {
             const avg = (someInt1 + someInt2 + someInt3) / 3;
             const avgGT = avg - 1;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt1} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt2} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt3} }]-(:${User} {testString: "${testString}"})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_AVERAGE_GT: ${avgGT} } } }) {
                             testString
@@ -387,25 +316,16 @@ describe("aggregations-where-edge-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of a edge like Int's is GTE than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -413,18 +333,17 @@ describe("aggregations-where-edge-int", () => {
 
             const avg = (someInt1 + someInt2 + someInt3) / 3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt1} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt2} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt3} }]-(:${User} {testString: "${testString}"})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_AVERAGE_GTE: ${avg} } } }) {
                             testString
@@ -435,24 +354,15 @@ describe("aggregations-where-edge-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            expect(gqlResult.errors).toBeUndefined();
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of a edge like Int's is LT than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -461,18 +371,17 @@ describe("aggregations-where-edge-int", () => {
             const avg = (someInt1 + someInt2 + someInt3) / 3;
             const avgLT = avg + 1;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt1} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt2} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt3} }]-(:${User} {testString: "${testString}"})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_AVERAGE_LT: ${avgLT} } } }) {
                             testString
@@ -483,25 +392,16 @@ describe("aggregations-where-edge-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
 
         test("should return posts where the average of a edge like Int's is LTE than", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -509,18 +409,17 @@ describe("aggregations-where-edge-int", () => {
 
             const avg = someInt1 + someInt2 + someInt3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt1} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt2} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt3} }]-(:${User} {testString: "${testString}"})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_AVERAGE_LTE: ${avg} } } }) {
                             testString
@@ -531,27 +430,18 @@ describe("aggregations-where-edge-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
     });
 
     describe("sum", () => {
         test("should return posts where the sum of a edge like Int's is EQUAL to", async () => {
-            const session = await neo4j.getSession();
-
             const testString = generate({
                 charset: "alphabetic",
                 readable: true,
@@ -563,18 +453,17 @@ describe("aggregations-where-edge-int", () => {
 
             const sum = someInt1 + someInt2 + someInt3;
 
-            try {
-                await session.run(
-                    `
+            await testHelper.executeCypher(
+                `
                         CREATE (p:${Post} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt1} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt2} }]-(:${User} {testString: "${testString}"})
                         CREATE (p)<-[:LIKES { someInt: ${someInt3} }]-(:${User} {testString: "${testString}"})
                         CREATE (:${Post} {testString: "${testString}"})
                     `
-                );
+            );
 
-                const query = `
+            const query = `
                     {
                         ${Post.plural}(where: { testString: "${testString}", likesAggregate: { edge: { someInt_SUM_EQUAL: ${sum} } } }) {
                             testString
@@ -585,20 +474,13 @@ describe("aggregations-where-edge-int", () => {
                     }
                 `;
 
-                const gqlResult = await graphql({
-                    schema: await neoSchema.getSchema(),
-                    source: query,
-                    contextValue: neo4j.getContextValues(),
-                });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
-                expect(gqlResult.errors).toBeUndefined();
+            expect(gqlResult.errors).toBeUndefined();
 
-                const [post] = (gqlResult.data as any)[Post.plural] as any[];
-                expect(post.testString).toEqual(testString);
-                expect(post.likes).toHaveLength(3);
-            } finally {
-                await session.close();
-            }
+            const [post] = (gqlResult.data as any)[Post.plural] as any[];
+            expect(post.testString).toEqual(testString);
+            expect(post.likes).toHaveLength(3);
         });
     });
 });

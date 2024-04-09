@@ -17,26 +17,17 @@
  * limitations under the License.
  */
 
-import type { GraphQLSchema } from "graphql";
-import { graphql } from "graphql";
 import { gql } from "graphql-tag";
-import type { Driver, Session } from "neo4j-driver";
 import { generate } from "randomstring";
-import { Neo4jGraphQL } from "../../src/classes";
-import { UniqueType } from "../utils/graphql-types";
-import Neo4jHelper from "./neo4j";
+import { TestHelper } from "../utils/tests-helper";
 
 const testLabel = generate({ charset: "alphabetic" });
 
 describe("sort", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let schema: GraphQLSchema;
-    let session: Session;
-
-    const movieType = new UniqueType("Movie");
-    const seriesType = new UniqueType("Series");
-    const actorType = new UniqueType("Actor");
+    const testHelper = new TestHelper();
+    const movieType = testHelper.createUniqueType("Movie");
+    const seriesType = testHelper.createUniqueType("Series");
+    const actorType = testHelper.createUniqueType("Actor");
 
     const typeDefs = gql`
         interface Production {
@@ -122,14 +113,9 @@ describe("sort", () => {
     ] as const;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        const session2 = await neo4j.getSession();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
-        schema = await neoSchema.getSchema();
-
-        await session2.run(
+        await testHelper.executeCypher(
             `
                     CREATE (m1:${movieType}:${testLabel}) SET m1 = $movies[0]
                     CREATE (m2:${movieType}:${testLabel}) SET m2 = $movies[1]
@@ -145,33 +131,17 @@ describe("sort", () => {
                 `,
             { movies, series, actors }
         );
-
-        await session2.close();
-    });
-
-    beforeEach(async () => {
-        session = await neo4j.getSession();
-    });
-
-    afterEach(async () => {
-        await session.close();
     });
 
     afterAll(async () => {
-        const session2 = await neo4j.getSession();
-        await session2.run(`MATCH (n:${testLabel}) DETACH DELETE n`);
-        await session2.close();
-        await driver.close();
+        await testHelper.close();
     });
 
     describe("on top level", () => {
         describe("primitive fields", () => {
             const gqlResultByTypeFromSource = (source: string) => (direction: "ASC" | "DESC") =>
-                graphql({
-                    schema,
-                    source,
+                testHelper.executeGraphQL(source, {
                     variableValues: { movieIds: movies.map(({ id }) => id), direction },
-                    contextValue: neo4j.getContextValues(),
                 });
 
             describe("with field in selection set", () => {
@@ -287,10 +257,7 @@ describe("sort", () => {
 
         describe("cypher fields", () => {
             const gqlResultByTypeFromSource = (source: string) => (direction: "ASC" | "DESC") =>
-                graphql({
-                    schema,
-                    source,
-                    contextValue: neo4j.getContextValues(),
+                testHelper.executeGraphQL(source, {
                     variableValues: { movieIds: movies.map(({ id }) => id), direction },
                 });
 
@@ -460,10 +427,7 @@ describe("sort", () => {
 
     describe("on relationship", () => {
         const gqlResultByTypeFromSource = (source: string) => (direction: "ASC" | "DESC") =>
-            graphql({
-                schema,
-                source,
-                contextValue: neo4j.getContextValues(),
+            testHelper.executeGraphQL(source, {
                 variableValues: { movieId: movies[1].id, actorIds: actors.map(({ id }) => id), direction },
             });
 
@@ -755,11 +719,7 @@ describe("sort", () => {
                 }
             `;
 
-            const gqlResult = await graphql({
-                schema,
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeUndefined();
             expect((gqlResult.data as any)[movieType.plural]).toEqual(
@@ -771,10 +731,7 @@ describe("sort", () => {
     describe("on interface relationship", () => {
         describe("primitive fields", () => {
             const gqlResultByTypeFromSource = (source: string) => (direction: "ASC" | "DESC") =>
-                graphql({
-                    schema,
-                    source,
-                    contextValue: neo4j.getContextValues(),
+                testHelper.executeGraphQL(source, {
                     variableValues: { actorId: actors[0].id, direction },
                 });
             describe("with field in selection set", () => {

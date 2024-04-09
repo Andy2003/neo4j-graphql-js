@@ -17,26 +17,19 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../../src/classes";
-import { UniqueType } from "../../../utils/graphql-types";
-import Neo4jHelper from "../../neo4j";
+import type { UniqueType } from "../../../utils/graphql-types";
+import { TestHelper } from "../../../utils/tests-helper";
 
 describe("Field Level Aggregations", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
+    const testHelper = new TestHelper();
     let typeDefs: string;
 
-    const typeMovie = new UniqueType("Movie");
-    const typeActor = new UniqueType("Actor");
-
-    let neoSchema: Neo4jGraphQL;
+    let typeMovie: UniqueType;
+    let typeActor: UniqueType;
 
     beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
+        typeMovie = testHelper.createUniqueType("Movie");
+        typeActor = testHelper.createUniqueType("Actor");
 
         typeDefs = `
         type ${typeMovie.name} {
@@ -57,10 +50,9 @@ describe("Field Level Aggregations", () => {
         }
         `;
 
-        neoSchema = new Neo4jGraphQL({ typeDefs });
-        session = await neo4j.getSession();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
-        await session.run(`
+        await testHelper.executeCypher(`
             CREATE (m:${typeMovie.name} { title: "Terminator"})
             CREATE(m)<-[:ACTED_IN { screentime: 60, character: "Terminator" }]-(:${typeActor.name} { name: "Arnold", age: 54, born: datetime('1980-07-02')})
             CREATE (m)<-[:ACTED_IN { screentime: 120, character: "Sarah" }]-(:${typeActor.name} {name: "Linda", age:37, born: datetime('2000-02-02')})
@@ -68,8 +60,7 @@ describe("Field Level Aggregations", () => {
     });
 
     afterAll(async () => {
-        await session.close();
-        await driver.close();
+        await testHelper.close();
     });
 
     test("count nodes", async () => {
@@ -83,11 +74,7 @@ describe("Field Level Aggregations", () => {
             }
             `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(query);
 
         expect(gqlResult.errors).toBeUndefined();
         expect((gqlResult as any).data[typeMovie.plural][0][`${typeActor.plural}Aggregate`]).toEqual({
@@ -112,11 +99,7 @@ describe("Field Level Aggregations", () => {
             }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeUndefined();
             expect((gqlResult as any).data[typeMovie.plural][0][`${typeActor.plural}Aggregate`]).toEqual({
@@ -147,11 +130,7 @@ describe("Field Level Aggregations", () => {
             }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeUndefined();
             expect((gqlResult as any).data[typeMovie.plural][0][`${typeActor.plural}Aggregate`]).toEqual({
@@ -182,11 +161,7 @@ describe("Field Level Aggregations", () => {
             }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeUndefined();
             expect((gqlResult as any).data[typeMovie.plural][0][`${typeActor.plural}Aggregate`]).toEqual({
@@ -219,11 +194,7 @@ describe("Field Level Aggregations", () => {
             }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeUndefined();
             expect((gqlResult as any).data[typeMovie.plural][0][`${typeActor.plural}Aggregate`]).toEqual({
@@ -254,11 +225,7 @@ describe("Field Level Aggregations", () => {
             }
             `;
 
-            const gqlResult = await graphql({
-                schema: await neoSchema.getSchema(),
-                source: query,
-                contextValue: neo4j.getContextValues(),
-            });
+            const gqlResult = await testHelper.executeGraphQL(query);
 
             expect(gqlResult.errors).toBeUndefined();
             expect((gqlResult as any).data[typeMovie.plural][0][`${typeActor.plural}Aggregate`]).toEqual({

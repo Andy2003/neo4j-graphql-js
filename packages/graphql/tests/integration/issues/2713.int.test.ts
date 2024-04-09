@@ -17,18 +17,11 @@
  * limitations under the License.
  */
 
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src/classes";
-import { cleanNodesUsingSession } from "../../utils/clean-nodes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("https://github.com/neo4j/graphql/issues/2713", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let neoSchema: Neo4jGraphQL;
-    let session: Session;
+    const testHelper = new TestHelper();
 
     let movieType: UniqueType;
     let genreType: UniqueType;
@@ -46,17 +39,10 @@ describe("https://github.com/neo4j/graphql/issues/2713", () => {
     const intValue4 = 0;
     const intValue5 = 42;
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
     beforeEach(async () => {
-        session = await neo4j.getSession();
-
-        movieType = new UniqueType("Movie");
-        genreType = new UniqueType("Genre");
-        inGenreInterface = new UniqueType("InGenre");
+        movieType = testHelper.createUniqueType("Movie");
+        genreType = testHelper.createUniqueType("Genre");
+        inGenreInterface = testHelper.createUniqueType("InGenre");
 
         const typeDefs = `
             type ${movieType.name} {
@@ -73,12 +59,11 @@ describe("https://github.com/neo4j/graphql/issues/2713", () => {
             }
         `;
 
-        neoSchema = new Neo4jGraphQL({
+        await testHelper.initNeo4jGraphQL({
             typeDefs,
-            driver,
         });
 
-        await session.run(`
+        await testHelper.executeCypher(`
             CREATE (m1:${movieType.name} { title: "${movieTitle1}" })-[:IN_GENRE { intValue: ${intValue1} }]->(g1:${genreType.name} { name: "${genreName1}" })
             CREATE (m2:${movieType.name} { title: "${movieTitle2}" })-[:IN_GENRE { intValue: ${intValue2} }]->(g1)
             CREATE (m3:${movieType.name} { title: "${movieTitle3}" })-[:IN_GENRE { intValue: ${intValue3} }]->(g1)
@@ -88,12 +73,7 @@ describe("https://github.com/neo4j/graphql/issues/2713", () => {
     });
 
     afterEach(async () => {
-        await cleanNodesUsingSession(session, [movieType, genreType]);
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("should not find genresConnection_ALL where NONE true", async () => {
@@ -105,11 +85,7 @@ describe("https://github.com/neo4j/graphql/issues/2713", () => {
             }
         `;
 
-        const result = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
-            contextValue: neo4j.getContextValues(),
-        });
+        const result = await testHelper.executeGraphQL(query);
 
         expect(result.errors).toBeFalsy();
         expect(result.data).toEqual({

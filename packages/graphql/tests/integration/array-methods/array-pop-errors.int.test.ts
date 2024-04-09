@@ -18,40 +18,23 @@
  */
 
 import type { GraphQLError } from "graphql";
-import { graphql } from "graphql";
 import { gql } from "graphql-tag";
 import { IncomingMessage } from "http";
-import type { Driver, Session } from "neo4j-driver";
 import { Socket } from "net";
 import { generate } from "randomstring";
-
-import { Neo4jGraphQL } from "../../../src/classes";
-import { UniqueType } from "../../utils/graphql-types";
-import Neo4jHelper from "../neo4j";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("array-pop-errors", () => {
-    let driver: Driver;
-    let session: Session;
-    let neo4j: Neo4jHelper;
+    const testHelper = new TestHelper();
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-    });
-
-    afterAll(async () => {
-        await driver.close();
-    });
-
-    beforeEach(async () => {
-        session = await neo4j.getSession();
-    });
+    beforeEach(() => {});
 
     afterEach(async () => {
-        await session.close();
+        await testHelper.close();
     });
+
     test("should throw an error when trying to pop an element from a non-existing array", async () => {
-        const typeMovie = new UniqueType("Movie");
+        const typeMovie = testHelper.createUniqueType("Movie");
 
         const typeDefs = gql`
             type ${typeMovie} {
@@ -60,7 +43,7 @@ describe("array-pop-errors", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const movieTitle = generate({
             charset: "alphabetic",
@@ -82,13 +65,9 @@ describe("array-pop-errors", () => {
             CREATE (m:${typeMovie} {title:$movieTitle})
         `;
 
-        await session.run(cypher, { movieTitle });
+        await testHelper.executeCypher(cypher, { movieTitle });
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(update);
 
         expect(gqlResult.errors).toBeDefined();
         expect(
@@ -99,7 +78,7 @@ describe("array-pop-errors", () => {
     });
 
     test("should throw an error when trying to pop an element from multiple non-existing arrays", async () => {
-        const typeMovie = new UniqueType("Movie");
+        const typeMovie = testHelper.createUniqueType("Movie");
 
         const typeDefs = gql`
             type ${typeMovie} {
@@ -109,7 +88,7 @@ describe("array-pop-errors", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const movieTitle = generate({
             charset: "alphabetic",
@@ -132,13 +111,9 @@ describe("array-pop-errors", () => {
             CREATE (m:${typeMovie} {title:$movieTitle})
         `;
 
-        await session.run(cypher, { movieTitle });
+        await testHelper.executeCypher(cypher, { movieTitle });
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(update);
 
         expect(gqlResult.errors).toBeDefined();
         expect(
@@ -151,7 +126,7 @@ describe("array-pop-errors", () => {
     });
 
     test("should throw an error if not authenticated on field definition", async () => {
-        const typeMovie = new UniqueType("Movie");
+        const typeMovie = testHelper.createUniqueType("Movie");
         const typeDefs = `
             type ${typeMovie} {
                 title: String
@@ -159,7 +134,10 @@ describe("array-pop-errors", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs, features: { authorization: { key: "secret" } } });
+        await testHelper.initNeo4jGraphQL({
+            typeDefs,
+            features: { authorization: { key: "secret" } },
+        });
 
         const movieTitle = generate({
             charset: "alphabetic",
@@ -180,7 +158,7 @@ describe("array-pop-errors", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags: ['a', 'b']})
         `;
 
-        await session.run(cypher, { movieTitle });
+        await testHelper.executeCypher(cypher, { movieTitle });
 
         const token = "not valid token";
 
@@ -188,11 +166,7 @@ describe("array-pop-errors", () => {
         const req = new IncomingMessage(socket);
         req.headers.authorization = `Bearer ${token}`;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(update);
 
         expect(gqlResult.errors).toBeDefined();
         expect((gqlResult.errors as GraphQLError[]).some((el) => el.message.includes("Unauthenticated"))).toBeTruthy();
@@ -200,7 +174,7 @@ describe("array-pop-errors", () => {
     });
 
     test("should throw an error when input is invalid", async () => {
-        const typeMovie = new UniqueType("Movie");
+        const typeMovie = testHelper.createUniqueType("Movie");
 
         const typeDefs = gql`
             type ${typeMovie} {
@@ -209,7 +183,7 @@ describe("array-pop-errors", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const movieTitle = generate({
             charset: "alphabetic",
@@ -230,13 +204,9 @@ describe("array-pop-errors", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags: ["abc", "xyz"]})
         `;
 
-        await session.run(cypher, { movieTitle });
+        await testHelper.executeCypher(cypher, { movieTitle });
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(update);
 
         expect(gqlResult.errors).toBeDefined();
         expect(
@@ -249,7 +219,7 @@ describe("array-pop-errors", () => {
     });
 
     test("should throw an error when performing an ambiguous property update", async () => {
-        const typeMovie = new UniqueType("Movie");
+        const typeMovie = testHelper.createUniqueType("Movie");
 
         const typeDefs = gql`
             type ${typeMovie} {
@@ -258,7 +228,7 @@ describe("array-pop-errors", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const movieTitle = generate({
             charset: "alphabetic",
@@ -279,13 +249,9 @@ describe("array-pop-errors", () => {
             CREATE (m:${typeMovie} {title:$movieTitle, tags:["existing value"]})
         `;
 
-        await session.run(cypher, { movieTitle });
+        await testHelper.executeCypher(cypher, { movieTitle });
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
-        });
+        const gqlResult = await testHelper.executeGraphQL(update);
 
         expect(gqlResult.errors).toBeDefined();
         expect(
@@ -298,8 +264,8 @@ describe("array-pop-errors", () => {
 
     test("should throw an error when performing an ambiguous property update on relationship properties", async () => {
         const initialPay = 100;
-        const movie = new UniqueType("Movie");
-        const actor = new UniqueType("Actor");
+        const movie = testHelper.createUniqueType("Movie");
+        const actor = testHelper.createUniqueType("Actor");
         const typeDefs = `
             type ${movie.name} {
                 title: String
@@ -317,7 +283,7 @@ describe("array-pop-errors", () => {
             }
         `;
 
-        const neoSchema = new Neo4jGraphQL({ typeDefs });
+        await testHelper.initNeo4jGraphQL({ typeDefs });
 
         const id = generate({
             charset: "alphabetic",
@@ -355,7 +321,7 @@ describe("array-pop-errors", () => {
         `;
 
         // Create new movie
-        await session.run(
+        await testHelper.executeCypher(
             `
                 CREATE (a:${movie.name} {title: "The Matrix"}), (b:${actor.name} {id: $id, name: "Keanu"}) WITH a,b CREATE (a)<-[actedIn: ACTED_IN{ pay: $initialPay }]-(b) RETURN a, actedIn, b
                 `,
@@ -365,11 +331,8 @@ describe("array-pop-errors", () => {
             }
         );
         // Update movie
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: query,
+        const gqlResult = await testHelper.executeGraphQL(query, {
             variableValues: { id, numberToPop: 1 },
-            contextValue: neo4j.getContextValues(),
         });
 
         expect(gqlResult.errors).toBeDefined();

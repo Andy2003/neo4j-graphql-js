@@ -17,52 +17,39 @@
  * limitations under the License.
  */
 
-import { faker } from "@faker-js/faker";
-import { graphql } from "graphql";
-import type { Driver, Session } from "neo4j-driver";
 import { int } from "neo4j-driver";
-import { Neo4jGraphQL } from "../../../src/classes";
-import Neo4jHelper from "../neo4j";
+import type { UniqueType } from "../../utils/graphql-types";
+import { TestHelper } from "../../utils/tests-helper";
 
 describe("CartesianPoint", () => {
-    let driver: Driver;
-    let neo4j: Neo4jHelper;
-    let session: Session;
-    let neoSchema: Neo4jGraphQL;
+    const testHelper = new TestHelper();
 
-    beforeAll(async () => {
-        neo4j = new Neo4jHelper();
-        driver = await neo4j.getDriver();
-        const typeDefs = `
-            type Part {
+    let Part: UniqueType;
+
+    beforeEach(async () => {
+        Part = testHelper.createUniqueType("Part");
+        const typeDefs = /* GraphQL */ `
+            type ${Part} {
                 serial: String!
                 location: CartesianPoint!
             }
         `;
-        neoSchema = new Neo4jGraphQL({ typeDefs });
-    });
-
-    beforeEach(async () => {
-        session = await neo4j.getSession();
+        await testHelper.initNeo4jGraphQL({ typeDefs });
     });
 
     afterEach(async () => {
-        await session.close();
-    });
-
-    afterAll(async () => {
-        await driver.close();
+        await testHelper.close();
     });
 
     test("enables creation of a node with a cartesian point", async () => {
-        const serial = faker.string.uuid();
-        const x = faker.number.float();
-        const y = faker.number.float();
+        const serial = "81dfaca5-0365-4bf7-b1fe-6cab702966d0";
+        const x = 0.7811776334419847;
+        const y = 0.7400629911571741;
 
-        const create = `
+        const create = /* GraphQL */ `
             mutation CreateParts($serial: String!, $x: Float!, $y: Float!) {
-                createParts(input: [{ serial: $serial, location: { x: $x, y: $y } }]) {
-                    parts {
+                ${Part.operations.create}(input: [{ serial: $serial, location: { x: $x, y: $y } }]) {
+                    ${Part.plural} {
                         serial
                         location {
                             x
@@ -74,16 +61,12 @@ describe("CartesianPoint", () => {
                 }
             }
         `;
-
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: create,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(create, {
             variableValues: { serial, x, y },
         });
 
         expect(gqlResult.errors).toBeFalsy();
-        expect((gqlResult.data as any).createParts.parts[0]).toEqual({
+        expect((gqlResult.data as any)[Part.operations.create][Part.plural][0]).toEqual({
             serial,
             location: {
                 x,
@@ -93,26 +76,26 @@ describe("CartesianPoint", () => {
             },
         });
 
-        const result = await session.run(`
-                MATCH (p:Part {serial: "${serial}"})
+        const result = await testHelper.executeCypher(`
+                MATCH (p:${Part} {serial: "${serial}"})
                 RETURN p { .serial, .location} as p
             `);
 
-        expect((result.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).p.location.y).toEqual(y);
-        expect((result.records[0]?.toObject() as any).p.location.srid).toEqual(int(7203));
+        expect((result.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((result.records[0] as any).toObject().p.location.y).toEqual(y);
+        expect((result.records[0] as any).toObject().p.location.srid).toEqual(int(7203));
     });
 
     test("enables creation of a node with a cartesian-3d point", async () => {
-        const serial = faker.string.uuid();
-        const x = faker.number.float();
-        const y = faker.number.float();
-        const z = faker.number.float();
+        const serial = "8482cc3a-1204-418e-8a31-74d24b27b542";
+        const x = 0.02628162084147334;
+        const y = 0.9550968739204109;
+        const z = 0.4940597955137491;
 
-        const create = `
+        const create = /* GraphQL */ `
             mutation CreateParts($serial: String!, $x: Float!, $y: Float!, $z: Float!) {
-                createParts(input: [{ serial: $serial, location: { x: $x, y: $y, z: $z } }]) {
-                    parts {
+                ${Part.operations.create}(input: [{ serial: $serial, location: { x: $x, y: $y, z: $z } }]) {
+                    ${Part.plural} {
                         serial
                         location {
                             x
@@ -124,16 +107,12 @@ describe("CartesianPoint", () => {
                 }
             }
         `;
-
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: create,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(create, {
             variableValues: { serial, x, y, z },
         });
 
         expect(gqlResult.errors).toBeFalsy();
-        expect((gqlResult.data as any).createParts.parts[0]).toEqual({
+        expect((gqlResult.data as any)[Part.operations.create][Part.plural][0]).toEqual({
             serial,
             location: {
                 x,
@@ -143,42 +122,41 @@ describe("CartesianPoint", () => {
             },
         });
 
-        const result = await session.run(`
-                MATCH (p:Part {serial: "${serial}"})
+        const result = await testHelper.executeCypher(`
+                MATCH (p:${Part} {serial: "${serial}"})
                 RETURN p { .serial, .location} as p
             `);
 
-        expect((result.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).p.location.y).toEqual(y);
-        expect((result.records[0]?.toObject() as any).p.location.z).toEqual(z);
-        expect((result.records[0]?.toObject() as any).p.location.srid).toEqual(int(9157));
+        expect((result.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((result.records[0] as any).toObject().p.location.y).toEqual(y);
+        expect((result.records[0] as any).toObject().p.location.z).toEqual(z);
+        expect((result.records[0] as any).toObject().p.location.srid).toEqual(int(9157));
     });
 
     test("enables update of a node with a cartesian point", async () => {
-        const serial = faker.string.uuid();
-        const x = faker.number.float();
-        const y = faker.number.float();
-        const newY = faker.number.float();
+        const serial = "f5e40cae-f839-4ec3-a12b-45da40e8de7f";
+        const x = 0.9797746981494129;
+        const y = 0.6287962510250509;
+        const newY = 0.8291290057823062;
 
-        const beforeResult = await session.run(`
+        const beforeResult = await testHelper.executeCypher(`
             CALL {
-                CREATE (p:Part)
+                CREATE (p:${Part})
                 SET p.serial = "${serial}"
                 SET p.location = point({x: ${x}, y: ${y}})
                 RETURN p
             }
 
-            RETURN
-            p { .serial, .location } AS p
+            RETURN p { .serial, .location } AS p
         `);
 
-        expect((beforeResult.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((beforeResult.records[0]?.toObject() as any).p.location.y).toEqual(y);
+        expect((beforeResult.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((beforeResult.records[0] as any).toObject().p.location.y).toEqual(y);
 
-        const update = `
+        const update = /* GraphQL */ `
             mutation UpdateParts($serial: String!, $x: Float!, $y: Float!) {
-                updateParts(where: { serial: $serial }, update: { location: { x: $x, y: $y } }) {
-                    parts {
+                ${Part.operations.update}(where: { serial: $serial }, update: { location: { x: $x, y: $y } }) {
+                    ${Part.plural} {
                         serial
                         location {
                             x
@@ -191,15 +169,12 @@ describe("CartesianPoint", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(update, {
             variableValues: { serial, x, y: newY },
         });
 
         expect(gqlResult.errors).toBeFalsy();
-        expect((gqlResult.data as any).updateParts.parts[0]).toEqual({
+        expect((gqlResult.data as any)[Part.operations.update][Part.plural][0]).toEqual({
             serial,
             location: {
                 x,
@@ -209,43 +184,42 @@ describe("CartesianPoint", () => {
             },
         });
 
-        const result = await session.run(`
-                MATCH (p:Part {serial: "${serial}"})
+        const result = await testHelper.executeCypher(`
+                MATCH (p:${Part} {serial: "${serial}"})
                 RETURN p { .serial, .location} as p
             `);
 
-        expect((result.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).p.location.y).toEqual(newY);
-        expect((result.records[0]?.toObject() as any).p.location.srid).toEqual(int(7203));
+        expect((result.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((result.records[0] as any).toObject().p.location.y).toEqual(newY);
+        expect((result.records[0] as any).toObject().p.location.srid).toEqual(int(7203));
     });
 
     test("enables update of a node with a cartesian-3d point", async () => {
-        const serial = faker.string.uuid();
-        const x = faker.number.float();
-        const y = faker.number.float();
-        const z = faker.number.float();
-        const newY = faker.number.float();
+        const serial = "ff4af64d-90f6-4f74-ad65-13dce16502bc";
+        const x = 0.954262402607128;
+        const y = 0.9950293721631169;
+        const z = 0.30888770753517747;
+        const newY = 0.8628286835737526;
 
-        const beforeResult = await session.run(`
+        const beforeResult = await testHelper.executeCypher(`
             CALL {
-                CREATE (p:Part)
+                CREATE (p:${Part})
                 SET p.serial = "${serial}"
                 SET p.location = point({x: ${x}, y: ${y}, z: ${z}})
                 RETURN p
             }
 
-            RETURN
-            p { .serial, .location } AS p
+            RETURN p { .serial, .location } AS p
         `);
 
-        expect((beforeResult.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((beforeResult.records[0]?.toObject() as any).p.location.y).toEqual(y);
-        expect((beforeResult.records[0]?.toObject() as any).p.location.z).toEqual(z);
+        expect((beforeResult.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((beforeResult.records[0] as any).toObject().p.location.y).toEqual(y);
+        expect((beforeResult.records[0] as any).toObject().p.location.z).toEqual(z);
 
-        const update = `
+        const update = /* GraphQL */ `
             mutation UpdateParts($serial: String!, $x: Float!, $y: Float!, $z: Float!) {
-                updateParts(where: { serial: $serial }, update: { location: { x: $x, y: $y, z: $z } }) {
-                    parts {
+                ${Part.operations.update}(where: { serial: $serial }, update: { location: { x: $x, y: $y, z: $z } }) {
+                    ${Part.plural} {
                         serial
                         location {
                             x
@@ -258,15 +232,12 @@ describe("CartesianPoint", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: update,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(update, {
             variableValues: { serial, x, y: newY, z },
         });
 
         expect(gqlResult.errors).toBeFalsy();
-        expect((gqlResult.data as any).updateParts.parts[0]).toEqual({
+        expect((gqlResult.data as any)[Part.operations.update][Part.plural][0]).toEqual({
             serial,
             location: {
                 x,
@@ -276,40 +247,39 @@ describe("CartesianPoint", () => {
             },
         });
 
-        const result = await session.run(`
-                MATCH (p:Part {serial: "${serial}"})
+        const result = await testHelper.executeCypher(`
+                MATCH (p:${Part} {serial: "${serial}"})
                 RETURN p { .serial, .location} as p
             `);
 
-        expect((result.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).p.location.y).toEqual(newY);
-        expect((result.records[0]?.toObject() as any).p.location.z).toEqual(z);
-        expect((result.records[0]?.toObject() as any).p.location.srid).toEqual(int(9157));
+        expect((result.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((result.records[0] as any).toObject().p.location.y).toEqual(newY);
+        expect((result.records[0] as any).toObject().p.location.z).toEqual(z);
+        expect((result.records[0] as any).toObject().p.location.srid).toEqual(int(9157));
     });
 
     test("enables query of a node with a cartesian point", async () => {
-        const serial = faker.string.uuid();
-        const x = faker.number.float();
-        const y = faker.number.float();
+        const serial = "bf92efbc-6c15-40ac-9cd5-8ab95fa4da90";
+        const x = 0.2800768264569342;
+        const y = 0.6105434170458466;
 
-        const result = await session.run(`
+        const result = await testHelper.executeCypher(`
             CALL {
-                CREATE (p:Part)
+                CREATE (p:${Part})
                 SET p.serial = "${serial}"
                 SET p.location = point({x: ${x}, y: ${y}})
                 RETURN p
             }
 
-            RETURN
-            p { .id, .location } AS p
+            RETURN p { .id, .location } AS p
         `);
 
-        expect((result.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).p.location.y).toEqual(y);
+        expect((result.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((result.records[0] as any).toObject().p.location.y).toEqual(y);
 
-        const partsQuery = `
+        const partsQuery = /* GraphQL */ `
             query Parts($serial: String!) {
-                parts(where: { serial: $serial }) {
+                ${Part.plural}(where: { serial: $serial }) {
                     serial
                     location {
                         x
@@ -321,15 +291,12 @@ describe("CartesianPoint", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: partsQuery,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(partsQuery, {
             variableValues: { serial },
         });
 
         expect(gqlResult.errors).toBeFalsy();
-        expect((gqlResult.data as any).parts[0]).toEqual({
+        expect((gqlResult.data as any)[Part.plural][0]).toEqual({
             serial,
             location: {
                 x,
@@ -341,30 +308,29 @@ describe("CartesianPoint", () => {
     });
 
     test("enables query of a node with a cartesian-3d point", async () => {
-        const serial = faker.string.uuid();
-        const x = faker.number.float();
-        const y = faker.number.float();
-        const z = faker.number.float();
+        const serial = "c7715adc-9c9c-45ff-b4ed-6cb20bb044ad";
+        const x = 0.9446345162577927;
+        const y = 0.7858678111806512;
+        const z = 0.4248296618461609;
 
-        const result = await session.run(`
+        const result = await testHelper.executeCypher(`
             CALL {
-                CREATE (p:Part)
+                CREATE (p:${Part})
                 SET p.serial = "${serial}"
                 SET p.location = point({x: ${x}, y: ${y}, z: ${z}})
                 RETURN p
             }
 
-            RETURN
-            p { .id, .location } AS p
+            RETURN p { .id, .location } AS p
         `);
 
-        expect((result.records[0]?.toObject() as any).p.location.x).toEqual(x);
-        expect((result.records[0]?.toObject() as any).p.location.y).toEqual(y);
-        expect((result.records[0]?.toObject() as any).p.location.z).toEqual(z);
+        expect((result.records[0] as any).toObject().p.location.x).toEqual(x);
+        expect((result.records[0] as any).toObject().p.location.y).toEqual(y);
+        expect((result.records[0] as any).toObject().p.location.z).toEqual(z);
 
-        const partsQuery = `
+        const partsQuery = /* GraphQL */ `
             query Parts($serial: String!) {
-                parts(where: { serial: $serial }) {
+                ${Part.plural}(where: { serial: $serial }) {
                     serial
                     location {
                         x
@@ -376,15 +342,12 @@ describe("CartesianPoint", () => {
             }
         `;
 
-        const gqlResult = await graphql({
-            schema: await neoSchema.getSchema(),
-            source: partsQuery,
-            contextValue: neo4j.getContextValues(),
+        const gqlResult = await testHelper.executeGraphQL(partsQuery, {
             variableValues: { serial },
         });
 
         expect(gqlResult.errors).toBeFalsy();
-        expect((gqlResult.data as any).parts[0]).toEqual({
+        expect((gqlResult.data as any)[Part.plural][0]).toEqual({
             serial,
             location: {
                 x,
