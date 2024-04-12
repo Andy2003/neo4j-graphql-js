@@ -134,7 +134,6 @@ describe("Connection with interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: CreatureMoviesNodeAggregationWhereInput
             }
 
             input CreatureMoviesConnectFieldInput {
@@ -171,12 +170,6 @@ describe("Connection with interfaces", () => {
             input CreatureMoviesDisconnectFieldInput {
               disconnect: ProductionDisconnectInput
               where: CreatureMoviesConnectionWhere
-            }
-
-            input CreatureMoviesNodeAggregationWhereInput {
-              AND: [CreatureMoviesNodeAggregationWhereInput!]
-              NOT: CreatureMoviesNodeAggregationWhereInput
-              OR: [CreatureMoviesNodeAggregationWhereInput!]
             }
 
             type CreatureMoviesRelationship {
@@ -307,7 +300,6 @@ describe("Connection with interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: MovieDirectorNodeAggregationWhereInput
             }
 
             input MovieDirectorConnectFieldInput {
@@ -332,12 +324,6 @@ describe("Connection with interfaces", () => {
             input MovieDirectorFieldInput {
               connect: [MovieDirectorConnectFieldInput!]
               create: [MovieDirectorCreateFieldInput!]
-            }
-
-            input MovieDirectorNodeAggregationWhereInput {
-              AND: [MovieDirectorNodeAggregationWhereInput!]
-              NOT: MovieDirectorNodeAggregationWhereInput
-              OR: [MovieDirectorNodeAggregationWhereInput!]
             }
 
             input MovieDirectorUpdateConnectionInput {
@@ -505,7 +491,6 @@ describe("Connection with interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: PersonMoviesNodeAggregationWhereInput
             }
 
             input PersonMoviesConnectFieldInput {
@@ -530,12 +515,6 @@ describe("Connection with interfaces", () => {
             input PersonMoviesFieldInput {
               connect: PersonMoviesConnectFieldInput
               create: PersonMoviesCreateFieldInput
-            }
-
-            input PersonMoviesNodeAggregationWhereInput {
-              AND: [PersonMoviesNodeAggregationWhereInput!]
-              NOT: PersonMoviesNodeAggregationWhereInput
-              OR: [PersonMoviesNodeAggregationWhereInput!]
             }
 
             input PersonMoviesUpdateConnectionInput {
@@ -638,7 +617,6 @@ describe("Connection with interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: ProductionDirectorNodeAggregationWhereInput
             }
 
             input ProductionDirectorConnectFieldInput {
@@ -675,12 +653,6 @@ describe("Connection with interfaces", () => {
             input ProductionDirectorDisconnectFieldInput {
               disconnect: CreatureDisconnectInput
               where: ProductionDirectorConnectionWhere
-            }
-
-            input ProductionDirectorNodeAggregationWhereInput {
-              AND: [ProductionDirectorNodeAggregationWhereInput!]
-              NOT: ProductionDirectorNodeAggregationWhereInput
-              OR: [ProductionDirectorNodeAggregationWhereInput!]
             }
 
             type ProductionDirectorRelationship {
@@ -860,7 +832,6 @@ describe("Connection with interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: SeriesDirectorNodeAggregationWhereInput
             }
 
             input SeriesDirectorConnectFieldInput {
@@ -885,12 +856,6 @@ describe("Connection with interfaces", () => {
             input SeriesDirectorFieldInput {
               connect: [SeriesDirectorConnectFieldInput!]
               create: [SeriesDirectorCreateFieldInput!]
-            }
-
-            input SeriesDirectorNodeAggregationWhereInput {
-              AND: [SeriesDirectorNodeAggregationWhereInput!]
-              NOT: SeriesDirectorNodeAggregationWhereInput
-              OR: [SeriesDirectorNodeAggregationWhereInput!]
             }
 
             input SeriesDirectorUpdateConnectionInput {

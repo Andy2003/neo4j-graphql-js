@@ -474,7 +474,6 @@ describe("Relationship", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: ActorMoviesNodeAggregationWhereInput
             }
 
             input ActorMoviesConnectFieldInput {
@@ -520,12 +519,6 @@ describe("Relationship", () => {
             input ActorMoviesFieldInput {
               connect: [ActorMoviesConnectFieldInput!]
               create: [ActorMoviesCreateFieldInput!]
-            }
-
-            input ActorMoviesNodeAggregationWhereInput {
-              AND: [ActorMoviesNodeAggregationWhereInput!]
-              NOT: ActorMoviesNodeAggregationWhereInput
-              OR: [ActorMoviesNodeAggregationWhereInput!]
             }
 
             type ActorMoviesRelationship {

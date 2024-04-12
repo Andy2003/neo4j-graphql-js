@@ -212,7 +212,6 @@ describe("162", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: TigerJawLevel2Part1NodeAggregationWhereInput
             }
 
             type TigerJawLevel2Part1AggregateSelection {
@@ -289,12 +288,6 @@ describe("162", () => {
             input TigerJawLevel2Part1FieldInput {
               connect: TigerJawLevel2Part1ConnectFieldInput
               create: TigerJawLevel2Part1CreateFieldInput
-            }
-
-            input TigerJawLevel2Part1NodeAggregationWhereInput {
-              AND: [TigerJawLevel2Part1NodeAggregationWhereInput!]
-              NOT: TigerJawLevel2Part1NodeAggregationWhereInput
-              OR: [TigerJawLevel2Part1NodeAggregationWhereInput!]
             }
 
             input TigerJawLevel2Part1Options {

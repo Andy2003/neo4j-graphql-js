@@ -848,7 +848,6 @@ describe("@populatedBy tests", () => {
                   count_LT: Int
                   count_LTE: Int
                   edge: RelPropertiesAggregationWhereInput
-                  node: MovieGenresNodeAggregationWhereInput
                 }
 
                 input MovieGenresConnectFieldInput {
@@ -895,12 +894,6 @@ describe("@populatedBy tests", () => {
                 input MovieGenresFieldInput {
                   connect: [MovieGenresConnectFieldInput!]
                   create: [MovieGenresCreateFieldInput!]
-                }
-
-                input MovieGenresNodeAggregationWhereInput {
-                  AND: [MovieGenresNodeAggregationWhereInput!]
-                  NOT: MovieGenresNodeAggregationWhereInput
-                  OR: [MovieGenresNodeAggregationWhereInput!]
                 }
 
                 type MovieGenresRelationship {
@@ -1358,7 +1351,6 @@ describe("@populatedBy tests", () => {
                   count_LT: Int
                   count_LTE: Int
                   edge: RelPropertiesAggregationWhereInput
-                  node: MovieGenresNodeAggregationWhereInput
                 }
 
                 input MovieGenresConnectFieldInput {
@@ -1405,12 +1397,6 @@ describe("@populatedBy tests", () => {
                 input MovieGenresFieldInput {
                   connect: [MovieGenresConnectFieldInput!]
                   create: [MovieGenresCreateFieldInput!]
-                }
-
-                input MovieGenresNodeAggregationWhereInput {
-                  AND: [MovieGenresNodeAggregationWhereInput!]
-                  NOT: MovieGenresNodeAggregationWhereInput
-                  OR: [MovieGenresNodeAggregationWhereInput!]
                 }
 
                 type MovieGenresRelationship {
