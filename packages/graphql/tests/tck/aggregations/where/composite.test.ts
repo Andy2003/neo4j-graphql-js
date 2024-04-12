@@ -48,7 +48,7 @@ describe("Cypher Aggregations where with count and node", () => {
     test("Equality Count and node", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { count: 10, node: { name_EQUAL: "potato" } } }) {
+                posts(where: { likesAggregate: { count: 10, node: { name_AVERAGE_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -61,10 +61,10 @@ describe("Cypher Aggregations where with count and node", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN (count(this1) = $param0 AND any(var2 IN collect(this1.name) WHERE var2 = $param1)) AS var3
+                RETURN (count(this1) = $param0 AND avg(size(this1.name)) = $param1) AS var2
             }
             WITH *
-            WHERE var3 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -74,7 +74,7 @@ describe("Cypher Aggregations where with count and node", () => {
                     \\"low\\": 10,
                     \\"high\\": 0
                 },
-                \\"param1\\": \\"potato\\"
+                \\"param1\\": 10
             }"
         `);
     });
@@ -84,7 +84,11 @@ describe("Cypher Aggregations where with count and node", () => {
             {
                 posts(
                     where: {
-                        likesAggregate: { count: 10, node: { name_EQUAL: "potato" }, edge: { someString_EQUAL: "10" } }
+                        likesAggregate: {
+                            count: 10
+                            node: { name_AVERAGE_LENGTH_EQUAL: 10 }
+                            edge: { someString_AVERAGE_LENGTH_EQUAL: 10 }
+                        }
                     }
                 ) {
                     content
@@ -99,10 +103,10 @@ describe("Cypher Aggregations where with count and node", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN (count(this1) = $param0 AND any(var2 IN collect(this1.name) WHERE var2 = $param1) AND any(var3 IN collect(this0.someString) WHERE var3 = $param2)) AS var4
+                RETURN (count(this1) = $param0 AND avg(size(this1.name)) = $param1 AND avg(size(this0.someString)) = $param2) AS var2
             }
             WITH *
-            WHERE var4 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -112,8 +116,8 @@ describe("Cypher Aggregations where with count and node", () => {
                     \\"low\\": 10,
                     \\"high\\": 0
                 },
-                \\"param1\\": \\"potato\\",
-                \\"param2\\": \\"10\\"
+                \\"param1\\": 10,
+                \\"param2\\": 10
             }"
         `);
     });
@@ -125,8 +129,8 @@ describe("Cypher Aggregations where with count and node", () => {
                     where: {
                         likesAggregate: {
                             count: 10
-                            node: { name_EQUAL: "potato" }
-                            edge: { someString_EQUAL: "10" }
+                            node: { name_AVERAGE_LENGTH_EQUAL: 10 }
+                            edge: { someString_AVERAGE_LENGTH_EQUAL: 10 }
                             AND: [{ count_GT: 10 }, { count_LT: 20 }]
                         }
                     }
@@ -143,10 +147,10 @@ describe("Cypher Aggregations where with count and node", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN (count(this1) = $param0 AND (count(this1) > $param1 AND count(this1) < $param2) AND any(var2 IN collect(this1.name) WHERE var2 = $param3) AND any(var3 IN collect(this0.someString) WHERE var3 = $param4)) AS var4
+                RETURN (count(this1) = $param0 AND (count(this1) > $param1 AND count(this1) < $param2) AND avg(size(this1.name)) = $param3 AND avg(size(this0.someString)) = $param4) AS var2
             }
             WITH *
-            WHERE var4 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -164,8 +168,8 @@ describe("Cypher Aggregations where with count and node", () => {
                     \\"low\\": 20,
                     \\"high\\": 0
                 },
-                \\"param3\\": \\"potato\\",
-                \\"param4\\": \\"10\\"
+                \\"param3\\": 10,
+                \\"param4\\": 10
             }"
         `);
     });

@@ -174,7 +174,7 @@ describe("https://github.com/neo4j/graphql/issues/2708", () => {
     test("should find where moviesAggregate node property SHORTEST", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { genres: { moviesAggregate: { node: { title_SHORTEST_EQUAL: 1 } } } }) {
+                movies(where: { genres: { moviesAggregate: { node: { title_SHORTEST_LENGTH_EQUAL: 1 } } } }) {
                     title
                 }
             }
@@ -214,7 +214,7 @@ describe("https://github.com/neo4j/graphql/issues/2708", () => {
     test("should find where moviesAggregate node property AVERAGE", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { genres: { moviesAggregate: { node: { title_AVERAGE_EQUAL: 1 } } } }) {
+                movies(where: { genres: { moviesAggregate: { node: { title_AVERAGE_LENGTH_EQUAL: 1 } } } }) {
                     title
                 }
             }
@@ -608,7 +608,7 @@ describe("https://github.com/neo4j/graphql/issues/2708", () => {
                         genres: {
                             AND: [
                                 { moviesAggregate: { count: 2 } }
-                                { seriesAggregate: { node: { name_SHORTEST_EQUAL: 1 } } }
+                                { seriesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 1 } } }
                             ]
                         }
                     }
@@ -666,7 +666,7 @@ describe("https://github.com/neo4j/graphql/issues/2708", () => {
                         genres: {
                             OR: [
                                 { moviesAggregate: { count: 3 } }
-                                { seriesAggregate: { node: { name_SHORTEST_EQUAL: 1 } } }
+                                { seriesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 1 } } }
                             ]
                         }
                     }
@@ -721,7 +721,10 @@ describe("https://github.com/neo4j/graphql/issues/2708", () => {
             {
                 movies(
                     where: {
-                        genres: { moviesAggregate: { count: 2 }, seriesAggregate: { node: { name_SHORTEST_EQUAL: 1 } } }
+                        genres: {
+                            moviesAggregate: { count: 2 }
+                            seriesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 1 } }
+                        }
                     }
                 ) {
                     title

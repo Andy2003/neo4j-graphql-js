@@ -44,7 +44,7 @@ describe("Cypher Where Aggregations with @node directive", () => {
     test("GT with node directive", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { someName_GT: 1 } } }) {
+                posts(where: { likesAggregate: { node: { someName_AVERAGE_LENGTH_GT: 1 } } }) {
                     content
                 }
             }
@@ -57,19 +57,16 @@ describe("Cypher Where Aggregations with @node directive", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:_User:additionalUser)
-                RETURN any(var2 IN collect(size(this1.someName)) WHERE var2 > $param0) AS var3
+                RETURN avg(size(this1.someName)) > $param0 AS var2
             }
             WITH *
-            WHERE var3 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
         expect(formatParams(result.params)).toMatchInlineSnapshot(`
             "{
-                \\"param0\\": {
-                    \\"low\\": 1,
-                    \\"high\\": 0
-                }
+                \\"param0\\": 1
             }"
         `);
     });
