@@ -60,17 +60,13 @@ function makeFullTextInputFields({
         throw new Error("Expected fulltext annotation");
     }
     for (const index of concreteEntityAdapter.annotations.fulltext.indexes) {
-        const indexName = index.indexName || index.name;
-        if (indexName === undefined) {
-            throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-        }
         const fieldInput = withFullTextIndexInputType({
             concreteEntityAdapter,
-            indexName,
+            indexName: index.indexName,
             composer,
         });
         if (fieldInput) {
-            fields[indexName] = fieldInput;
+            fields[index.indexName] = fieldInput;
         }
     }
     return fields;
