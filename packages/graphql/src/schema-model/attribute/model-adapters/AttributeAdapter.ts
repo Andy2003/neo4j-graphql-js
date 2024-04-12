@@ -194,6 +194,7 @@ export class AttributeAdapter {
         const isTemporalWithoutDate = this.typeHelper.isTemporal() && !this.typeHelper.isDate();
         return (
             !this.typeHelper.isList() &&
+            !this.typeHelper.isID() &&
             (isGraphQLBuiltInScalarWithoutBoolean || isTemporalWithoutDate || this.typeHelper.isBigInt()) &&
             this.isAggregationFilterable()
         );

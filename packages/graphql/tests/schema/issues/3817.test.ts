@@ -222,7 +222,6 @@ describe("3817", () => {
               count_LT: Int
               count_LTE: Int
               edge: FriendOfAggregationWhereInput
-              node: PersonFriendsNodeAggregationWhereInput
             }
 
             input PersonFriendsConnectFieldInput {
@@ -282,12 +281,6 @@ describe("3817", () => {
               connect: [PersonFriendsConnectFieldInput!]
               connectOrCreate: [PersonFriendsConnectOrCreateFieldInput!]
               create: [PersonFriendsCreateFieldInput!]
-            }
-
-            input PersonFriendsNodeAggregationWhereInput {
-              AND: [PersonFriendsNodeAggregationWhereInput!]
-              NOT: PersonFriendsNodeAggregationWhereInput
-              OR: [PersonFriendsNodeAggregationWhereInput!]
             }
 
             type PersonFriendsRelationship {

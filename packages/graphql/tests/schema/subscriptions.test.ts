@@ -5634,7 +5634,6 @@ describe("Subscriptions", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: CreatureMoviesNodeAggregationWhereInput
             }
 
             input CreatureMoviesConnectFieldInput {
@@ -5672,12 +5671,6 @@ describe("Subscriptions", () => {
             input CreatureMoviesDisconnectFieldInput {
               disconnect: ProductionDisconnectInput
               where: CreatureMoviesConnectionWhere
-            }
-
-            input CreatureMoviesNodeAggregationWhereInput {
-              AND: [CreatureMoviesNodeAggregationWhereInput!]
-              NOT: CreatureMoviesNodeAggregationWhereInput
-              OR: [CreatureMoviesNodeAggregationWhereInput!]
             }
 
             type CreatureMoviesRelationship {
@@ -5987,7 +5980,6 @@ describe("Subscriptions", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: PersonMoviesNodeAggregationWhereInput
             }
 
             input PersonMoviesConnectFieldInput {
@@ -6016,12 +6008,6 @@ describe("Subscriptions", () => {
             input PersonMoviesFieldInput {
               connect: PersonMoviesConnectFieldInput
               create: PersonMoviesCreateFieldInput
-            }
-
-            input PersonMoviesNodeAggregationWhereInput {
-              AND: [PersonMoviesNodeAggregationWhereInput!]
-              NOT: PersonMoviesNodeAggregationWhereInput
-              OR: [PersonMoviesNodeAggregationWhereInput!]
             }
 
             input PersonMoviesRelationshipSubscriptionWhere {

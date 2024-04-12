@@ -140,7 +140,6 @@ describe("Interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: MovieMoviesNodeAggregationWhereInput
             }
 
             input MovieMoviesConnectFieldInput {
@@ -159,12 +158,6 @@ describe("Interfaces", () => {
             input MovieMoviesFieldInput {
               connect: [MovieMoviesConnectFieldInput!]
               create: [MovieMoviesCreateFieldInput!]
-            }
-
-            input MovieMoviesNodeAggregationWhereInput {
-              AND: [MovieMoviesNodeAggregationWhereInput!]
-              NOT: MovieMoviesNodeAggregationWhereInput
-              OR: [MovieMoviesNodeAggregationWhereInput!]
             }
 
             input MovieMoviesUpdateConnectionInput {
@@ -210,7 +203,6 @@ describe("Interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: MovieNodeMoviesNodeAggregationWhereInput
             }
 
             type MovieNodeMoviesConnection {
@@ -239,12 +231,6 @@ describe("Interfaces", () => {
             input MovieNodeMoviesDisconnectFieldInput {
               disconnect: MovieDisconnectInput
               where: MovieNodeMoviesConnectionWhere
-            }
-
-            input MovieNodeMoviesNodeAggregationWhereInput {
-              AND: [MovieNodeMoviesNodeAggregationWhereInput!]
-              NOT: MovieNodeMoviesNodeAggregationWhereInput
-              OR: [MovieNodeMoviesNodeAggregationWhereInput!]
             }
 
             type MovieNodeMoviesRelationship {
@@ -565,7 +551,6 @@ describe("Interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: MovieMoviesNodeAggregationWhereInput
             }
 
             input MovieMoviesConnectFieldInput {
@@ -584,12 +569,6 @@ describe("Interfaces", () => {
             input MovieMoviesFieldInput {
               connect: [MovieMoviesConnectFieldInput!]
               create: [MovieMoviesCreateFieldInput!]
-            }
-
-            input MovieMoviesNodeAggregationWhereInput {
-              AND: [MovieMoviesNodeAggregationWhereInput!]
-              NOT: MovieMoviesNodeAggregationWhereInput
-              OR: [MovieMoviesNodeAggregationWhereInput!]
             }
 
             input MovieMoviesUpdateConnectionInput {
@@ -635,7 +614,6 @@ describe("Interfaces", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: MovieNodeMoviesNodeAggregationWhereInput
             }
 
             type MovieNodeMoviesConnection {
@@ -664,12 +642,6 @@ describe("Interfaces", () => {
             input MovieNodeMoviesDisconnectFieldInput {
               disconnect: MovieDisconnectInput
               where: MovieNodeMoviesConnectionWhere
-            }
-
-            input MovieNodeMoviesNodeAggregationWhereInput {
-              AND: [MovieNodeMoviesNodeAggregationWhereInput!]
-              NOT: MovieNodeMoviesNodeAggregationWhereInput
-              OR: [MovieNodeMoviesNodeAggregationWhereInput!]
             }
 
             type MovieNodeMoviesRelationship {

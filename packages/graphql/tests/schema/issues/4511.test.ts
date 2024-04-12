@@ -134,7 +134,6 @@ describe("https://github.com/neo4j/graphql/issues/4511", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: CreatureMoviesNodeAggregationWhereInput
             }
 
             input CreatureMoviesConnectFieldInput {
@@ -172,12 +171,6 @@ describe("https://github.com/neo4j/graphql/issues/4511", () => {
             input CreatureMoviesDisconnectFieldInput {
               disconnect: ProductionDisconnectInput
               where: CreatureMoviesConnectionWhere
-            }
-
-            input CreatureMoviesNodeAggregationWhereInput {
-              AND: [CreatureMoviesNodeAggregationWhereInput!]
-              NOT: CreatureMoviesNodeAggregationWhereInput
-              OR: [CreatureMoviesNodeAggregationWhereInput!]
             }
 
             type CreatureMoviesRelationship {
@@ -487,7 +480,6 @@ describe("https://github.com/neo4j/graphql/issues/4511", () => {
               count_GTE: Int
               count_LT: Int
               count_LTE: Int
-              node: PersonMoviesNodeAggregationWhereInput
             }
 
             input PersonMoviesConnectFieldInput {
@@ -516,12 +508,6 @@ describe("https://github.com/neo4j/graphql/issues/4511", () => {
             input PersonMoviesFieldInput {
               connect: PersonMoviesConnectFieldInput
               create: PersonMoviesCreateFieldInput
-            }
-
-            input PersonMoviesNodeAggregationWhereInput {
-              AND: [PersonMoviesNodeAggregationWhereInput!]
-              NOT: PersonMoviesNodeAggregationWhereInput
-              OR: [PersonMoviesNodeAggregationWhereInput!]
             }
 
             input PersonMoviesRelationshipSubscriptionWhere {
