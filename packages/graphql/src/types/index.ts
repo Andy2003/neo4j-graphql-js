@@ -42,11 +42,10 @@ export type AuthorizationContext = {
 };
 
 export type FulltextContext = {
-    name: string | undefined;
     fields: string[];
     queryType: string;
     queryName: string | undefined;
-    indexName: string | undefined; // TODO: not undefined once name is removed.
+    indexName: string;
     scoreVariable: Cypher.Variable;
 };
 

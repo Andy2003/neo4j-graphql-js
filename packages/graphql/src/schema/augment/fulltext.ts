@@ -49,29 +49,15 @@ export function augmentFulltextSchema(
      *  and determine if we can remove them
      */
     concreteEntityAdapter.annotations.fulltext.indexes.forEach((index) => {
-        /**
-         * TODO [fulltext-deprecations]
-         * remove indexName assignment and undefined check once the name argument has been removed.
-         */
-        const indexName = index.indexName || index.name;
-        if (indexName === undefined) {
-            throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-        }
-
-        let queryName = concreteEntityAdapter.operations.getFullTextIndexQueryFieldName(indexName);
+        let queryName = concreteEntityAdapter.operations.getFullTextIndexQueryFieldName(index.indexName);
         if (index.queryName) {
             queryName = index.queryName;
         }
-        /**
-         * TODO [translation-layer-compatibility]
-         *  temporary for compatibility with translation layer
-         */
         const nodeIndex = node.fulltextDirective!.indexes.find((i) => {
-            const iName = i.indexName || i.name;
-            return iName === indexName;
+            return i.indexName === index.indexName;
         });
         if (!nodeIndex) {
-            throw new Error(`Could not find index ${indexName} on node ${node.name}`);
+            throw new Error(`Could not find index ${index.indexName} on node ${node.name}`);
         }
         composer.Query.addFields({
             [queryName]: {

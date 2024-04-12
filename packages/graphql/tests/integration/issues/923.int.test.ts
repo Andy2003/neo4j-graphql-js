@@ -34,7 +34,7 @@ describe("https://github.com/neo4j/graphql/issues/923", () => {
         // driver = await neo4j.getDriver();
 
         const typeDefs = gql`
-            type ${testBlogpost.name} @fulltext(indexes: [{ name: "BlogTitle", fields: ["title"] }]) {
+            type ${testBlogpost.name} @fulltext(indexes: [{ indexName: "BlogTitle", fields: ["title"] }]) {
                 title: String!
                 slug: String! @unique
             }

@@ -149,11 +149,7 @@ async function createIndexesAndConstraints({
     for (const entity of schemaModel.concreteEntities) {
         if (entity.annotations.fulltext) {
             entity.annotations.fulltext.indexes.forEach((index) => {
-                const indexName = index.indexName || index.name; // TODO remove indexName assignment and undefined check once the name argument has been removed.
-                if (indexName === undefined) {
-                    throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-                }
-                const existingIndex = existingIndexes[indexName];
+                const existingIndex = existingIndexes[index.indexName];
                 if (!existingIndex) {
                     // An index with the same name does not exist, so we will create it
                     const properties = index.fields.map((field) => {
@@ -168,7 +164,7 @@ async function createIndexesAndConstraints({
                     const entityAdapter = new ConcreteEntityAdapter(entity);
 
                     indexesToCreate.push({
-                        indexName: indexName,
+                        indexName: index.indexName,
                         label: entityAdapter.getMainLabel(),
                         properties,
                     });
@@ -188,7 +184,7 @@ async function createIndexesAndConstraints({
                                     : "";
 
                             indexErrors.push(
-                                `@fulltext index '${indexName}' on Node '${entity.name}' already exists, but is missing field '${field}'${aliasError}`
+                                `@fulltext index '${index.indexName}' on Node '${entity.name}' already exists, but is missing field '${field}'${aliasError}`
                             );
                         }
                     });
@@ -259,14 +255,9 @@ async function checkIndexesAndConstraints({
     for (const entity of schemaModel.concreteEntities) {
         if (entity.annotations.fulltext) {
             entity.annotations.fulltext.indexes.forEach((index) => {
-                const indexName = index.indexName || index.name; // TODO remove indexName assignment and undefined check once the name argument has been removed.
-                if (indexName === undefined) {
-                    throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-                }
-
-                const existingIndex = existingIndexes[indexName];
+                const existingIndex = existingIndexes[index.indexName];
                 if (!existingIndex) {
-                    indexErrors.push(`Missing @fulltext index '${indexName}' on Node '${entity.name}'`);
+                    indexErrors.push(`Missing @fulltext index '${index.indexName}' on Node '${entity.name}'`);
 
                     return;
                 }
@@ -286,7 +277,7 @@ async function checkIndexesAndConstraints({
                                 : "";
 
                         indexErrors.push(
-                            `@fulltext index '${indexName}' on Node '${entity.name}' is missing field '${field}'${aliasError}`
+                            `@fulltext index '${index.indexName}' on Node '${entity.name}' is missing field '${field}'${aliasError}`
                         );
                     }
                 });
