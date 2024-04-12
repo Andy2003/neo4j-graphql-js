@@ -172,16 +172,11 @@ function createFulltextMatchClause(
         throw new Error("Full-text context not defined");
     }
 
-    // TODO: remove indexName assignment and undefined check once the name argument has been removed.
-    const indexName = context.fulltext.indexName || context.fulltext.name;
-    if (indexName === undefined) {
-        throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-    }
     const phraseParam = new Cypher.Param(context.resolveTree.args.phrase);
     const scoreVar = context.fulltext.scoreVariable;
 
     const matchClause = Cypher.db.index.fulltext
-        .queryNodes(indexName, phraseParam)
+        .queryNodes(context.fulltext.indexName, phraseParam)
         .yield(["node", matchNode], ["score", scoreVar]);
 
     const expectedLabels = node.getLabels(context);

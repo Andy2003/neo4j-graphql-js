@@ -28,8 +28,8 @@ describe("@fulltext schema", () => {
             type Movie
                 @fulltext(
                     indexes: [
-                        { name: "MovieTitle", fields: ["title"] }
-                        { name: "MovieDescription", fields: ["description"] }
+                        { indexName: "MovieTitle", fields: ["title"] }
+                        { indexName: "MovieDescription", fields: ["description"] }
                     ]
                 ) {
                 title: String

@@ -143,17 +143,13 @@ export class FulltextFactory {
 
     private getFulltextOptions(context: Neo4jGraphQLTranslationContext): FulltextOptions {
         if (context.fulltext) {
-            const indexName = context.fulltext.indexName ?? context.fulltext.name;
-            if (indexName === undefined) {
-                throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-            }
             const phrase = context.resolveTree.args.phrase;
             if (!phrase || typeof phrase !== "string") {
                 throw new Error("Invalid phrase");
             }
 
             return {
-                index: indexName,
+                index: context.fulltext.indexName,
                 phrase,
                 score: context.fulltext.scoreVariable,
             };

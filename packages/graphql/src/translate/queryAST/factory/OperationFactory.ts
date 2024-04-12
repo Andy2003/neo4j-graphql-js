@@ -108,10 +108,6 @@ export class OperationsFactory {
             if (!context.fulltext) {
                 throw new Error("Failed to get context fulltext");
             }
-            const indexName = context.fulltext.indexName ?? context.fulltext.name;
-            if (indexName === undefined) {
-                throw new Error("The name of the fulltext index should be defined using the indexName argument.");
-            }
             assertIsConcreteEntity(entity);
             return this.fulltextFactory.createFulltextOperation(entity, resolveTree, context);
         }
