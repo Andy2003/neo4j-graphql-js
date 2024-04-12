@@ -75,7 +75,6 @@ import { filterTruthy } from "../utils/utils";
 import { createConnectionFields } from "./create-connection-fields";
 import { addGlobalNodeFields } from "./create-global-nodes";
 import { createRelationshipFields } from "./create-relationship-fields/create-relationship-fields";
-import { deprecationMap } from "./deprecation-map";
 import { AugmentedSchemaGenerator } from "./generation/AugmentedSchemaGenerator";
 import { withAggregateSelectionType } from "./generation/aggregate-types";
 import { withCreateInputType } from "./generation/create-input";
@@ -148,14 +147,6 @@ function makeAugmentedSchema({
     ];
     if (pipedDefs.length) {
         composer.addTypeDefs(print({ kind: Kind.DOCUMENT, definitions: pipedDefs }));
-    }
-
-    // Loop over all entries in the deprecation map and add field deprecations to all types in the map.
-    for (const [typeName, deprecatedFields] of deprecationMap) {
-        const typeComposer = composer.getOTC(typeName);
-        typeComposer.deprecateFields(
-            deprecatedFields.reduce((acc, { field, reason }) => ({ ...acc, [field]: reason }), {})
-        );
     }
 
     // TODO: ideally move these in getSubgraphSchema()

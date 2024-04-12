@@ -47,7 +47,6 @@ describe("info", () => {
             mutation {
                 createMovies(input: [{ title: "title", actors: { create: [{ node: { name: "Keanu" } }] } }]) {
                     info {
-                        bookmark
                         nodesCreated
                         relationshipsCreated
                     }
@@ -105,7 +104,7 @@ describe("info", () => {
         const query = /* GraphQL */ `
             mutation {
                 deleteMovies(where: { id: "123" }) {
-                    bookmark
+                    nodesDeleted
                 }
             }
         `;
@@ -130,7 +129,7 @@ describe("info", () => {
             mutation {
                 updateMovies(where: { id: "123" }) {
                     info {
-                        bookmark
+                        nodesCreated
                     }
                 }
             }
