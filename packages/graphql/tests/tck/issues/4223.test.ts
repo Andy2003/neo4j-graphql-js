@@ -33,13 +33,14 @@ describe("https://github.com/neo4j/graphql/issues/4223", () => {
             adminAccess: [Tenant!]! @relationship(type: "ADMIN_IN", direction: OUT)
         }
 
-        type Tenant @authorization(validate: [{ where: { node: { admins: { userId: "$jwt.id" } } } }]) {
+        type Tenant @authorization(validate: [{ where: { node: { admins_SOME: { userId: "$jwt.id" } } } }]) {
             id: ID! @id
             settings: Settings! @relationship(type: "VEHICLECARD_OWNER", direction: IN)
             admins: [User!]! @relationship(type: "ADMIN_IN", direction: IN)
         }
 
-        type Settings @authorization(validate: [{ where: { node: { tenant: { admins: { userId: "$jwt.id" } } } } }]) {
+        type Settings
+            @authorization(validate: [{ where: { node: { tenant: { admins_SOME: { userId: "$jwt.id" } } } } }]) {
             id: ID! @id
             tenant: Tenant! @relationship(type: "HAS_SETTINGS", direction: IN)
             openingDays: [OpeningDay!]! @relationship(type: "VALID_OPENING_DAYS", direction: OUT)
@@ -49,7 +50,7 @@ describe("https://github.com/neo4j/graphql/issues/4223", () => {
 
         type OpeningDay
             @authorization(
-                validate: [{ where: { node: { settings: { tenant: { admins: { userId: "$jwt.id" } } } } } }]
+                validate: [{ where: { node: { settings: { tenant: { admins_SOME: { userId: "$jwt.id" } } } } } }]
             ) {
             id: ID! @id
             settings: Settings @relationship(type: "VALID_GARAGES", direction: IN)
@@ -59,7 +60,11 @@ describe("https://github.com/neo4j/graphql/issues/4223", () => {
         type OpeningHoursInterval
             @authorization(
                 validate: [
-                    { where: { node: { openingDay: { settings: { tenant: { admins: { userId: "$jwt.id" } } } } } } }
+                    {
+                        where: {
+                            node: { openingDay: { settings: { tenant: { admins_SOME: { userId: "$jwt.id" } } } } }
+                        }
+                    }
                 ]
             ) {
             name: String
@@ -69,7 +74,7 @@ describe("https://github.com/neo4j/graphql/issues/4223", () => {
 
         type MyWorkspace
             @authorization(
-                validate: [{ where: { node: { settings: { tenant: { admins: { userId: "$jwt.id" } } } } } }]
+                validate: [{ where: { node: { settings: { tenant: { admins_SOME: { userId: "$jwt.id" } } } } } }]
             ) {
             settings: Settings! @relationship(type: "HAS_WORKSPACE_SETTINGS", direction: IN)
             workspace: String

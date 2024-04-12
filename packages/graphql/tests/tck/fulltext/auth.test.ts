@@ -42,7 +42,7 @@ describe("Cypher -> fulltext -> Auth", () => {
             const typeDefs = /* GraphQL */ `
                 type Movie
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
-                    @authorization(filter: [{ where: { node: { director: { id: "$jwt.sub" } } } }]) {
+                    @authorization(filter: [{ where: { node: { director_SOME: { id: "$jwt.sub" } } } }]) {
                     title: String
                     director: [Person!]! @relationship(type: "DIRECTED", direction: IN)
                 }
@@ -98,7 +98,9 @@ describe("Cypher -> fulltext -> Auth", () => {
             const typeDefs = /* GraphQL */ `
                 type Movie
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
-                    @authorization(validate: [{ when: [BEFORE], where: { node: { director: { id: "$jwt.sub" } } } }]) {
+                    @authorization(
+                        validate: [{ when: [BEFORE], where: { node: { director_SOME: { id: "$jwt.sub" } } } }]
+                    ) {
                     title: String
                     director: [Person!]! @relationship(type: "DIRECTED", direction: IN)
                 }
@@ -214,7 +216,10 @@ describe("Cypher -> fulltext -> Auth", () => {
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
                     @authorization(
                         validate: [
-                            { when: [BEFORE], where: { node: { directorConnection: { node: { id: "$jwt.sub" } } } } }
+                            {
+                                when: [BEFORE]
+                                where: { node: { directorConnection_SOME: { node: { id: "$jwt.sub" } } } }
+                            }
                         ]
                     ) {
                     title: String
@@ -337,7 +342,7 @@ describe("Cypher -> fulltext -> Auth", () => {
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
                     @authorization(
                         validate: [
-                            { when: [BEFORE], where: { node: { directorConnection: { edge: { year: 2020 } } } } }
+                            { when: [BEFORE], where: { node: { directorConnection_SOME: { edge: { year: 2020 } } } } }
                         ]
                     ) {
                     title: String
@@ -459,7 +464,7 @@ describe("Cypher -> fulltext -> Auth", () => {
             const typeDefs = /* GraphQL */ `
                 type Movie
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
-                    @authorization(filter: [{ where: { node: { director: { id: "$jwt.sub" } } } }]) {
+                    @authorization(filter: [{ where: { node: { director_SOME: { id: "$jwt.sub" } } } }]) {
                     title: String
                     director: [Person!]! @relationship(type: "DIRECTED", direction: IN)
                 }
@@ -518,7 +523,9 @@ describe("Cypher -> fulltext -> Auth", () => {
             const typeDefs = /* GraphQL */ `
                 type Movie
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
-                    @authorization(validate: [{ when: [BEFORE], where: { node: { director: { id: "$jwt.sub" } } } }]) {
+                    @authorization(
+                        validate: [{ when: [BEFORE], where: { node: { director_SOME: { id: "$jwt.sub" } } } }]
+                    ) {
                     title: String
                     director: [Person!]! @relationship(type: "DIRECTED", direction: IN)
                 }
@@ -643,7 +650,10 @@ describe("Cypher -> fulltext -> Auth", () => {
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
                     @authorization(
                         validate: [
-                            { when: [BEFORE], where: { node: { directorConnection: { node: { id: "$jwt.sub" } } } } }
+                            {
+                                when: [BEFORE]
+                                where: { node: { directorConnection_SOME: { node: { id: "$jwt.sub" } } } }
+                            }
                         ]
                     ) {
                     title: String
@@ -775,7 +785,7 @@ describe("Cypher -> fulltext -> Auth", () => {
                     @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
                     @authorization(
                         validate: [
-                            { when: [BEFORE], where: { node: { directorConnection: { edge: { year: 2020 } } } } }
+                            { when: [BEFORE], where: { node: { directorConnection_SOME: { edge: { year: 2020 } } } } }
                         ]
                     ) {
                     title: String

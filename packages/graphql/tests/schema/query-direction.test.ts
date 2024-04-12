@@ -183,7 +183,6 @@ describe("Query Direction", () => {
               NOT: UserFriendsConnectionWhere
               OR: [UserFriendsConnectionWhere!]
               node: UserWhere
-              node_NOT: UserWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input UserFriendsCreateFieldInput {
@@ -302,9 +301,7 @@ describe("Query Direction", () => {
               AND: [UserWhere!]
               NOT: UserWhere
               OR: [UserWhere!]
-              friends: UserWhere @deprecated(reason: \\"Use \`friends_SOME\` instead.\\")
               friendsAggregate: UserFriendsAggregateInput
-              friendsConnection: UserFriendsConnectionWhere @deprecated(reason: \\"Use \`friendsConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Users where all of the related UserFriendsConnections match this filter
               \\"\\"\\"
@@ -313,7 +310,6 @@ describe("Query Direction", () => {
               Return Users where none of the related UserFriendsConnections match this filter
               \\"\\"\\"
               friendsConnection_NONE: UserFriendsConnectionWhere
-              friendsConnection_NOT: UserFriendsConnectionWhere @deprecated(reason: \\"Use \`friendsConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Users where one of the related UserFriendsConnections match this filter
               \\"\\"\\"
@@ -326,7 +322,6 @@ describe("Query Direction", () => {
               friends_ALL: UserWhere
               \\"\\"\\"Return Users where none of the related Users match this filter\\"\\"\\"
               friends_NONE: UserWhere
-              friends_NOT: UserWhere @deprecated(reason: \\"Use \`friends_NONE\` instead.\\")
               \\"\\"\\"Return Users where one of the related Users match this filter\\"\\"\\"
               friends_SINGLE: UserWhere
               \\"\\"\\"Return Users where some of the related Users match this filter\\"\\"\\"
@@ -335,11 +330,6 @@ describe("Query Direction", () => {
               name_CONTAINS: String
               name_ENDS_WITH: String
               name_IN: [String!]
-              name_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               name_STARTS_WITH: String
             }
 
@@ -510,7 +500,6 @@ describe("Query Direction", () => {
               NOT: UserFriendsConnectionWhere
               OR: [UserFriendsConnectionWhere!]
               node: UserWhere
-              node_NOT: UserWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input UserFriendsCreateFieldInput {
@@ -629,9 +618,7 @@ describe("Query Direction", () => {
               AND: [UserWhere!]
               NOT: UserWhere
               OR: [UserWhere!]
-              friends: UserWhere @deprecated(reason: \\"Use \`friends_SOME\` instead.\\")
               friendsAggregate: UserFriendsAggregateInput
-              friendsConnection: UserFriendsConnectionWhere @deprecated(reason: \\"Use \`friendsConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Users where all of the related UserFriendsConnections match this filter
               \\"\\"\\"
@@ -640,7 +627,6 @@ describe("Query Direction", () => {
               Return Users where none of the related UserFriendsConnections match this filter
               \\"\\"\\"
               friendsConnection_NONE: UserFriendsConnectionWhere
-              friendsConnection_NOT: UserFriendsConnectionWhere @deprecated(reason: \\"Use \`friendsConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Users where one of the related UserFriendsConnections match this filter
               \\"\\"\\"
@@ -653,7 +639,6 @@ describe("Query Direction", () => {
               friends_ALL: UserWhere
               \\"\\"\\"Return Users where none of the related Users match this filter\\"\\"\\"
               friends_NONE: UserWhere
-              friends_NOT: UserWhere @deprecated(reason: \\"Use \`friends_NONE\` instead.\\")
               \\"\\"\\"Return Users where one of the related Users match this filter\\"\\"\\"
               friends_SINGLE: UserWhere
               \\"\\"\\"Return Users where some of the related Users match this filter\\"\\"\\"
@@ -662,11 +647,6 @@ describe("Query Direction", () => {
               name_CONTAINS: String
               name_ENDS_WITH: String
               name_IN: [String!]
-              name_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               name_STARTS_WITH: String
             }
 
@@ -837,7 +817,6 @@ describe("Query Direction", () => {
               NOT: UserFriendsConnectionWhere
               OR: [UserFriendsConnectionWhere!]
               node: UserWhere
-              node_NOT: UserWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input UserFriendsCreateFieldInput {
@@ -956,9 +935,7 @@ describe("Query Direction", () => {
               AND: [UserWhere!]
               NOT: UserWhere
               OR: [UserWhere!]
-              friends: UserWhere @deprecated(reason: \\"Use \`friends_SOME\` instead.\\")
               friendsAggregate: UserFriendsAggregateInput
-              friendsConnection: UserFriendsConnectionWhere @deprecated(reason: \\"Use \`friendsConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Users where all of the related UserFriendsConnections match this filter
               \\"\\"\\"
@@ -967,7 +944,6 @@ describe("Query Direction", () => {
               Return Users where none of the related UserFriendsConnections match this filter
               \\"\\"\\"
               friendsConnection_NONE: UserFriendsConnectionWhere
-              friendsConnection_NOT: UserFriendsConnectionWhere @deprecated(reason: \\"Use \`friendsConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Users where one of the related UserFriendsConnections match this filter
               \\"\\"\\"
@@ -980,7 +956,6 @@ describe("Query Direction", () => {
               friends_ALL: UserWhere
               \\"\\"\\"Return Users where none of the related Users match this filter\\"\\"\\"
               friends_NONE: UserWhere
-              friends_NOT: UserWhere @deprecated(reason: \\"Use \`friends_NONE\` instead.\\")
               \\"\\"\\"Return Users where one of the related Users match this filter\\"\\"\\"
               friends_SINGLE: UserWhere
               \\"\\"\\"Return Users where some of the related Users match this filter\\"\\"\\"
@@ -989,11 +964,6 @@ describe("Query Direction", () => {
               name_CONTAINS: String
               name_ENDS_WITH: String
               name_IN: [String!]
-              name_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               name_STARTS_WITH: String
             }
 

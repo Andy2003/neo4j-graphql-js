@@ -98,7 +98,7 @@ describe("Cypher -> Connections -> Filtering -> Node -> Equality", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { node: { name_NOT: "Tom Hanks" } }) {
+                    actorsConnection(where: { node: { NOT: { name: "Tom Hanks" } } }) {
                         edges {
                             properties {
                                 screenTime

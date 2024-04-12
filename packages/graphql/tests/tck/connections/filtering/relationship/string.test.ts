@@ -116,7 +116,7 @@ describe("Cypher -> Connections -> Filtering -> Relationship -> String", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { edge: { role_NOT_CONTAINS: "Forrest" } }) {
+                    actorsConnection(where: { edge: { NOT: { role_CONTAINS: "Forrest" } } }) {
                         edges {
                             properties {
                                 role
@@ -210,7 +210,7 @@ describe("Cypher -> Connections -> Filtering -> Relationship -> String", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { edge: { role_NOT_STARTS_WITH: "Forrest" } }) {
+                    actorsConnection(where: { edge: { NOT: { role_STARTS_WITH: "Forrest" } } }) {
                         edges {
                             properties {
                                 role
@@ -304,7 +304,7 @@ describe("Cypher -> Connections -> Filtering -> Relationship -> String", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { edge: { role_NOT_ENDS_WITH: "Gump" } }) {
+                    actorsConnection(where: { edge: { NOT: { role_ENDS_WITH: "Gump" } } }) {
                         edges {
                             properties {
                                 role

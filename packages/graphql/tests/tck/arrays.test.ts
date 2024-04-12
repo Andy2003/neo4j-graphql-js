@@ -65,7 +65,7 @@ describe("Cypher Arrays", () => {
     test("WHERE NOT INCLUDES", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { ratings_NOT_INCLUDES: 4.0 }) {
+                movies(where: { NOT: { ratings_INCLUDES: 4.0 } }) {
                     title
                     ratings
                 }

@@ -118,7 +118,7 @@ describe("Cypher Advanced Filtering", () => {
     test("NOT", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { id_NOT: "123" }) {
+                movies(where: { NOT: { id: "123" } }) {
                     id
                 }
             }
@@ -142,7 +142,7 @@ describe("Cypher Advanced Filtering", () => {
     test("NOT_IN", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { id_NOT_IN: ["123"] }) {
+                movies(where: { NOT: { id_IN: ["123"] } }) {
                     id
                 }
             }
@@ -192,7 +192,7 @@ describe("Cypher Advanced Filtering", () => {
     test("NOT_CONTAINS", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { id_NOT_CONTAINS: "123" }) {
+                movies(where: { NOT: { id_CONTAINS: "123" } }) {
                     id
                 }
             }
@@ -240,7 +240,7 @@ describe("Cypher Advanced Filtering", () => {
     test("NOT_STARTS_WITH", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { id_NOT_STARTS_WITH: "123" }) {
+                movies(where: { NOT: { id_STARTS_WITH: "123" } }) {
                     id
                 }
             }
@@ -288,7 +288,7 @@ describe("Cypher Advanced Filtering", () => {
     test("NOT_ENDS_WITH", async () => {
         const query = /* GraphQL */ `
             {
-                movies(where: { id_NOT_ENDS_WITH: "123" }) {
+                movies(where: { NOT: { id_ENDS_WITH: "123" } }) {
                     id
                 }
             }
@@ -621,7 +621,7 @@ describe("Cypher Advanced Filtering", () => {
         test("equality", async () => {
             const query = /* GraphQL */ `
                 {
-                    movies(where: { genres: { name: "some genre" } }) {
+                    movies(where: { genres_SOME: { name: "some genre" } }) {
                         actorCount
                     }
                 }
@@ -648,7 +648,7 @@ describe("Cypher Advanced Filtering", () => {
         test("NOT", async () => {
             const query = /* GraphQL */ `
                 {
-                    movies(where: { genres_NOT: { name: "some genre" } }) {
+                    movies(where: { NOT: { genres_SOME: { name: "some genre" } } }) {
                         actorCount
                     }
                 }
@@ -766,7 +766,7 @@ describe("Cypher Advanced Filtering", () => {
         test("Node and relationship properties equality", async () => {
             const query = /* GraphQL */ `
                 {
-                    movies(where: { genresConnection: { node: { name: "some genre" } } }) {
+                    movies(where: { genresConnection_SOME: { node: { name: "some genre" } } }) {
                         actorCount
                     }
                 }
@@ -793,7 +793,7 @@ describe("Cypher Advanced Filtering", () => {
         test("Node and relationship properties NOT", async () => {
             const query = /* GraphQL */ `
                 {
-                    movies(where: { genresConnection_NOT: { node: { name: "some genre" } } }) {
+                    movies(where: { NOT: { genresConnection_SOME: { node: { name: "some genre" } } } }) {
                         actorCount
                     }
                 }

@@ -41,8 +41,8 @@ describe("https://github.com/neo4j/graphql/issues/505", () => {
                             operations: [READ]
                             where: {
                                 OR: [
-                                    { node: { members: { authId: "$jwt.sub" } } }
-                                    { node: { admins: { authId: "$jwt.sub" } } }
+                                    { node: { members_SOME: { authId: "$jwt.sub" } } }
+                                    { node: { admins_SOME: { authId: "$jwt.sub" } } }
                                 ]
                             }
                         }
@@ -71,8 +71,8 @@ describe("https://github.com/neo4j/graphql/issues/505", () => {
                                                 {
                                                     workspace: {
                                                         OR: [
-                                                            { members: { authId: "$jwt.sub" } }
-                                                            { admins: { authId: "$jwt.sub" } }
+                                                            { members_SOME: { authId: "$jwt.sub" } }
+                                                            { admins_SOME: { authId: "$jwt.sub" } }
                                                         ]
                                                     }
                                                 }

@@ -116,7 +116,7 @@ describe("Cypher -> Connections -> Filtering -> Node -> String", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { node: { name_NOT_CONTAINS: "Tom" } }) {
+                    actorsConnection(where: { node: { NOT: { name_CONTAINS: "Tom" } } }) {
                         edges {
                             properties {
                                 screenTime
@@ -210,7 +210,7 @@ describe("Cypher -> Connections -> Filtering -> Node -> String", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { node: { name_NOT_STARTS_WITH: "Tom" } }) {
+                    actorsConnection(where: { node: { NOT: { name_STARTS_WITH: "Tom" } } }) {
                         edges {
                             properties {
                                 screenTime
@@ -304,7 +304,7 @@ describe("Cypher -> Connections -> Filtering -> Node -> String", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { node: { name_NOT_ENDS_WITH: "Hanks" } }) {
+                    actorsConnection(where: { node: { NOT: { name_ENDS_WITH: "Hanks" } } }) {
                         edges {
                             properties {
                                 screenTime

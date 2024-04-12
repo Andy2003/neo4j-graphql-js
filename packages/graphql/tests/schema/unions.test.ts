@@ -122,11 +122,6 @@ describe("Unions", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
             }
 
@@ -237,7 +232,6 @@ describe("Unions", () => {
               NOT: MovieSearchGenreConnectionWhere
               OR: [MovieSearchGenreConnectionWhere!]
               node: GenreWhere
-              node_NOT: GenreWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input MovieSearchGenreCreateFieldInput {
@@ -280,7 +274,6 @@ describe("Unions", () => {
               NOT: MovieSearchMovieConnectionWhere
               OR: [MovieSearchMovieConnectionWhere!]
               node: MovieWhere
-              node_NOT: MovieWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input MovieSearchMovieCreateFieldInput {
@@ -345,14 +338,7 @@ describe("Unions", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
-              search: SearchWhere @deprecated(reason: \\"Use \`search_SOME\` instead.\\")
-              searchConnection: MovieSearchConnectionWhere @deprecated(reason: \\"Use \`searchConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Movies where all of the related MovieSearchConnections match this filter
               \\"\\"\\"
@@ -361,7 +347,6 @@ describe("Unions", () => {
               Return Movies where none of the related MovieSearchConnections match this filter
               \\"\\"\\"
               searchConnection_NONE: MovieSearchConnectionWhere
-              searchConnection_NOT: MovieSearchConnectionWhere @deprecated(reason: \\"Use \`searchConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Movies where one of the related MovieSearchConnections match this filter
               \\"\\"\\"
@@ -374,7 +359,6 @@ describe("Unions", () => {
               search_ALL: SearchWhere
               \\"\\"\\"Return Movies where none of the related Searches match this filter\\"\\"\\"
               search_NONE: SearchWhere
-              search_NOT: SearchWhere @deprecated(reason: \\"Use \`search_NONE\` instead.\\")
               \\"\\"\\"Return Movies where one of the related Searches match this filter\\"\\"\\"
               search_SINGLE: SearchWhere
               \\"\\"\\"Return Movies where some of the related Searches match this filter\\"\\"\\"

@@ -55,10 +55,10 @@ describe("#582", () => {
             variableValues: {
                 where: {
                     type: "Cat",
-                    childrenConnection: {
+                    childrenConnection_SOME: {
                         node: {
                             type: "Dog",
-                            parentsConnection: {
+                            parentsConnection_SOME: {
                                 node: {
                                     type: "Bird",
                                 },
@@ -103,13 +103,13 @@ describe("#582", () => {
             variableValues: {
                 where: {
                     type: "Cat",
-                    childrenConnection: {
+                    childrenConnection_SOME: {
                         node: {
                             type: "Dog",
-                            parentsConnection: {
+                            parentsConnection_SOME: {
                                 node: {
                                     type: "Bird",
-                                    childrenConnection: {
+                                    childrenConnection_SOME: {
                                         node: {
                                             type: "Fish",
                                         },
