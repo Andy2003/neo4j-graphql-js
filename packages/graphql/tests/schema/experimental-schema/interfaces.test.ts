@@ -163,7 +163,6 @@ describe("Interfaces", () => {
               AND: [MovieMoviesNodeAggregationWhereInput!]
               NOT: MovieMoviesNodeAggregationWhereInput
               OR: [MovieMoviesNodeAggregationWhereInput!]
-              id_EQUAL: ID @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
             }
 
             input MovieMoviesUpdateConnectionInput {
@@ -243,7 +242,6 @@ describe("Interfaces", () => {
               AND: [MovieNodeMoviesNodeAggregationWhereInput!]
               NOT: MovieNodeMoviesNodeAggregationWhereInput
               OR: [MovieNodeMoviesNodeAggregationWhereInput!]
-              id_EQUAL: ID @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
             }
 
             type MovieNodeMoviesRelationship {
@@ -568,7 +566,6 @@ describe("Interfaces", () => {
               AND: [MovieMoviesNodeAggregationWhereInput!]
               NOT: MovieMoviesNodeAggregationWhereInput
               OR: [MovieMoviesNodeAggregationWhereInput!]
-              id_EQUAL: ID @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
             }
 
             input MovieMoviesUpdateConnectionInput {
@@ -648,7 +645,6 @@ describe("Interfaces", () => {
               AND: [MovieNodeMoviesNodeAggregationWhereInput!]
               NOT: MovieNodeMoviesNodeAggregationWhereInput
               OR: [MovieNodeMoviesNodeAggregationWhereInput!]
-              id_EQUAL: ID @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
             }
 
             type MovieNodeMoviesRelationship {

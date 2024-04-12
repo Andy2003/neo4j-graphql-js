@@ -295,7 +295,6 @@ describe("162", () => {
               AND: [TigerJawLevel2Part1NodeAggregationWhereInput!]
               NOT: TigerJawLevel2Part1NodeAggregationWhereInput
               OR: [TigerJawLevel2Part1NodeAggregationWhereInput!]
-              id_EQUAL: ID @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
             }
 
             input TigerJawLevel2Part1Options {
@@ -386,11 +385,6 @@ describe("162", () => {
               x_AVERAGE_GTE: Float
               x_AVERAGE_LT: Float
               x_AVERAGE_LTE: Float
-              x_EQUAL: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              x_GT: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              x_GTE: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              x_LT: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              x_LTE: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
               x_MAX_EQUAL: Int
               x_MAX_GT: Int
               x_MAX_GTE: Int

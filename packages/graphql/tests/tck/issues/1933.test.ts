@@ -105,10 +105,10 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
         `);
     });
 
-    test("should compare for LTE allocation in return statement", async () => {
+    test("should compare for AVERAGE_LTE allocation in return statement", async () => {
         const query = /* GraphQL */ `
             {
-                employees(where: { projectsAggregate: { edge: { allocation_LTE: 25 } } }) {
+                employees(where: { projectsAggregate: { edge: { allocation_AVERAGE_LTE: 25 } } }) {
                     employeeId
                     firstName
                     lastName
@@ -134,21 +134,21 @@ describe("https://github.com/neo4j/graphql/issues/1933", () => {
             CALL {
                 WITH this
                 MATCH (this)-[this0:PARTICIPATES]->(this1:Project)
-                RETURN any(var2 IN collect(this0.allocation) WHERE var2 <= $param0) AS var3
+                RETURN avg(this0.allocation) <= $param0 AS var2
             }
             WITH *
-            WHERE var3 = true
+            WHERE var2 = true
             CALL {
                 WITH this
-                MATCH (this)-[this4:PARTICIPATES]->(this5:Project)
-                RETURN count(this5) AS var6
+                MATCH (this)-[this3:PARTICIPATES]->(this4:Project)
+                RETURN count(this4) AS var5
             }
             CALL {
                 WITH this
-                MATCH (this)-[this7:PARTICIPATES]->(this8:Project)
-                RETURN { min: min(this7.allocation), max: max(this7.allocation), average: avg(this7.allocation), sum: sum(this7.allocation) } AS var9
+                MATCH (this)-[this6:PARTICIPATES]->(this7:Project)
+                RETURN { min: min(this6.allocation), max: max(this6.allocation), average: avg(this6.allocation), sum: sum(this6.allocation) } AS var8
             }
-            RETURN this { .employeeId, .firstName, .lastName, projectsAggregate: { count: var6, edge: { allocation: var9 } } } AS this"
+            RETURN this { .employeeId, .firstName, .lastName, projectsAggregate: { count: var5, edge: { allocation: var8 } } } AS this"
         `);
 
         expect(formatParams(result.params)).toMatchInlineSnapshot(`

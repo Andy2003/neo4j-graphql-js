@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 import type { DirectiveNode } from "graphql";
-import { GraphQLFloat, GraphQLID, GraphQLInt, GraphQLNonNull, GraphQLString } from "graphql";
+import { GraphQLFloat, GraphQLInt, GraphQLNonNull } from "graphql";
 import type {
     InputTypeComposer,
     InputTypeComposerFieldConfigMapDefinition,
@@ -32,7 +32,6 @@ import { InterfaceEntityAdapter } from "../../schema-model/entity/model-adapters
 import type { RelationshipAdapter } from "../../schema-model/relationship/model-adapters/RelationshipAdapter";
 import { RelationshipDeclarationAdapter } from "../../schema-model/relationship/model-adapters/RelationshipDeclarationAdapter";
 import type { AggregationTypesMapper } from "../aggregations/aggregation-types-mapper";
-import { DEPRECATE_IMPLICIT_LENGTH_AGGREGATION_FILTERS, DEPRECATE_INVALID_AGGREGATION_FILTERS } from "../constants";
 import { numericalResolver } from "../resolvers/field/numerical";
 import { graphqlDirectivesToCompose } from "../to-compose";
 
@@ -196,30 +195,10 @@ function getAggregationFieldsByType(
         (directivesOnField || []).filter((d) => d.name.value === DEPRECATED)
     );
     if (attribute.typeHelper.isID()) {
-        fields[`${attribute.name}_EQUAL`] = {
-            type: GraphQLID,
-            directives: [DEPRECATE_INVALID_AGGREGATION_FILTERS],
-        };
         return fields;
     }
     if (attribute.typeHelper.isString()) {
         for (const operator of AGGREGATION_COMPARISON_OPERATORS) {
-            fields[`${attribute.name}_${operator}`] = {
-                type: `${operator === "EQUAL" ? GraphQLString : GraphQLInt}`,
-                directives: [DEPRECATE_INVALID_AGGREGATION_FILTERS],
-            };
-            fields[`${attribute.name}_AVERAGE_${operator}`] = {
-                type: GraphQLFloat,
-                directives: [DEPRECATE_IMPLICIT_LENGTH_AGGREGATION_FILTERS],
-            };
-            fields[`${attribute.name}_LONGEST_${operator}`] = {
-                type: GraphQLInt,
-                directives: [DEPRECATE_IMPLICIT_LENGTH_AGGREGATION_FILTERS],
-            };
-            fields[`${attribute.name}_SHORTEST_${operator}`] = {
-                type: GraphQLInt,
-                directives: [DEPRECATE_IMPLICIT_LENGTH_AGGREGATION_FILTERS],
-            };
             fields[`${attribute.name}_AVERAGE_LENGTH_${operator}`] = {
                 type: GraphQLFloat,
                 directives: deprecatedDirectives,
@@ -241,10 +220,6 @@ function getAggregationFieldsByType(
         // https://neo4j.com/docs/cypher-manual/current/functions/aggregating/#functions-avg-duration
         // String uses avg(size())
         for (const operator of AGGREGATION_COMPARISON_OPERATORS) {
-            fields[`${attribute.name}_${operator}`] = {
-                type: attribute.getTypeName(),
-                directives: [DEPRECATE_INVALID_AGGREGATION_FILTERS],
-            };
             fields[`${attribute.name}_MIN_${operator}`] = {
                 type: attribute.getTypeName(),
                 directives: deprecatedDirectives,
@@ -269,10 +244,6 @@ function getAggregationFieldsByType(
         return fields;
     }
     for (const operator of AGGREGATION_COMPARISON_OPERATORS) {
-        fields[`${attribute.name}_${operator}`] = {
-            type: attribute.getTypeName(),
-            directives: [DEPRECATE_INVALID_AGGREGATION_FILTERS],
-        };
         fields[`${attribute.name}_MIN_${operator}`] = {
             type: attribute.getTypeName(),
             directives: deprecatedDirectives,

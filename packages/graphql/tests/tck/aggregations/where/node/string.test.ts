@@ -42,10 +42,10 @@ describe("Cypher Aggregations where node with String", () => {
         });
     });
 
-    test("EQUAL", async () => {
+    test("SHORTEST_LENGTH_EQUAL with alias", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_EQUAL: "10" } } }) {
+                posts(where: { likesAggregate: { node: { someStringAlias_SHORTEST_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -58,70 +58,10 @@ describe("Cypher Aggregations where node with String", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1.name) WHERE var2 = $param0) AS var3
+                RETURN min(size(this1._someStringAlias)) = $param0 AS var2
             }
             WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": \\"10\\"
-            }"
-        `);
-    });
-
-    test("EQUAL with alias", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someStringAlias_EQUAL: "10" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1._someStringAlias) WHERE var2 = $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": \\"10\\"
-            }"
-        `);
-    });
-
-    test("GT", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_GT: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 > $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -135,109 +75,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("GTE", async () => {
+    test("SHORTEST_LENGTH_EQUAL", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_GTE: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 >= $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("LT", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_LT: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 < $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("LTE", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_LTE: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 <= $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("SHORTEST_EQUAL", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_EQUAL: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -267,10 +108,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("SHORTEST_GT", async () => {
+    test("SHORTEST_LENGTH_GT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_GT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_GT: 10 } } }) {
                     content
                 }
             }
@@ -300,10 +141,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("SHORTEST_GTE", async () => {
+    test("SHORTEST_LENGTH_GTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_GTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_GTE: 10 } } }) {
                     content
                 }
             }
@@ -333,10 +174,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("SHORTEST_LT", async () => {
+    test("SHORTEST_LENGTH_LT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_LT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_LT: 10 } } }) {
                     content
                 }
             }
@@ -366,10 +207,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("SHORTEST_LTE", async () => {
+    test("SHORTEST_LENGTH_LTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_LTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_LTE: 10 } } }) {
                     content
                 }
             }
@@ -399,10 +240,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("LONGEST_EQUAL", async () => {
+    test("LONGEST_LENGTH_EQUAL", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_EQUAL: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -432,10 +273,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("LONGEST_GT", async () => {
+    test("LONGEST_LENGTH_GT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_GT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_GT: 10 } } }) {
                     content
                 }
             }
@@ -465,10 +306,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("LONGEST_GTE", async () => {
+    test("LONGEST_LENGTH_GTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_GTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_GTE: 10 } } }) {
                     content
                 }
             }
@@ -498,10 +339,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("LONGEST_LT", async () => {
+    test("LONGEST_LENGTH_LT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_LT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_LT: 10 } } }) {
                     content
                 }
             }
@@ -531,10 +372,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("LONGEST_LTE", async () => {
+    test("LONGEST_LENGTH_LTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_LTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_LTE: 10 } } }) {
                     content
                 }
             }
@@ -564,10 +405,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("AVERAGE_EQUAL", async () => {
+    test("AVERAGE_LENGTH_EQUAL", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_EQUAL: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -594,10 +435,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("AVERAGE_GT", async () => {
+    test("AVERAGE_LENGTH_GT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_GT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_GT: 10 } } }) {
                     content
                 }
             }
@@ -624,10 +465,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("AVERAGE_GTE", async () => {
+    test("AVERAGE_LENGTH_GTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_GTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_GTE: 10 } } }) {
                     content
                 }
             }
@@ -654,10 +495,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("AVERAGE_LT", async () => {
+    test("AVERAGE_LENGTH_LT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_LT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_LT: 10 } } }) {
                     content
                 }
             }
@@ -684,10 +525,10 @@ describe("Cypher Aggregations where node with String", () => {
         `);
     });
 
-    test("AVERAGE_LTE", async () => {
+    test("AVERAGE_LENGTH_LTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_LTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_LTE: 10 } } }) {
                     content
                 }
             }
@@ -747,211 +588,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         });
     });
 
-    test("EQUAL", async () => {
+    test("SHORTEST_LENGTH_EQUAL", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_EQUAL: "10" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1)
-                WHERE (this1:\`User:Employee\` OR this1:Person)
-                RETURN any(var2 IN collect(this1.name) WHERE var2 = $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": \\"10\\"
-            }"
-        `);
-    });
-
-    test("EQUAL with alias", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someStringAlias_EQUAL: "10" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1)
-                WHERE (this1:\`User:Employee\` OR this1:Person)
-                RETURN any(var2 IN collect(CASE
-                    WHEN this1:User:Employee THEN this1._someStringAlias
-                    ELSE this1.someStringAlias
-                END) WHERE var2 = $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": \\"10\\"
-            }"
-        `);
-    });
-
-    test("GT", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_GT: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1)
-                WHERE (this1:\`User:Employee\` OR this1:Person)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 > $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("GTE", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_GTE: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1)
-                WHERE (this1:\`User:Employee\` OR this1:Person)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 >= $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("LT", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_LT: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1)
-                WHERE (this1:\`User:Employee\` OR this1:Person)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 < $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("LTE", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_LTE: 10 } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1)
-                WHERE (this1:\`User:Employee\` OR this1:Person)
-                RETURN any(var2 IN collect(size(this1.name)) WHERE var2 <= $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"low\\": 10,
-                    \\"high\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("SHORTEST_EQUAL", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_EQUAL: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -982,10 +622,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("SHORTEST_GT", async () => {
+    test("SHORTEST_LENGTH_GT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_GT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_GT: 10 } } }) {
                     content
                 }
             }
@@ -1016,10 +656,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("SHORTEST_GTE", async () => {
+    test("SHORTEST_LENGTH_GTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_GTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_GTE: 10 } } }) {
                     content
                 }
             }
@@ -1050,10 +690,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("SHORTEST_LT", async () => {
+    test("SHORTEST_LENGTH_LT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_LT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_LT: 10 } } }) {
                     content
                 }
             }
@@ -1084,10 +724,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("SHORTEST_LTE", async () => {
+    test("SHORTEST_LENGTH_LTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_SHORTEST_LTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_SHORTEST_LENGTH_LTE: 10 } } }) {
                     content
                 }
             }
@@ -1118,10 +758,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("LONGEST_EQUAL", async () => {
+    test("LONGEST_LENGTH_EQUAL", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_EQUAL: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -1152,10 +792,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("LONGEST_GT", async () => {
+    test("LONGEST_LENGTH_GT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_GT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_GT: 10 } } }) {
                     content
                 }
             }
@@ -1186,10 +826,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("LONGEST_GTE", async () => {
+    test("LONGEST_LENGTH_GTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_GTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_GTE: 10 } } }) {
                     content
                 }
             }
@@ -1220,10 +860,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("LONGEST_LT", async () => {
+    test("LONGEST_LENGTH_LT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_LT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_LT: 10 } } }) {
                     content
                 }
             }
@@ -1254,10 +894,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("LONGEST_LTE", async () => {
+    test("LONGEST_LENGTH_LTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_LONGEST_LTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_LONGEST_LENGTH_LTE: 10 } } }) {
                     content
                 }
             }
@@ -1288,10 +928,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("AVERAGE_EQUAL", async () => {
+    test("AVERAGE_LENGTH_EQUAL", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_EQUAL: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_EQUAL: 10 } } }) {
                     content
                 }
             }
@@ -1319,10 +959,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("AVERAGE_GT", async () => {
+    test("AVERAGE_LENGTH_GT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_GT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_GT: 10 } } }) {
                     content
                 }
             }
@@ -1350,10 +990,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("AVERAGE_GTE", async () => {
+    test("AVERAGE_LENGTH_GTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_GTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_GTE: 10 } } }) {
                     content
                 }
             }
@@ -1381,10 +1021,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("AVERAGE_LT", async () => {
+    test("AVERAGE_LENGTH_LT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_LT: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_LT: 10 } } }) {
                     content
                 }
             }
@@ -1412,10 +1052,10 @@ describe("Cypher Aggregations where node with String interface relationships of 
         `);
     });
 
-    test("AVERAGE_LTE", async () => {
+    test("AVERAGE_LENGTH_LTE", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { name_AVERAGE_LTE: 10 } } }) {
+                posts(where: { likesAggregate: { node: { name_AVERAGE_LENGTH_LTE: 10 } } }) {
                     content
                 }
             }

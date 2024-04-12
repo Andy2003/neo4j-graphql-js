@@ -176,7 +176,9 @@ describe("https://github.com/neo4j/graphql/issues/2670", () => {
             {
                 movies(
                     where: {
-                        genresConnection_SOME: { node: { moviesAggregate: { node: { title_SHORTEST_EQUAL: 5 } } } }
+                        genresConnection_SOME: {
+                            node: { moviesAggregate: { node: { title_SHORTEST_LENGTH_EQUAL: 5 } } }
+                        }
                     }
                 ) {
                     title
@@ -220,7 +222,9 @@ describe("https://github.com/neo4j/graphql/issues/2670", () => {
             {
                 movies(
                     where: {
-                        genresConnection_SOME: { node: { moviesAggregate: { node: { title_AVERAGE_EQUAL: 1 } } } }
+                        genresConnection_SOME: {
+                            node: { moviesAggregate: { node: { title_AVERAGE_LENGTH_EQUAL: 1 } } }
+                        }
                     }
                 ) {
                     title
@@ -564,7 +568,7 @@ describe("https://github.com/neo4j/graphql/issues/2670", () => {
                         genresConnection_SOME: {
                             AND: [
                                 { node: { moviesAggregate: { count: 2 } } }
-                                { node: { seriesAggregate: { node: { name_SHORTEST_EQUAL: 1 } } } }
+                                { node: { seriesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 1 } } } }
                             ]
                         }
                     }
@@ -622,7 +626,7 @@ describe("https://github.com/neo4j/graphql/issues/2670", () => {
                         genresConnection_SOME: {
                             OR: [
                                 { node: { moviesAggregate: { count: 3 } } }
-                                { node: { seriesAggregate: { node: { name_SHORTEST_EQUAL: 983 } } } }
+                                { node: { seriesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 983 } } } }
                             ]
                         }
                     }
@@ -680,7 +684,7 @@ describe("https://github.com/neo4j/graphql/issues/2670", () => {
                         genresConnection_SOME: {
                             node: {
                                 moviesAggregate: { count: 2 }
-                                seriesAggregate: { node: { name_SHORTEST_EQUAL: 983 } }
+                                seriesAggregate: { node: { name_SHORTEST_LENGTH_EQUAL: 983 } }
                             }
                         }
                     }

@@ -42,10 +42,10 @@ describe("Cypher Aggregations where node with Time", () => {
         });
     });
 
-    test("EQUAL", async () => {
+    test("MIN_EQUAL with alias", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { someTime_EQUAL: "12:00:00" } } }) {
+                posts(where: { likesAggregate: { node: { someTimeAlias_MIN_EQUAL: "12:00:00" } } }) {
                     content
                 }
             }
@@ -58,190 +58,10 @@ describe("Cypher Aggregations where node with Time", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1.someTime) WHERE var2 = $param0) AS var3
+                RETURN min(this1._someTimeAlias) = $param0 AS var2
             }
             WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"hour\\": 12,
-                    \\"minute\\": 0,
-                    \\"second\\": 0,
-                    \\"nanosecond\\": 0,
-                    \\"timeZoneOffsetSeconds\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("EQUAL with alias", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someTimeAlias_EQUAL: "12:00:00" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1._someTimeAlias) WHERE var2 = $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"hour\\": 12,
-                    \\"minute\\": 0,
-                    \\"second\\": 0,
-                    \\"nanosecond\\": 0,
-                    \\"timeZoneOffsetSeconds\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("GT", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someTime_GT: "12:00:00" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1.someTime) WHERE var2 > $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"hour\\": 12,
-                    \\"minute\\": 0,
-                    \\"second\\": 0,
-                    \\"nanosecond\\": 0,
-                    \\"timeZoneOffsetSeconds\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("GTE", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someTime_GTE: "12:00:00" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1.someTime) WHERE var2 >= $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"hour\\": 12,
-                    \\"minute\\": 0,
-                    \\"second\\": 0,
-                    \\"nanosecond\\": 0,
-                    \\"timeZoneOffsetSeconds\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("LT", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someTime_LT: "12:00:00" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1.someTime) WHERE var2 < $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
-            RETURN this { .content } AS this"
-        `);
-
-        expect(formatParams(result.params)).toMatchInlineSnapshot(`
-            "{
-                \\"param0\\": {
-                    \\"hour\\": 12,
-                    \\"minute\\": 0,
-                    \\"second\\": 0,
-                    \\"nanosecond\\": 0,
-                    \\"timeZoneOffsetSeconds\\": 0
-                }
-            }"
-        `);
-    });
-
-    test("LTE", async () => {
-        const query = /* GraphQL */ `
-            {
-                posts(where: { likesAggregate: { node: { someTime_LTE: "12:00:00" } } }) {
-                    content
-                }
-            }
-        `;
-
-        const result = await translateQuery(neoSchema, query);
-
-        expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
-            "MATCH (this:Post)
-            CALL {
-                WITH this
-                MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN any(var2 IN collect(this1.someTime) WHERE var2 <= $param0) AS var3
-            }
-            WITH *
-            WHERE var3 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 

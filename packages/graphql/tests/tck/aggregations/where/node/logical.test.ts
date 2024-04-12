@@ -45,7 +45,9 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
         const query = /* GraphQL */ `
             {
                 posts(
-                    where: { likesAggregate: { node: { AND: [{ someFloat_EQUAL: 10 }, { someFloat_EQUAL: 11 }] } } }
+                    where: {
+                        likesAggregate: { node: { AND: [{ someFloat_SUM_EQUAL: 10 }, { someFloat_SUM_EQUAL: 11 }] } }
+                    }
                 ) {
                     content
                 }
@@ -59,10 +61,10 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN (any(var2 IN collect(this1.someFloat) WHERE var2 = $param0) AND any(var3 IN collect(this1.someFloat) WHERE var3 = $param1)) AS var4
+                RETURN (sum(this1.someFloat) = $param0 AND sum(this1.someFloat) = $param1) AS var2
             }
             WITH *
-            WHERE var4 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -77,7 +79,11 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
     test("OR", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { OR: [{ someFloat_EQUAL: 10 }, { someFloat_EQUAL: 11 }] } } }) {
+                posts(
+                    where: {
+                        likesAggregate: { node: { OR: [{ someFloat_SUM_EQUAL: 10 }, { someFloat_SUM_EQUAL: 11 }] } }
+                    }
+                ) {
                     content
                 }
             }
@@ -90,10 +96,10 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN (any(var2 IN collect(this1.someFloat) WHERE var2 = $param0) OR any(var3 IN collect(this1.someFloat) WHERE var3 = $param1)) AS var4
+                RETURN (sum(this1.someFloat) = $param0 OR sum(this1.someFloat) = $param1) AS var2
             }
             WITH *
-            WHERE var4 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -108,7 +114,7 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
     test("NOT", async () => {
         const query = /* GraphQL */ `
             {
-                posts(where: { likesAggregate: { node: { NOT: { someFloat_EQUAL: 10 } } } }) {
+                posts(where: { likesAggregate: { node: { NOT: { someFloat_SUM_EQUAL: 10 } } } }) {
                     content
                 }
             }
@@ -121,10 +127,10 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN NOT (any(var2 IN collect(this1.someFloat) WHERE var2 = $param0)) AS var3
+                RETURN NOT (sum(this1.someFloat) = $param0) AS var2
             }
             WITH *
-            WHERE var3 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 
@@ -140,7 +146,9 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
             {
                 posts(
                     where: {
-                        likesAggregate: { node: { OR: [{ NOT: { someFloat_EQUAL: 10 } }, { someFloat_EQUAL: 11 }] } }
+                        likesAggregate: {
+                            node: { OR: [{ NOT: { someFloat_SUM_EQUAL: 10 } }, { someFloat_SUM_EQUAL: 11 }] }
+                        }
                     }
                 ) {
                     content
@@ -155,10 +163,10 @@ describe("Cypher Aggregations where node with Logical AND + OR", () => {
             CALL {
                 WITH this
                 MATCH (this)<-[this0:LIKES]-(this1:User)
-                RETURN (NOT (any(var2 IN collect(this1.someFloat) WHERE var2 = $param0)) OR any(var3 IN collect(this1.someFloat) WHERE var3 = $param1)) AS var4
+                RETURN (NOT (sum(this1.someFloat) = $param0) OR sum(this1.someFloat) = $param1) AS var2
             }
             WITH *
-            WHERE var4 = true
+            WHERE var2 = true
             RETURN this { .content } AS this"
         `);
 

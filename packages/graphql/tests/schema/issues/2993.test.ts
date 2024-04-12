@@ -91,11 +91,6 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               AND: [FOLLOWSAggregationWhereInput!]
               NOT: FOLLOWSAggregationWhereInput
               OR: [FOLLOWSAggregationWhereInput!]
-              since_EQUAL: DateTime @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              since_GT: DateTime @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              since_GTE: DateTime @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              since_LT: DateTime @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              since_LTE: DateTime @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
               since_MAX_EQUAL: DateTime
               since_MAX_GT: DateTime
               since_MAX_GTE: DateTime
@@ -350,42 +345,21 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               AND: [UserFollowingNodeAggregationWhereInput!]
               NOT: UserFollowingNodeAggregationWhereInput
               OR: [UserFollowingNodeAggregationWhereInput!]
-              id_EQUAL: ID @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              userName_AVERAGE_EQUAL: Float @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_AVERAGE_GT: Float @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_AVERAGE_GTE: Float @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
               userName_AVERAGE_LENGTH_EQUAL: Float
               userName_AVERAGE_LENGTH_GT: Float
               userName_AVERAGE_LENGTH_GTE: Float
               userName_AVERAGE_LENGTH_LT: Float
               userName_AVERAGE_LENGTH_LTE: Float
-              userName_AVERAGE_LT: Float @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_AVERAGE_LTE: Float @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_EQUAL: String @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              userName_GT: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              userName_GTE: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              userName_LONGEST_EQUAL: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_LONGEST_GT: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_LONGEST_GTE: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
               userName_LONGEST_LENGTH_EQUAL: Int
               userName_LONGEST_LENGTH_GT: Int
               userName_LONGEST_LENGTH_GTE: Int
               userName_LONGEST_LENGTH_LT: Int
               userName_LONGEST_LENGTH_LTE: Int
-              userName_LONGEST_LT: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_LONGEST_LTE: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_LT: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              userName_LTE: Int @deprecated(reason: \\"Aggregation filters that are not relying on an aggregating function will be deprecated.\\")
-              userName_SHORTEST_EQUAL: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_SHORTEST_GT: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_SHORTEST_GTE: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
               userName_SHORTEST_LENGTH_EQUAL: Int
               userName_SHORTEST_LENGTH_GT: Int
               userName_SHORTEST_LENGTH_GTE: Int
               userName_SHORTEST_LENGTH_LT: Int
               userName_SHORTEST_LENGTH_LTE: Int
-              userName_SHORTEST_LT: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
-              userName_SHORTEST_LTE: Int @deprecated(reason: \\"Please use the explicit _LENGTH version for string aggregation.\\")
             }
 
             type UserFollowingRelationship {
