@@ -52,7 +52,7 @@ describe("interface relationships with aliased fields", () => {
 
             type ProtectedActor
                 @authorization(
-                    validate: [{ where: { node: { actedInConnection: { node: { title: "$jwt.title" } } } } }]
+                    validate: [{ where: { node: { actedInConnection_SOME: { node: { title: "$jwt.title" } } } } }]
                 ) {
                 name: String! @alias(property: "dbName")
                 actedIn: [Production!]! @relationship(type: "ACTED_IN", direction: OUT, properties: "ActedIn")

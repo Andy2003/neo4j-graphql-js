@@ -128,8 +128,6 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               since_IN: [DateTime!]
               since_LT: DateTime
               since_LTE: DateTime
-              since_NOT: DateTime @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              since_NOT_IN: [DateTime!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             type IDAggregateSelection {
@@ -209,22 +207,12 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID!]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               typename_IN: [ProfileImplementation!]
               userName: String
               userName_CONTAINS: String
               userName_ENDS_WITH: String
               userName_IN: [String!]
-              userName_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               userName_STARTS_WITH: String
             }
 
@@ -341,9 +329,7 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               NOT: UserFollowingConnectionWhere
               OR: [UserFollowingConnectionWhere!]
               edge: FOLLOWSWhere
-              edge_NOT: FOLLOWSWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               node: ProfileWhere
-              node_NOT: ProfileWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input UserFollowingCreateFieldInput {
@@ -470,9 +456,7 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               AND: [UserWhere!]
               NOT: UserWhere
               OR: [UserWhere!]
-              following: ProfileWhere @deprecated(reason: \\"Use \`following_SOME\` instead.\\")
               followingAggregate: UserFollowingAggregateInput
-              followingConnection: UserFollowingConnectionWhere @deprecated(reason: \\"Use \`followingConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Users where all of the related UserFollowingConnections match this filter
               \\"\\"\\"
@@ -481,7 +465,6 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               Return Users where none of the related UserFollowingConnections match this filter
               \\"\\"\\"
               followingConnection_NONE: UserFollowingConnectionWhere
-              followingConnection_NOT: UserFollowingConnectionWhere @deprecated(reason: \\"Use \`followingConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Users where one of the related UserFollowingConnections match this filter
               \\"\\"\\"
@@ -494,7 +477,6 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               following_ALL: ProfileWhere
               \\"\\"\\"Return Users where none of the related Profiles match this filter\\"\\"\\"
               following_NONE: ProfileWhere
-              following_NOT: ProfileWhere @deprecated(reason: \\"Use \`following_NONE\` instead.\\")
               \\"\\"\\"Return Users where one of the related Profiles match this filter\\"\\"\\"
               following_SINGLE: ProfileWhere
               \\"\\"\\"Return Users where some of the related Profiles match this filter\\"\\"\\"
@@ -503,21 +485,11 @@ describe("https://github.com/neo4j/graphql/issues/2993", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID!]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               userName: String
               userName_CONTAINS: String
               userName_ENDS_WITH: String
               userName_IN: [String!]
-              userName_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              userName_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               userName_STARTS_WITH: String
             }
 

@@ -190,7 +190,6 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               NOT: BookTitle_ENBookConnectionWhere
               OR: [BookTitle_ENBookConnectionWhere!]
               node: BookWhere
-              node_NOT: BookWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input BookTitle_ENBookCreateFieldInput {
@@ -370,11 +369,6 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               value_CONTAINS: String
               value_ENDS_WITH: String
               value_IN: [String!]
-              value_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               value_STARTS_WITH: String
             }
 
@@ -436,7 +430,6 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               NOT: BookTitle_SVBookConnectionWhere
               OR: [BookTitle_SVBookConnectionWhere!]
               node: BookWhere
-              node_NOT: BookWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input BookTitle_SVBookCreateFieldInput {
@@ -616,11 +609,6 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               value_CONTAINS: String
               value_ENDS_WITH: String
               value_IN: [String!]
-              value_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              value_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               value_STARTS_WITH: String
             }
 
@@ -634,7 +622,6 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               NOT: BookTranslatedTitleBookTitle_ENConnectionWhere
               OR: [BookTranslatedTitleBookTitle_ENConnectionWhere!]
               node: BookTitle_ENWhere
-              node_NOT: BookTitle_ENWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input BookTranslatedTitleBookTitle_ENCreateFieldInput {
@@ -679,7 +666,6 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               NOT: BookTranslatedTitleBookTitle_SVConnectionWhere
               OR: [BookTranslatedTitleBookTitle_SVConnectionWhere!]
               node: BookTitle_SVWhere
-              node_NOT: BookTitle_SVWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input BookTranslatedTitleBookTitle_SVCreateFieldInput {
@@ -774,21 +760,11 @@ describe("https://github.com/neo4j/graphql/issues/2981", () => {
               isbn_CONTAINS: String
               isbn_ENDS_WITH: String
               isbn_IN: [String!]
-              isbn_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              isbn_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              isbn_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              isbn_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              isbn_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               isbn_STARTS_WITH: String
               originalTitle: String
               originalTitle_CONTAINS: String
               originalTitle_ENDS_WITH: String
               originalTitle_IN: [String!]
-              originalTitle_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              originalTitle_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              originalTitle_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              originalTitle_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              originalTitle_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               originalTitle_STARTS_WITH: String
               translatedTitle: BookTitleWhere
               translatedTitleConnection: BookTranslatedTitleConnectionWhere

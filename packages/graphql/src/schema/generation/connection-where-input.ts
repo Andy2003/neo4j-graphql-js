@@ -30,7 +30,6 @@ import { InterfaceEntityAdapter } from "../../schema-model/entity/model-adapters
 import { UnionEntityAdapter } from "../../schema-model/entity/model-adapters/UnionEntityAdapter";
 import { RelationshipAdapter } from "../../schema-model/relationship/model-adapters/RelationshipAdapter";
 import type { RelationshipDeclarationAdapter } from "../../schema-model/relationship/model-adapters/RelationshipDeclarationAdapter";
-import { DEPRECATE_NOT } from "../constants";
 
 // tODO: refactor into smaller fns for unions, like disconnect-input
 export function makeConnectionWhereInputType({
@@ -89,18 +88,10 @@ export function withConnectionWhereInputType({
         OR: connectionWhereInputType.NonNull.List,
         NOT: connectionWhereInputType,
         node: targetEntity.operations.whereInputTypeName,
-        node_NOT: {
-            type: targetEntity.operations.whereInputTypeName,
-            directives: [DEPRECATE_NOT],
-        },
     });
     if (relationshipAdapter.hasAnyProperties) {
         connectionWhereInputType.addFields({
             edge: relationshipAdapter.operations.whereInputTypeName,
-            edge_NOT: {
-                type: relationshipAdapter.operations.whereInputTypeName,
-                directives: [DEPRECATE_NOT],
-            },
         });
     }
     return connectionWhereInputType;

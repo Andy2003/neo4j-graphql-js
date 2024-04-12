@@ -76,7 +76,7 @@ describe("Cypher Points", () => {
     test("Simple Points NOT query", async () => {
         const query = /* GraphQL */ `
             {
-                pointContainers(where: { points_NOT: [{ longitude: 1.0, latitude: 2.0 }] }) {
+                pointContainers(where: { NOT: { points: [{ longitude: 1.0, latitude: 2.0 }] } }) {
                     points {
                         longitude
                         latitude
@@ -145,7 +145,7 @@ describe("Cypher Points", () => {
     test("Simple Points NOT INCLUDES query", async () => {
         const query = /* GraphQL */ `
             {
-                pointContainers(where: { points_NOT_INCLUDES: { longitude: 1.0, latitude: 2.0 } }) {
+                pointContainers(where: { NOT: { points_INCLUDES: { longitude: 1.0, latitude: 2.0 } } }) {
                     points {
                         longitude
                         latitude

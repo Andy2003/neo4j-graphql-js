@@ -315,7 +315,7 @@ describe("Cypher WHERE", () => {
         test("Match with not NULL in where", async () => {
             const query = /* GraphQL */ `
                 {
-                    movies(where: { title_NOT: null }) {
+                    movies(where: { NOT: { title: null } }) {
                         title
                     }
                 }
@@ -325,7 +325,7 @@ describe("Cypher WHERE", () => {
 
             expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
                 "MATCH (this:Movie)
-                WHERE this.title IS NOT NULL
+                WHERE NOT (this.title IS NULL)
                 RETURN this { .title } AS this"
             `);
 

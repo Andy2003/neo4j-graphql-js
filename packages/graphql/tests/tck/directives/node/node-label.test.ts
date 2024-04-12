@@ -500,7 +500,7 @@ describe("Label in Node directive", () => {
     test("Admin Deletes Post", async () => {
         const query = /* GraphQL */ `
             mutation {
-                deleteMovies(where: { actors: { name: "tom" } }) {
+                deleteMovies(where: { actors_SOME: { name: "tom" } }) {
                     nodesDeleted
                 }
             }

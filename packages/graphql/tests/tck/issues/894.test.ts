@@ -49,7 +49,7 @@ describe("https://github.com/neo4j/graphql/issues/894", () => {
                 updateUsers(
                     where: { name: "Luke Skywalker" }
                     connect: { activeOrganization: { where: { node: { id: "test-id" } } } }
-                    disconnect: { activeOrganization: { where: { node: { id_NOT: "test-id" } } } }
+                    disconnect: { activeOrganization: { where: { node: { NOT: { id: "test-id" } } } } }
                 ) {
                     users {
                         id
@@ -117,7 +117,9 @@ describe("https://github.com/neo4j/graphql/issues/894", () => {
                             \\"activeOrganization\\": {
                                 \\"where\\": {
                                     \\"node\\": {
-                                        \\"id_NOT\\": \\"test-id\\"
+                                        \\"NOT\\": {
+                                            \\"id\\": \\"test-id\\"
+                                        }
                                     }
                                 }
                             }

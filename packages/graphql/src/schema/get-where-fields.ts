@@ -29,7 +29,6 @@ import type {
     PrimitiveField,
     TemporalField,
 } from "../types";
-import { DEPRECATE_NOT } from "./constants";
 import { graphqlDirectivesToCompose } from "./to-compose";
 
 interface Fields {
@@ -72,10 +71,6 @@ function getWhereFields({
                 type: f.typeMeta.input.where.pretty,
                 directives: deprecatedDirectives,
             };
-            res[`${f.fieldName}_NOT`] = {
-                type: f.typeMeta.input.where.pretty,
-                directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
-            };
 
             if (f.typeMeta.name === "Boolean") {
                 return res;
@@ -86,20 +81,12 @@ function getWhereFields({
                     type: f.typeMeta.input.where.type,
                     directives: deprecatedDirectives,
                 };
-                res[`${f.fieldName}_NOT_INCLUDES`] = {
-                    type: f.typeMeta.input.where.type,
-                    directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
-                };
                 return res;
             }
 
             res[`${f.fieldName}_IN`] = {
                 type: `[${f.typeMeta.input.where.pretty}${f.typeMeta.required ? "!" : ""}]`,
                 directives: deprecatedDirectives,
-            };
-            res[`${f.fieldName}_NOT_IN`] = {
-                type: `[${f.typeMeta.input.where.pretty}${f.typeMeta.required ? "!" : ""}]`,
-                directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
             };
 
             if (
@@ -138,8 +125,6 @@ function getWhereFields({
                     { comparator: "_ENDS_WITH", typeName: f.typeMeta.name },
                 ];
 
-                const stringWhereOperatorsNegate = ["_NOT_CONTAINS", "_NOT_STARTS_WITH", "_NOT_ENDS_WITH"];
-
                 Object.entries(features?.filters?.[f.typeMeta.name] || {}).forEach(([filter, enabled]) => {
                     if (enabled) {
                         if (filter === "MATCHES") {
@@ -153,12 +138,6 @@ function getWhereFields({
                     res[`${f.fieldName}${comparator}`] = { type: typeName, directives: deprecatedDirectives };
                 });
 
-                stringWhereOperatorsNegate.forEach((comparator) => {
-                    res[`${f.fieldName}${comparator}`] = {
-                        type: f.typeMeta.name,
-                        directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
-                    };
-                });
                 return res;
             }
 
@@ -206,11 +185,6 @@ export function getWhereFieldsForAttributes({
             directives: deprecatedDirectives,
         };
 
-        result[`${field.name}_NOT`] = {
-            type: field.getInputTypeNames().where.pretty,
-            directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
-        };
-
         // If the field is a boolean, skip it
         // This is done here because the previous additions are still added for boolean fields
         if (field.typeHelper.isBoolean()) {
@@ -224,10 +198,6 @@ export function getWhereFieldsForAttributes({
                 type: field.getInputTypeNames().where.type,
                 directives: deprecatedDirectives,
             };
-            result[`${field.name}_NOT_INCLUDES`] = {
-                type: field.getInputTypeNames().where.type,
-                directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
-            };
             continue;
         }
 
@@ -235,11 +205,6 @@ export function getWhereFieldsForAttributes({
         result[`${field.name}_IN`] = {
             type: field.getFilterableInputTypeName(),
             directives: deprecatedDirectives,
-        };
-
-        result[`${field.name}_NOT_IN`] = {
-            type: field.getFilterableInputTypeName(),
-            directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
         };
 
         // If the field is a number or temporal, add the comparison operators
@@ -288,13 +253,6 @@ export function getWhereFieldsForAttributes({
             );
             stringWhereOperators.forEach(({ comparator, typeName }) => {
                 result[`${field.name}${comparator}`] = { type: typeName, directives: deprecatedDirectives };
-            });
-
-            ["_NOT_CONTAINS", "_NOT_STARTS_WITH", "_NOT_ENDS_WITH"].forEach((comparator) => {
-                result[`${field.name}${comparator}`] = {
-                    type: field.getInputTypeNames().where.type,
-                    directives: deprecatedDirectives.length ? deprecatedDirectives : [DEPRECATE_NOT],
-                };
             });
         }
     }

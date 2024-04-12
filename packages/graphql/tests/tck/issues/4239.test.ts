@@ -42,7 +42,7 @@ describe("https://github.com/neo4j/graphql/issues/4239", () => {
             type Movie
                 @authorization(
                     validate: [
-                        { when: [BEFORE], where: { node: { directorConnection: { node: { id: "$jwt.sub" } } } } }
+                        { when: [BEFORE], where: { node: { directorConnection_SOME: { node: { id: "$jwt.sub" } } } } }
                     ]
                 ) {
                 title: String
@@ -150,7 +150,7 @@ describe("https://github.com/neo4j/graphql/issues/4239", () => {
             type Movie
                 @authorization(
                     validate: [
-                        { when: [BEFORE], where: { node: { directorConnection: { node: { id: "$jwt.sub" } } } } }
+                        { when: [BEFORE], where: { node: { directorConnection_SOME: { node: { id: "$jwt.sub" } } } } }
                     ]
                 ) {
                 title: String

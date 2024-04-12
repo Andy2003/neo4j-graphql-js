@@ -71,7 +71,7 @@ describe("Cypher coalesce()", () => {
                     where: {
                         id: $id
                         name_MATCHES: $name
-                        verified_NOT: $verified
+                        NOT: { verified: $verified }
                         numberOfFriends_GT: $numberOfFriends
                         rating_LT: $rating
                         fromInterface: $fromInterface
@@ -97,7 +97,7 @@ describe("Cypher coalesce()", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "MATCH (this:User)
-            WHERE (coalesce(this.id, \\"00000000-00000000-00000000-00000000\\") = $param0 AND coalesce(this.name, \\"Jane Smith\\") =~ $param1 AND NOT (coalesce(this.verified, false) = $param2) AND coalesce(this.numberOfFriends, 0) > $param3 AND coalesce(this.rating, 2.5) < $param4 AND this.fromInterface = $param5 AND coalesce(this.toBeOverridden, \\"Overridden\\") = $param6)
+            WHERE (coalesce(this.id, \\"00000000-00000000-00000000-00000000\\") = $param0 AND coalesce(this.name, \\"Jane Smith\\") =~ $param1 AND coalesce(this.numberOfFriends, 0) > $param2 AND coalesce(this.rating, 2.5) < $param3 AND this.fromInterface = $param4 AND coalesce(this.toBeOverridden, \\"Overridden\\") = $param5 AND NOT (coalesce(this.verified, false) = $param6))
             RETURN this { .name } AS this"
         `);
 
@@ -105,14 +105,14 @@ describe("Cypher coalesce()", () => {
             "{
                 \\"param0\\": \\"Some ID\\",
                 \\"param1\\": \\"Some name\\",
-                \\"param2\\": true,
-                \\"param3\\": {
+                \\"param2\\": {
                     \\"low\\": 10,
                     \\"high\\": 0
                 },
-                \\"param4\\": 3.5,
+                \\"param3\\": 3.5,
+                \\"param4\\": \\"Some string\\",
                 \\"param5\\": \\"Some string\\",
-                \\"param6\\": \\"Some string\\"
+                \\"param6\\": true
             }"
         `);
     });

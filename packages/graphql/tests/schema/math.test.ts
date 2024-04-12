@@ -126,11 +126,6 @@ describe("Algebraic", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               viewers: Int
               viewers_GT: Int
@@ -138,8 +133,6 @@ describe("Algebraic", () => {
               viewers_IN: [Int!]
               viewers_LT: Int
               viewers_LTE: Int
-              viewers_NOT: Int @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              viewers_NOT_IN: [Int!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             type MoviesConnection {
@@ -302,11 +295,6 @@ describe("Algebraic", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               viewers: BigInt
               viewers_GT: BigInt
@@ -314,8 +302,6 @@ describe("Algebraic", () => {
               viewers_IN: [BigInt!]
               viewers_LT: BigInt
               viewers_LTE: BigInt
-              viewers_NOT: BigInt @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              viewers_NOT_IN: [BigInt!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             type MoviesConnection {
@@ -476,11 +462,6 @@ describe("Algebraic", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               viewers: Float
               viewers_GT: Float
@@ -488,8 +469,6 @@ describe("Algebraic", () => {
               viewers_IN: [Float!]
               viewers_LT: Float
               viewers_LTE: Float
-              viewers_NOT: Float @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              viewers_NOT_IN: [Float!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             type MoviesConnection {
@@ -658,7 +637,6 @@ describe("Algebraic", () => {
               NOT: DirectorDirectsConnectionWhere
               OR: [DirectorDirectsConnectionWhere!]
               node: MovieWhere
-              node_NOT: MovieWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input DirectorDirectsCreateFieldInput {
@@ -778,9 +756,7 @@ describe("Algebraic", () => {
               AND: [DirectorWhere!]
               NOT: DirectorWhere
               OR: [DirectorWhere!]
-              directs: MovieWhere @deprecated(reason: \\"Use \`directs_SOME\` instead.\\")
               directsAggregate: DirectorDirectsAggregateInput
-              directsConnection: DirectorDirectsConnectionWhere @deprecated(reason: \\"Use \`directsConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Directors where all of the related DirectorDirectsConnections match this filter
               \\"\\"\\"
@@ -789,7 +765,6 @@ describe("Algebraic", () => {
               Return Directors where none of the related DirectorDirectsConnections match this filter
               \\"\\"\\"
               directsConnection_NONE: DirectorDirectsConnectionWhere
-              directsConnection_NOT: DirectorDirectsConnectionWhere @deprecated(reason: \\"Use \`directsConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Directors where one of the related DirectorDirectsConnections match this filter
               \\"\\"\\"
@@ -802,7 +777,6 @@ describe("Algebraic", () => {
               directs_ALL: MovieWhere
               \\"\\"\\"Return Directors where none of the related Movies match this filter\\"\\"\\"
               directs_NONE: MovieWhere
-              directs_NOT: MovieWhere @deprecated(reason: \\"Use \`directs_NONE\` instead.\\")
               \\"\\"\\"Return Directors where one of the related Movies match this filter\\"\\"\\"
               directs_SINGLE: MovieWhere
               \\"\\"\\"Return Directors where some of the related Movies match this filter\\"\\"\\"
@@ -811,11 +785,6 @@ describe("Algebraic", () => {
               lastName_CONTAINS: String
               lastName_ENDS_WITH: String
               lastName_IN: [String!]
-              lastName_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              lastName_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              lastName_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              lastName_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              lastName_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               lastName_STARTS_WITH: String
             }
 
@@ -905,7 +874,6 @@ describe("Algebraic", () => {
               NOT: MovieDirectedByConnectionWhere
               OR: [MovieDirectedByConnectionWhere!]
               node: DirectorWhere
-              node_NOT: DirectorWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input MovieDirectedByCreateFieldInput {
@@ -1046,11 +1014,6 @@ describe("Algebraic", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               viewers: Int
               viewers_GT: Int
@@ -1058,8 +1021,6 @@ describe("Algebraic", () => {
               viewers_IN: [Int!]
               viewers_LT: Int
               viewers_LTE: Int
-              viewers_NOT: Int @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              viewers_NOT_IN: [Int!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             type MoviesConnection {
@@ -1278,11 +1239,6 @@ describe("Algebraic", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               viewers: Int
               viewers_GT: Int
@@ -1290,11 +1246,7 @@ describe("Algebraic", () => {
               viewers_IN: [Int!]
               viewers_LT: Int
               viewers_LTE: Int
-              viewers_NOT: Int @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              viewers_NOT_IN: [Int!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              workers: PersonWhere @deprecated(reason: \\"Use \`workers_SOME\` instead.\\")
               workersAggregate: MovieWorkersAggregateInput
-              workersConnection: MovieWorkersConnectionWhere @deprecated(reason: \\"Use \`workersConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Movies where all of the related MovieWorkersConnections match this filter
               \\"\\"\\"
@@ -1303,7 +1255,6 @@ describe("Algebraic", () => {
               Return Movies where none of the related MovieWorkersConnections match this filter
               \\"\\"\\"
               workersConnection_NONE: MovieWorkersConnectionWhere
-              workersConnection_NOT: MovieWorkersConnectionWhere @deprecated(reason: \\"Use \`workersConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Movies where one of the related MovieWorkersConnections match this filter
               \\"\\"\\"
@@ -1316,7 +1267,6 @@ describe("Algebraic", () => {
               workers_ALL: PersonWhere
               \\"\\"\\"Return Movies where none of the related People match this filter\\"\\"\\"
               workers_NONE: PersonWhere
-              workers_NOT: PersonWhere @deprecated(reason: \\"Use \`workers_NONE\` instead.\\")
               \\"\\"\\"Return Movies where one of the related People match this filter\\"\\"\\"
               workers_SINGLE: PersonWhere
               \\"\\"\\"Return Movies where some of the related People match this filter\\"\\"\\"
@@ -1359,7 +1309,6 @@ describe("Algebraic", () => {
               NOT: MovieWorkersConnectionWhere
               OR: [MovieWorkersConnectionWhere!]
               node: PersonWhere
-              node_NOT: PersonWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input MovieWorkersCreateFieldInput {
@@ -1549,15 +1498,8 @@ describe("Algebraic", () => {
               name_CONTAINS: String
               name_ENDS_WITH: String
               name_IN: [String!]
-              name_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               name_STARTS_WITH: String
-              worksInProduction: ProductionWhere @deprecated(reason: \\"Use \`worksInProduction_SOME\` instead.\\")
               worksInProductionAggregate: PersonWorksInProductionAggregateInput
-              worksInProductionConnection: PersonWorksInProductionConnectionWhere @deprecated(reason: \\"Use \`worksInProductionConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return People where all of the related PersonWorksInProductionConnections match this filter
               \\"\\"\\"
@@ -1566,7 +1508,6 @@ describe("Algebraic", () => {
               Return People where none of the related PersonWorksInProductionConnections match this filter
               \\"\\"\\"
               worksInProductionConnection_NONE: PersonWorksInProductionConnectionWhere
-              worksInProductionConnection_NOT: PersonWorksInProductionConnectionWhere @deprecated(reason: \\"Use \`worksInProductionConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return People where one of the related PersonWorksInProductionConnections match this filter
               \\"\\"\\"
@@ -1579,7 +1520,6 @@ describe("Algebraic", () => {
               worksInProduction_ALL: ProductionWhere
               \\"\\"\\"Return People where none of the related Productions match this filter\\"\\"\\"
               worksInProduction_NONE: ProductionWhere
-              worksInProduction_NOT: ProductionWhere @deprecated(reason: \\"Use \`worksInProduction_NONE\` instead.\\")
               \\"\\"\\"Return People where one of the related Productions match this filter\\"\\"\\"
               worksInProduction_SINGLE: ProductionWhere
               \\"\\"\\"Return People where some of the related Productions match this filter\\"\\"\\"
@@ -1617,7 +1557,6 @@ describe("Algebraic", () => {
               NOT: PersonWorksInProductionConnectionWhere
               OR: [PersonWorksInProductionConnectionWhere!]
               node: ProductionWhere
-              node_NOT: ProductionWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input PersonWorksInProductionCreateFieldInput {
@@ -1745,8 +1684,6 @@ describe("Algebraic", () => {
               viewers_IN: [Int!]
               viewers_LT: Int
               viewers_LTE: Int
-              viewers_NOT: Int @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              viewers_NOT_IN: [Int!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             type ProductionsConnection {
@@ -1901,12 +1838,8 @@ describe("Algebraic", () => {
               pay_IN: [Float]
               pay_LT: Float
               pay_LTE: Float
-              pay_NOT: Float @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              pay_NOT_IN: [Float] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               roles: [String!]
               roles_INCLUDES: String
-              roles_NOT: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              roles_NOT_INCLUDES: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             \\"\\"\\"
@@ -1990,9 +1923,7 @@ describe("Algebraic", () => {
               NOT: MovieActorsConnectionWhere
               OR: [MovieActorsConnectionWhere!]
               edge: ActedInWhere
-              edge_NOT: ActedInWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               node: PersonWhere
-              node_NOT: PersonWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input MovieActorsCreateFieldInput {
@@ -2150,9 +2081,7 @@ describe("Algebraic", () => {
               AND: [MovieWhere!]
               NOT: MovieWhere
               OR: [MovieWhere!]
-              actors: PersonWhere @deprecated(reason: \\"Use \`actors_SOME\` instead.\\")
               actorsAggregate: MovieActorsAggregateInput
-              actorsConnection: MovieActorsConnectionWhere @deprecated(reason: \\"Use \`actorsConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Movies where all of the related MovieActorsConnections match this filter
               \\"\\"\\"
@@ -2161,7 +2090,6 @@ describe("Algebraic", () => {
               Return Movies where none of the related MovieActorsConnections match this filter
               \\"\\"\\"
               actorsConnection_NONE: MovieActorsConnectionWhere
-              actorsConnection_NOT: MovieActorsConnectionWhere @deprecated(reason: \\"Use \`actorsConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Movies where one of the related MovieActorsConnections match this filter
               \\"\\"\\"
@@ -2174,7 +2102,6 @@ describe("Algebraic", () => {
               actors_ALL: PersonWhere
               \\"\\"\\"Return Movies where none of the related People match this filter\\"\\"\\"
               actors_NONE: PersonWhere
-              actors_NOT: PersonWhere @deprecated(reason: \\"Use \`actors_NONE\` instead.\\")
               \\"\\"\\"Return Movies where one of the related People match this filter\\"\\"\\"
               actors_SINGLE: PersonWhere
               \\"\\"\\"Return Movies where some of the related People match this filter\\"\\"\\"
@@ -2183,11 +2110,6 @@ describe("Algebraic", () => {
               title_CONTAINS: String
               title_ENDS_WITH: String
               title_IN: [String!]
-              title_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               title_STARTS_WITH: String
             }
 
@@ -2266,9 +2188,7 @@ describe("Algebraic", () => {
               NOT: PersonActedInMoviesConnectionWhere
               OR: [PersonActedInMoviesConnectionWhere!]
               edge: ActedInWhere
-              edge_NOT: ActedInWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               node: MovieWhere
-              node_NOT: MovieWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input PersonActedInMoviesCreateFieldInput {
@@ -2426,9 +2346,7 @@ describe("Algebraic", () => {
               AND: [PersonWhere!]
               NOT: PersonWhere
               OR: [PersonWhere!]
-              actedInMovies: MovieWhere @deprecated(reason: \\"Use \`actedInMovies_SOME\` instead.\\")
               actedInMoviesAggregate: PersonActedInMoviesAggregateInput
-              actedInMoviesConnection: PersonActedInMoviesConnectionWhere @deprecated(reason: \\"Use \`actedInMoviesConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return People where all of the related PersonActedInMoviesConnections match this filter
               \\"\\"\\"
@@ -2437,7 +2355,6 @@ describe("Algebraic", () => {
               Return People where none of the related PersonActedInMoviesConnections match this filter
               \\"\\"\\"
               actedInMoviesConnection_NONE: PersonActedInMoviesConnectionWhere
-              actedInMoviesConnection_NOT: PersonActedInMoviesConnectionWhere @deprecated(reason: \\"Use \`actedInMoviesConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return People where one of the related PersonActedInMoviesConnections match this filter
               \\"\\"\\"
@@ -2450,7 +2367,6 @@ describe("Algebraic", () => {
               actedInMovies_ALL: MovieWhere
               \\"\\"\\"Return People where none of the related Movies match this filter\\"\\"\\"
               actedInMovies_NONE: MovieWhere
-              actedInMovies_NOT: MovieWhere @deprecated(reason: \\"Use \`actedInMovies_NONE\` instead.\\")
               \\"\\"\\"Return People where one of the related Movies match this filter\\"\\"\\"
               actedInMovies_SINGLE: MovieWhere
               \\"\\"\\"Return People where some of the related Movies match this filter\\"\\"\\"
@@ -2459,11 +2375,6 @@ describe("Algebraic", () => {
               name_CONTAINS: String
               name_ENDS_WITH: String
               name_IN: [String!]
-              name_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              name_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               name_STARTS_WITH: String
             }
 

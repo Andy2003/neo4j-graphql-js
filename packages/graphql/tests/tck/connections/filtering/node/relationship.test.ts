@@ -47,7 +47,7 @@ describe("Cypher -> Connections -> Filtering -> Node -> Relationship", () => {
             query {
                 movies {
                     title
-                    actorsConnection(where: { node: { movies: { title: "Forrest Gump" } } }) {
+                    actorsConnection(where: { node: { movies_SOME: { title: "Forrest Gump" } } }) {
                         edges {
                             node {
                                 name

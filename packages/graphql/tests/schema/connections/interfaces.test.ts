@@ -158,7 +158,6 @@ describe("Connection with interfaces", () => {
               NOT: CreatureMoviesConnectionWhere
               OR: [CreatureMoviesConnectionWhere!]
               node: ProductionWhere
-              node_NOT: ProductionWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input CreatureMoviesCreateFieldInput {
@@ -229,11 +228,6 @@ describe("Connection with interfaces", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               movies: ProductionWhere
               moviesAggregate: CreatureMoviesAggregateInput
@@ -403,9 +397,7 @@ describe("Connection with interfaces", () => {
               AND: [MovieWhere!]
               NOT: MovieWhere
               OR: [MovieWhere!]
-              director: CreatureWhere @deprecated(reason: \\"Use \`director_SOME\` instead.\\")
               directorAggregate: MovieDirectorAggregateInput
-              directorConnection: ProductionDirectorConnectionWhere @deprecated(reason: \\"Use \`directorConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Movies where all of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
@@ -414,7 +406,6 @@ describe("Connection with interfaces", () => {
               Return Movies where none of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
               directorConnection_NONE: ProductionDirectorConnectionWhere
-              directorConnection_NOT: ProductionDirectorConnectionWhere @deprecated(reason: \\"Use \`directorConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Movies where one of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
@@ -427,7 +418,6 @@ describe("Connection with interfaces", () => {
               director_ALL: CreatureWhere
               \\"\\"\\"Return Movies where none of the related Creatures match this filter\\"\\"\\"
               director_NONE: CreatureWhere
-              director_NOT: CreatureWhere @deprecated(reason: \\"Use \`director_NONE\` instead.\\")
               \\"\\"\\"Return Movies where one of the related Creatures match this filter\\"\\"\\"
               director_SINGLE: CreatureWhere
               \\"\\"\\"Return Movies where some of the related Creatures match this filter\\"\\"\\"
@@ -436,21 +426,11 @@ describe("Connection with interfaces", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               title: String
               title_CONTAINS: String
               title_ENDS_WITH: String
               title_IN: [String!]
-              title_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               title_STARTS_WITH: String
             }
 
@@ -618,11 +598,6 @@ describe("Connection with interfaces", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               movies: ProductionWhere
               moviesAggregate: PersonMoviesAggregateInput
@@ -691,7 +666,6 @@ describe("Connection with interfaces", () => {
               NOT: ProductionDirectorConnectionWhere
               OR: [ProductionDirectorConnectionWhere!]
               node: CreatureWhere
-              node_NOT: CreatureWhere @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
             }
 
             input ProductionDirectorCreateFieldInput {
@@ -772,9 +746,7 @@ describe("Connection with interfaces", () => {
               AND: [ProductionWhere!]
               NOT: ProductionWhere
               OR: [ProductionWhere!]
-              director: CreatureWhere @deprecated(reason: \\"Use \`director_SOME\` instead.\\")
               directorAggregate: ProductionDirectorAggregateInput
-              directorConnection: ProductionDirectorConnectionWhere @deprecated(reason: \\"Use \`directorConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Productions where all of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
@@ -783,7 +755,6 @@ describe("Connection with interfaces", () => {
               Return Productions where none of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
               directorConnection_NONE: ProductionDirectorConnectionWhere
-              directorConnection_NOT: ProductionDirectorConnectionWhere @deprecated(reason: \\"Use \`directorConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Productions where one of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
@@ -800,7 +771,6 @@ describe("Connection with interfaces", () => {
               Return Productions where none of the related Creatures match this filter
               \\"\\"\\"
               director_NONE: CreatureWhere
-              director_NOT: CreatureWhere @deprecated(reason: \\"Use \`director_NONE\` instead.\\")
               \\"\\"\\"
               Return Productions where one of the related Creatures match this filter
               \\"\\"\\"
@@ -813,11 +783,6 @@ describe("Connection with interfaces", () => {
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               typename_IN: [ProductionImplementation!]
             }
@@ -992,9 +957,7 @@ describe("Connection with interfaces", () => {
               AND: [SeriesWhere!]
               NOT: SeriesWhere
               OR: [SeriesWhere!]
-              director: CreatureWhere @deprecated(reason: \\"Use \`director_SOME\` instead.\\")
               directorAggregate: SeriesDirectorAggregateInput
-              directorConnection: ProductionDirectorConnectionWhere @deprecated(reason: \\"Use \`directorConnection_SOME\` instead.\\")
               \\"\\"\\"
               Return Series where all of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
@@ -1003,7 +966,6 @@ describe("Connection with interfaces", () => {
               Return Series where none of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
               directorConnection_NONE: ProductionDirectorConnectionWhere
-              directorConnection_NOT: ProductionDirectorConnectionWhere @deprecated(reason: \\"Use \`directorConnection_NONE\` instead.\\")
               \\"\\"\\"
               Return Series where one of the related ProductionDirectorConnections match this filter
               \\"\\"\\"
@@ -1016,7 +978,6 @@ describe("Connection with interfaces", () => {
               director_ALL: CreatureWhere
               \\"\\"\\"Return Series where none of the related Creatures match this filter\\"\\"\\"
               director_NONE: CreatureWhere
-              director_NOT: CreatureWhere @deprecated(reason: \\"Use \`director_NONE\` instead.\\")
               \\"\\"\\"Return Series where one of the related Creatures match this filter\\"\\"\\"
               director_SINGLE: CreatureWhere
               \\"\\"\\"Return Series where some of the related Creatures match this filter\\"\\"\\"
@@ -1027,27 +988,15 @@ describe("Connection with interfaces", () => {
               episode_IN: [Int!]
               episode_LT: Int
               episode_LTE: Int
-              episode_NOT: Int @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              episode_NOT_IN: [Int!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id: ID
               id_CONTAINS: ID
               id_ENDS_WITH: ID
               id_IN: [ID]
-              id_NOT: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_CONTAINS: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_ENDS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_IN: [ID] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              id_NOT_STARTS_WITH: ID @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               id_STARTS_WITH: ID
               title: String
               title_CONTAINS: String
               title_ENDS_WITH: String
               title_IN: [String!]
-              title_NOT: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_CONTAINS: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_ENDS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_IN: [String!] @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
-              title_NOT_STARTS_WITH: String @deprecated(reason: \\"Negation filters will be deprecated, use the NOT operator to achieve the same behavior\\")
               title_STARTS_WITH: String
             }
 
