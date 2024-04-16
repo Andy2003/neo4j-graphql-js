@@ -84,23 +84,23 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                CALL {
-                    WITH this0
-                    MATCH (this0)-[this1:HAS_OTHER_NODES]->(this2:OtherNodeType)
-                    WITH this2 { .id } AS this2
-                    RETURN collect(this2) AS var3
-                }
-                WITH this0 { .id, .something, .somethingElse, other: var3, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this4:MyImplementationType)
-                WITH this4 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this4) } AS this4
-                RETURN this4 AS this
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
+                RETURN this1 AS this
                 UNION
-                MATCH (this5:MyOtherImplementationType)
-                WITH this5 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this5) } AS this5
-                RETURN this5 AS this
+                MATCH (this2:SomeNodeType)
+                CALL {
+                    WITH this2
+                    MATCH (this2)-[this3:HAS_OTHER_NODES]->(this4:OtherNodeType)
+                    WITH this4 { .id } AS this4
+                    RETURN collect(this4) AS var5
+                }
+                WITH this2 { .id, .something, .somethingElse, other: var5, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
+                RETURN this2 AS this
             }
             WITH this
             ORDER BY this.id ASC
@@ -136,16 +136,16 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                WITH this0 { .something, .id, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this1:MyImplementationType)
-                WITH this1 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this1) } AS this1
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .someField, .id, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
                 RETURN this1 AS this
                 UNION
-                MATCH (this2:MyOtherImplementationType)
-                WITH this2 { .someField, .id, __resolveType: \\"MyOtherImplementationType\\", __id: id(this2) } AS this2
+                MATCH (this2:SomeNodeType)
+                WITH this2 { .something, .id, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
                 RETURN this2 AS this
             }
             WITH this
@@ -189,25 +189,25 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                CALL {
-                    WITH this0
-                    MATCH (this0)-[this1:HAS_OTHER_NODES]->(this2:OtherNodeType)
-                    WITH this2 { .id } AS this2
-                    ORDER BY this2.id DESC
-                    LIMIT $param0
-                    RETURN collect(this2) AS var3
-                }
-                WITH this0 { .id, .something, .somethingElse, other: var3, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this4:MyImplementationType)
-                WITH this4 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this4) } AS this4
-                RETURN this4 AS this
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
+                RETURN this1 AS this
                 UNION
-                MATCH (this5:MyOtherImplementationType)
-                WITH this5 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this5) } AS this5
-                RETURN this5 AS this
+                MATCH (this2:SomeNodeType)
+                CALL {
+                    WITH this2
+                    MATCH (this2)-[this3:HAS_OTHER_NODES]->(this4:OtherNodeType)
+                    WITH this4 { .id } AS this4
+                    ORDER BY this4.id DESC
+                    LIMIT $param0
+                    RETURN collect(this4) AS var5
+                }
+                WITH this2 { .id, .something, .somethingElse, other: var5, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
+                RETURN this2 AS this
             }
             WITH this
             ORDER BY this.id ASC
@@ -264,18 +264,18 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
                         WITH this1
                         CALL {
                             WITH *
-                            MATCH (this1)-[this2:HAS_INTERFACE_NODES]->(this3:SomeNodeType)
-                            WITH this3 { .id, __resolveType: \\"SomeNodeType\\", __id: id(this3) } AS this3
+                            MATCH (this1)-[this2:HAS_INTERFACE_NODES]->(this3:MyImplementationType)
+                            WITH this3 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this3) } AS this3
                             RETURN this3 AS var4
                             UNION
                             WITH *
-                            MATCH (this1)-[this5:HAS_INTERFACE_NODES]->(this6:MyImplementationType)
-                            WITH this6 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this6) } AS this6
+                            MATCH (this1)-[this5:HAS_INTERFACE_NODES]->(this6:MyOtherImplementationType)
+                            WITH this6 { .id, __resolveType: \\"MyOtherImplementationType\\", __id: id(this6) } AS this6
                             RETURN this6 AS var4
                             UNION
                             WITH *
-                            MATCH (this1)-[this7:HAS_INTERFACE_NODES]->(this8:MyOtherImplementationType)
-                            WITH this8 { .id, __resolveType: \\"MyOtherImplementationType\\", __id: id(this8) } AS this8
+                            MATCH (this1)-[this7:HAS_INTERFACE_NODES]->(this8:SomeNodeType)
+                            WITH this8 { .id, __resolveType: \\"SomeNodeType\\", __id: id(this8) } AS this8
                             RETURN this8 AS var4
                         }
                         WITH var4
@@ -322,23 +322,23 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
             expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
                 "CALL {
-                    MATCH (this0:SomeNodeType)
-                    CALL {
-                        WITH this0
-                        MATCH (this0)-[this1:HAS_OTHER_NODES]->(this2:OtherNodeType)
-                        WITH this2 { .id } AS this2
-                        RETURN collect(this2) AS var3
-                    }
-                    WITH this0 { .id, .something, .somethingElse, other: var3, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                    MATCH (this0:MyImplementationType)
+                    WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                     RETURN this0 AS this
                     UNION
-                    MATCH (this4:MyImplementationType)
-                    WITH this4 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this4) } AS this4
-                    RETURN this4 AS this
+                    MATCH (this1:MyOtherImplementationType)
+                    WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
+                    RETURN this1 AS this
                     UNION
-                    MATCH (this5:MyOtherImplementationType)
-                    WITH this5 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this5) } AS this5
-                    RETURN this5 AS this
+                    MATCH (this2:SomeNodeType)
+                    CALL {
+                        WITH this2
+                        MATCH (this2)-[this3:HAS_OTHER_NODES]->(this4:OtherNodeType)
+                        WITH this4 { .id } AS this4
+                        RETURN collect(this4) AS var5
+                    }
+                    WITH this2 { .id, .something, .somethingElse, other: var5, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
+                    RETURN this2 AS this
                 }
                 WITH this
                 LIMIT $param0
@@ -379,23 +379,23 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
             expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
                 "CALL {
-                    MATCH (this0:SomeNodeType)
-                    CALL {
-                        WITH this0
-                        MATCH (this0)-[this1:HAS_OTHER_NODES]->(this2:OtherNodeType)
-                        WITH this2 { .id } AS this2
-                        RETURN collect(this2) AS var3
-                    }
-                    WITH this0 { .id, .something, .somethingElse, other: var3, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                    MATCH (this0:MyImplementationType)
+                    WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                     RETURN this0 AS this
                     UNION
-                    MATCH (this4:MyImplementationType)
-                    WITH this4 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this4) } AS this4
-                    RETURN this4 AS this
+                    MATCH (this1:MyOtherImplementationType)
+                    WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
+                    RETURN this1 AS this
                     UNION
-                    MATCH (this5:MyOtherImplementationType)
-                    WITH this5 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this5) } AS this5
-                    RETURN this5 AS this
+                    MATCH (this2:SomeNodeType)
+                    CALL {
+                        WITH this2
+                        MATCH (this2)-[this3:HAS_OTHER_NODES]->(this4:OtherNodeType)
+                        WITH this4 { .id } AS this4
+                        RETURN collect(this4) AS var5
+                    }
+                    WITH this2 { .id, .something, .somethingElse, other: var5, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
+                    RETURN this2 AS this
                 }
                 WITH this
                 LIMIT $param0
@@ -436,23 +436,23 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
             expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
                 "CALL {
-                    MATCH (this0:SomeNodeType)
-                    CALL {
-                        WITH this0
-                        MATCH (this0)-[this1:HAS_OTHER_NODES]->(this2:OtherNodeType)
-                        WITH this2 { .id } AS this2
-                        RETURN collect(this2) AS var3
-                    }
-                    WITH this0 { .id, .something, .somethingElse, other: var3, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                    MATCH (this0:MyImplementationType)
+                    WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                     RETURN this0 AS this
                     UNION
-                    MATCH (this4:MyImplementationType)
-                    WITH this4 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this4) } AS this4
-                    RETURN this4 AS this
+                    MATCH (this1:MyOtherImplementationType)
+                    WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
+                    RETURN this1 AS this
                     UNION
-                    MATCH (this5:MyOtherImplementationType)
-                    WITH this5 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this5) } AS this5
-                    RETURN this5 AS this
+                    MATCH (this2:SomeNodeType)
+                    CALL {
+                        WITH this2
+                        MATCH (this2)-[this3:HAS_OTHER_NODES]->(this4:OtherNodeType)
+                        WITH this4 { .id } AS this4
+                        RETURN collect(this4) AS var5
+                    }
+                    WITH this2 { .id, .something, .somethingElse, other: var5, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
+                    RETURN this2 AS this
                 }
                 WITH this
                 LIMIT $param0
@@ -493,23 +493,23 @@ describe("Top-level Interface query pagination (sort and limit)", () => {
 
             expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
                 "CALL {
-                    MATCH (this0:SomeNodeType)
-                    CALL {
-                        WITH this0
-                        MATCH (this0)-[this1:HAS_OTHER_NODES]->(this2:OtherNodeType)
-                        WITH this2 { .id } AS this2
-                        RETURN collect(this2) AS var3
-                    }
-                    WITH this0 { .id, .something, .somethingElse, other: var3, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                    MATCH (this0:MyImplementationType)
+                    WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                     RETURN this0 AS this
                     UNION
-                    MATCH (this4:MyImplementationType)
-                    WITH this4 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this4) } AS this4
-                    RETURN this4 AS this
+                    MATCH (this1:MyOtherImplementationType)
+                    WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
+                    RETURN this1 AS this
                     UNION
-                    MATCH (this5:MyOtherImplementationType)
-                    WITH this5 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this5) } AS this5
-                    RETURN this5 AS this
+                    MATCH (this2:SomeNodeType)
+                    CALL {
+                        WITH this2
+                        MATCH (this2)-[this3:HAS_OTHER_NODES]->(this4:OtherNodeType)
+                        WITH this4 { .id } AS this4
+                        RETURN collect(this4) AS var5
+                    }
+                    WITH this2 { .id, .something, .somethingElse, other: var5, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
+                    RETURN this2 AS this
                 }
                 WITH this
                 ORDER BY this.id ASC

@@ -105,7 +105,7 @@ describe("https://github.com/neo4j/graphql/issues/2709", () => {
             "MATCH (this:Film)
             WHERE EXISTS {
                 MATCH (this)<-[this0:DISTRIBUTED_BY]-(this1)
-                WHERE (this1.name = $param0 AND (this1:Dishney OR this1:Prime OR this1:Netflix))
+                WHERE (this1.name = $param0 AND (this1:Dishney OR this1:Netflix OR this1:Prime))
             }
             RETURN this { .title } AS this"
         `);
@@ -133,7 +133,7 @@ describe("https://github.com/neo4j/graphql/issues/2709", () => {
             "MATCH (this:Film)
             WHERE EXISTS {
                 MATCH (this)<-[this0:DISTRIBUTED_BY]-(this1)
-                WHERE ((this1.name = $param0 OR this1.name = $param1) AND (this1:Dishney OR this1:Prime OR this1:Netflix))
+                WHERE ((this1.name = $param0 OR this1.name = $param1) AND (this1:Dishney OR this1:Netflix OR this1:Prime))
             }
             RETURN this { .title } AS this"
         `);

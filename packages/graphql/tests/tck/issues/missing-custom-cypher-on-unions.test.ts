@@ -160,17 +160,22 @@ describe("Missing custom Cypher on unions", () => {
                 WITH this
                 CALL {
                     WITH *
-                    MATCH (this)-[this1:relatesToChild]->(this2:HierarchicalRoot:Resource)
-                    WITH this2 { __resolveType: \\"HierarchicalRoot\\", __id: id(this2) } AS this2
+                    MATCH (this)-[this1:relatesToChild]->(this2:Expression:MyTenant:Resource)
+                    WITH this2 { __resolveType: \\"Expression\\", __id: id(this2) } AS this2
                     RETURN this2 AS var3
                     UNION
                     WITH *
-                    MATCH (this)-[this4:relatesToChild]->(this5:HierarchicalComponent:Resource)
+                    MATCH (this)-[this4:relatesToChild]->(this5:Fragment:MyTenant:Resource)
+                    WITH this5 { __resolveType: \\"Fragment\\", __id: id(this5) } AS this5
+                    RETURN this5 AS var3
+                    UNION
+                    WITH *
+                    MATCH (this)-[this6:relatesToChild]->(this7:HierarchicalComponent:Resource)
                     CALL {
-                        WITH this5
+                        WITH this7
                         CALL {
-                            WITH this5
-                            WITH this5 AS this
+                            WITH this7
+                            WITH this7 AS this
                             MATCH p=(this)<-[:relatesToChild*..10]-(parent:HierarchicalRoot)
                             WITH p, parent
                             OPTIONAL MATCH (parent) - [:type] -> (parentType)
@@ -192,26 +197,21 @@ describe("Missing custom Cypher on unions", () => {
                             } AS obj
                             RETURN DISTINCT obj as result
                         }
-                        WITH result AS this6
-                        WITH this6 { .hasSortKey, iri: this6.uri } AS this6
-                        RETURN collect(this6) AS var7
+                        WITH result AS this8
+                        WITH this8 { .hasSortKey, iri: this8.uri } AS this8
+                        RETURN collect(this8) AS var9
                     }
-                    WITH this5 { hierarchicalPathNodes: var7, __resolveType: \\"HierarchicalComponent\\", __id: id(this5) } AS this5
-                    RETURN this5 AS var3
+                    WITH this7 { hierarchicalPathNodes: var9, __resolveType: \\"HierarchicalComponent\\", __id: id(this7) } AS this7
+                    RETURN this7 AS var3
                     UNION
                     WITH *
-                    MATCH (this)-[this8:relatesToChild]->(this9:Expression:MyTenant:Resource)
-                    WITH this9 { __resolveType: \\"Expression\\", __id: id(this9) } AS this9
-                    RETURN this9 AS var3
-                    UNION
-                    WITH *
-                    MATCH (this)-[this10:relatesToChild]->(this11:Work:MyTenant:Resource)
-                    WITH this11 { __resolveType: \\"Work\\", __id: id(this11) } AS this11
+                    MATCH (this)-[this10:relatesToChild]->(this11:HierarchicalRoot:Resource)
+                    WITH this11 { __resolveType: \\"HierarchicalRoot\\", __id: id(this11) } AS this11
                     RETURN this11 AS var3
                     UNION
                     WITH *
-                    MATCH (this)-[this12:relatesToChild]->(this13:Fragment:MyTenant:Resource)
-                    WITH this13 { __resolveType: \\"Fragment\\", __id: id(this13) } AS this13
+                    MATCH (this)-[this12:relatesToChild]->(this13:Work:MyTenant:Resource)
+                    WITH this13 { __resolveType: \\"Work\\", __id: id(this13) } AS this13
                     RETURN this13 AS var3
                 }
                 WITH var3

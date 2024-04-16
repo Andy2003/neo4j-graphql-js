@@ -147,13 +147,13 @@ describe("context-variable-not-always-resolved-on-cypher-queries", () => {
                 WITH this
                 CALL {
                     WITH *
-                    MATCH (this)-[this2:relToUnion]->(this3:coreRoot:Resource)
-                    WITH this3 { __resolveType: \\"coreRoot\\", __id: id(this3) } AS this3
+                    MATCH (this)-[this2:relToUnion]->(this3:coreFrag:test:Resource)
+                    WITH this3 { iri: this3.uri, __resolveType: \\"coreFrag\\", __id: id(this3) } AS this3
                     RETURN this3 AS var4
                     UNION
                     WITH *
-                    MATCH (this)-[this5:relToUnion]->(this6:coreFrag:test:Resource)
-                    WITH this6 { iri: this6.uri, __resolveType: \\"coreFrag\\", __id: id(this6) } AS this6
+                    MATCH (this)-[this5:relToUnion]->(this6:coreRoot:Resource)
+                    WITH this6 { __resolveType: \\"coreRoot\\", __id: id(this6) } AS this6
                     RETURN this6 AS var4
                 }
                 WITH var4

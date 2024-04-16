@@ -140,34 +140,34 @@ describe("https://github.com/neo4j/graphql/issues/5066", () => {
                 WITH this
                 CALL {
                     WITH *
-                    MATCH (this)<-[this6:CREATED_PARTY]-(this7:User)
-                    CALL {
-                        WITH this7
-                        MATCH (this7)-[:HAS_BLOCKED]->(this8:UserBlockedUser)
-                        OPTIONAL MATCH (this8)-[:IS_BLOCKING]->(this9:User)
-                        WITH *, count(this9) AS toCount
-                        WITH *
-                        WHERE (toCount <> 0 AND ($jwt.sub IS NOT NULL AND this9.id = $jwt.sub))
-                        RETURN count(this8) > 0 AS var10
-                    }
+                    MATCH (this)<-[this6:CREATED_PARTY]-(this7:AdminGroup)
+                    OPTIONAL MATCH (this7)<-[:CREATED_ADMIN_GROUP]-(this8:User)
+                    WITH *, count(this8) AS createdByCount
                     WITH *
-                    WHERE ($isAuthenticated = true AND NOT (var10 = true))
-                    WITH this7 { .username, __resolveType: \\"User\\", __id: id(this7) } AS this7
-                    RETURN this7 AS var11
+                    WHERE ($isAuthenticated = true AND (createdByCount <> 0 AND ($jwt.sub IS NOT NULL AND this8.id = $jwt.sub)))
+                    WITH this7 { __resolveType: \\"AdminGroup\\", __id: id(this7) } AS this7
+                    RETURN this7 AS var9
                     UNION
                     WITH *
-                    MATCH (this)<-[this12:CREATED_PARTY]-(this13:AdminGroup)
-                    OPTIONAL MATCH (this13)<-[:CREATED_ADMIN_GROUP]-(this14:User)
-                    WITH *, count(this14) AS createdByCount
+                    MATCH (this)<-[this10:CREATED_PARTY]-(this11:User)
+                    CALL {
+                        WITH this11
+                        MATCH (this11)-[:HAS_BLOCKED]->(this12:UserBlockedUser)
+                        OPTIONAL MATCH (this12)-[:IS_BLOCKING]->(this13:User)
+                        WITH *, count(this13) AS toCount
+                        WITH *
+                        WHERE (toCount <> 0 AND ($jwt.sub IS NOT NULL AND this13.id = $jwt.sub))
+                        RETURN count(this12) > 0 AS var14
+                    }
                     WITH *
-                    WHERE ($isAuthenticated = true AND (createdByCount <> 0 AND ($jwt.sub IS NOT NULL AND this14.id = $jwt.sub)))
-                    WITH this13 { __resolveType: \\"AdminGroup\\", __id: id(this13) } AS this13
-                    RETURN this13 AS var11
+                    WHERE ($isAuthenticated = true AND NOT (var14 = true))
+                    WITH this11 { .username, __resolveType: \\"User\\", __id: id(this11) } AS this11
+                    RETURN this11 AS var9
                 }
-                WITH var11
-                RETURN head(collect(var11)) AS var11
+                WITH var9
+                RETURN head(collect(var9)) AS var9
             }
-            RETURN this { .id, createdBy: var11 } AS this"
+            RETURN this { .id, createdBy: var9 } AS this"
         `);
 
         expect(formatParams(result.params)).toMatchInlineSnapshot(`

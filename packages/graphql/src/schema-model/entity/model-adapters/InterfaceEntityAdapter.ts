@@ -161,6 +161,7 @@ export class InterfaceEntityAdapter {
             const entityAdapter = new ConcreteEntityAdapter(entity);
             this.concreteEntities.push(entityAdapter);
         }
+        this.concreteEntities.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     private initAttributes(attributes: Map<string, Attribute>) {

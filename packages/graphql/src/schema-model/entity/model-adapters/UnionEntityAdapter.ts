@@ -48,6 +48,7 @@ export class UnionEntityAdapter {
             const entityAdapter = new ConcreteEntityAdapter(entity);
             this.concreteEntities.push(entityAdapter);
         }
+        this.concreteEntities.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     get operations(): UnionEntityOperations {
