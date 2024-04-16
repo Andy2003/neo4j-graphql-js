@@ -89,18 +89,18 @@ describe("Interface top level operations with authorization", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this0.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param2 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this0 { .id, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param2 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this1:MyImplementationType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param3 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this1 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this1) } AS this1
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .id, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
                 RETURN this1 AS this
                 UNION
-                MATCH (this2:MyOtherImplementationType)
-                WITH this2 { .id, __resolveType: \\"MyOtherImplementationType\\", __id: id(this2) } AS this2
+                MATCH (this2:SomeNodeType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this2.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param3 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this2 { .id, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
                 RETURN this2 AS this
             }
             WITH this
@@ -114,8 +114,8 @@ describe("Interface top level operations with authorization", () => {
                     \\"roles\\": [],
                     \\"jwtAllowedNamesExample\\": \\"Horror\\"
                 },
-                \\"param2\\": \\"admin\\",
-                \\"param3\\": \\"a\\"
+                \\"param2\\": \\"a\\",
+                \\"param3\\": \\"admin\\"
             }"
         `);
     });
@@ -137,18 +137,18 @@ describe("Interface top level operations with authorization", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this0.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param2 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this0 { .id, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param2 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this1:MyImplementationType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param3 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this1 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this1) } AS this1
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
                 RETURN this1 AS this
                 UNION
-                MATCH (this2:MyOtherImplementationType)
-                WITH this2 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this2) } AS this2
+                MATCH (this2:SomeNodeType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this2.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param3 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this2 { .id, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
                 RETURN this2 AS this
             }
             WITH this
@@ -162,8 +162,8 @@ describe("Interface top level operations with authorization", () => {
                     \\"roles\\": [],
                     \\"jwtAllowedNamesExample\\": \\"Horror\\"
                 },
-                \\"param2\\": \\"admin\\",
-                \\"param3\\": \\"a\\"
+                \\"param2\\": \\"a\\",
+                \\"param3\\": \\"admin\\"
             }"
         `);
     });
@@ -188,18 +188,18 @@ describe("Interface top level operations with authorization", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this0.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param2 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this0 { .id, .something, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param2 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this1:MyImplementationType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param3 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this1 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this1) } AS this1
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
                 RETURN this1 AS this
                 UNION
-                MATCH (this2:MyOtherImplementationType)
-                WITH this2 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this2) } AS this2
+                MATCH (this2:SomeNodeType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this2.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param3 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this2 { .id, .something, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
                 RETURN this2 AS this
             }
             WITH this
@@ -213,8 +213,8 @@ describe("Interface top level operations with authorization", () => {
                     \\"roles\\": [],
                     \\"jwtAllowedNamesExample\\": \\"Horror\\"
                 },
-                \\"param2\\": \\"admin\\",
-                \\"param3\\": \\"a\\"
+                \\"param2\\": \\"a\\",
+                \\"param3\\": \\"admin\\"
             }"
         `);
     });
@@ -241,18 +241,18 @@ describe("Interface top level operations with authorization", () => {
 
         expect(formatCypher(result.cypher)).toMatchInlineSnapshot(`
             "CALL {
-                MATCH (this0:SomeNodeType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this0.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param2 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this0 { .id, .something, .somethingElse, __resolveType: \\"SomeNodeType\\", __id: id(this0) } AS this0
+                MATCH (this0:MyImplementationType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param2 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this0 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this0) } AS this0
                 RETURN this0 AS this
                 UNION
-                MATCH (this1:MyImplementationType)
-                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.groups IS NOT NULL AND $param3 IN $jwt.groups)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
-                WITH this1 { .id, __resolveType: \\"MyImplementationType\\", __id: id(this1) } AS this1
+                MATCH (this1:MyOtherImplementationType)
+                WITH this1 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this1) } AS this1
                 RETURN this1 AS this
                 UNION
-                MATCH (this2:MyOtherImplementationType)
-                WITH this2 { .id, .someField, __resolveType: \\"MyOtherImplementationType\\", __id: id(this2) } AS this2
+                MATCH (this2:SomeNodeType)
+                WHERE apoc.util.validatePredicate(NOT ($isAuthenticated = true AND ($jwt.jwtAllowedNamesExample IS NOT NULL AND this2.id = $jwt.jwtAllowedNamesExample) AND ($jwt.roles IS NOT NULL AND $param3 IN $jwt.roles)), \\"@neo4j/graphql/FORBIDDEN\\", [0])
+                WITH this2 { .id, .something, .somethingElse, __resolveType: \\"SomeNodeType\\", __id: id(this2) } AS this2
                 RETURN this2 AS this
             }
             WITH this
@@ -266,8 +266,8 @@ describe("Interface top level operations with authorization", () => {
                     \\"roles\\": [],
                     \\"jwtAllowedNamesExample\\": \\"Horror\\"
                 },
-                \\"param2\\": \\"admin\\",
-                \\"param3\\": \\"a\\"
+                \\"param2\\": \\"a\\",
+                \\"param3\\": \\"admin\\"
             }"
         `);
     });
