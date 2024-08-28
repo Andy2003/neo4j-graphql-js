@@ -1,5 +1,211 @@
 # @neo4j/graphql
 
+## 5.6.0
+
+## 5.5.6
+
+### Patch Changes
+
+-   [#5468](https://github.com/neo4j/graphql/pull/5468) [`24f6d79`](https://github.com/neo4j/graphql/commit/24f6d79750918c69294f2b93b9547508fd04df01) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix unique constraints for BigInt
+
+-   [#5470](https://github.com/neo4j/graphql/pull/5470) [`4f05a62`](https://github.com/neo4j/graphql/commit/4f05a629ccc6119522db165aaa07369ecc1ad5c6) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix problem with parameters colliding in the cypher directive
+
+## 5.5.5
+
+### Patch Changes
+
+-   [#5446](https://github.com/neo4j/graphql/pull/5446) [`1e4a451`](https://github.com/neo4j/graphql/commit/1e4a45143dc66d9829a36b0430aaffd51a4cde50) Thanks [@darrellwarde](https://github.com/darrellwarde)! - A warning will now be given during validation of type definitions if subscriptions has been enabled, and `@authorization` has been used without `@subscriptionsAuthorization`
+
+## 5.5.4
+
+### Patch Changes
+
+-   [#5440](https://github.com/neo4j/graphql/pull/5440) [`cfcc474`](https://github.com/neo4j/graphql/commit/cfcc474ebcc238d1c4bc9e7ac55674975b8aa1c3) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Generate filters for non-list relationship fields if deprecated array filters have been excluded
+
+## 5.5.3
+
+### Patch Changes
+
+-   [#5432](https://github.com/neo4j/graphql/pull/5432) [`9866da6`](https://github.com/neo4j/graphql/commit/9866da62ef06d2718dbea12e8d02715c55429d3e) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Fix bug where pre-specified plural names were being pluralized again
+
+## 5.5.2
+
+### Patch Changes
+
+-   [#5387](https://github.com/neo4j/graphql/pull/5387) [`a40182d`](https://github.com/neo4j/graphql/commit/a40182df5d94da27e3372d747daff87dfe669ea6) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix connection operations with a fulltext argument
+
+## 5.5.1
+
+## 5.5.0
+
+### Minor Changes
+
+-   [#5316](https://github.com/neo4j/graphql/pull/5316) [`a26f32f`](https://github.com/neo4j/graphql/commit/a26f32f9726c5e5befd664a87588a22f8a4a9e3e) Thanks [@mjfwebb](https://github.com/mjfwebb)! - Add `@vector` directive.
+
+    The directive enables two forms of user input, depending on the index configuration: vector input which in GraphQL is a `[Float!]`, and phrase input which is a `String`.
+
+    For example to use the `@vector` directive with a vector index, you would define a type like this:
+
+    ```graphql
+    type Movie
+        @vector(
+            indexes: [
+                { indexName: "myVectorIndexName", propertyName: "embedding", queryName: "searchForRelatedMovies" }
+            ]
+        ) {
+        title: String!
+    }
+    ```
+
+    To configure a provider to use the GenAI plugin and have phrase input, you would define a type like this:
+
+    ```graphql
+    type Movie
+        @vector(
+            indexes: [
+                {
+                    indexName: "myVectorIndexName"
+                    propertyName: "embedding"
+                    queryName: "searchForRelatedMovies"
+                    provider: OPEN_AI
+                }
+            ]
+        ) {
+        title: String!
+    }
+    ```
+
+    The constructor of the `Neo4jGraphQL` class would need to be updated to include the `OpenAI` provider under the `vector` feature like this:
+
+    ```javascript
+    const neoSchema = new Neo4jGraphQL({
+        typeDefs,
+        driver,
+        features: {
+            vector: {
+                OpenAI: {
+                    token: "my-open-ai-token",
+                    model: "text-embedding-3-small",
+                },
+            },
+        },
+    });
+    ```
+
+### Patch Changes
+
+-   [#5317](https://github.com/neo4j/graphql/pull/5317) [`f4c41fe`](https://github.com/neo4j/graphql/commit/f4c41fef566c670fe837dddb7d4bae12f87bc001) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix non-array validate argument on authorization directive #4534
+
+## 5.4.5
+
+### Patch Changes
+
+-   [#5304](https://github.com/neo4j/graphql/pull/5304) [`92fdf2e`](https://github.com/neo4j/graphql/commit/92fdf2eca41d08b0a81877c7ff6a65c3ef3b7d4f) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix bug on generated Cypher with the @cypher directive and authorization rules #5270
+
+## 5.4.4
+
+### Patch Changes
+
+-   [#5257](https://github.com/neo4j/graphql/pull/5257) [`2e3aac9`](https://github.com/neo4j/graphql/commit/2e3aac9765c2e40e7fd0f1f6934bf85737473044) Thanks [@MacondoExpress](https://github.com/MacondoExpress)! - Fix projection of spatial fields with `srid` field
+
+## 5.4.3
+
+### Patch Changes
+
+-   [#5228](https://github.com/neo4j/graphql/pull/5228) [`62a052a`](https://github.com/neo4j/graphql/commit/62a052a09804a6c4361b0f0ce0cd0d9ba89b061b) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Add parallel as an option for `runtime` in `CypherQueryOptions`
+
+## 5.4.2
+
+### Patch Changes
+
+-   [#5189](https://github.com/neo4j/graphql/pull/5189) [`7046091`](https://github.com/neo4j/graphql/commit/70460916901c08aec69a170467c1a1cb290e9fac) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Remove parameters from transaction metadata
+
+## 5.4.1
+
+### Patch Changes
+
+-   [#5147](https://github.com/neo4j/graphql/pull/5147) [`97b86b5`](https://github.com/neo4j/graphql/commit/97b86b55d117d6ef0f7b0ee5b7549193c9e48481) Thanks [@MacondoExpress](https://github.com/MacondoExpress)! - Fix a bug that caused custom Cypher queries to fail when complex authorization rules are applied.
+
+-   [#5148](https://github.com/neo4j/graphql/pull/5148) [`1106af4`](https://github.com/neo4j/graphql/commit/1106af4554dedc35badea795725a15c96832bf49) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix schema error when defining matrix values as arguments on custom fields #5142.
+
+    For example:
+
+    ```graphql
+    type Query {
+        test(fields: [[String!]]!): String!
+    }
+    ```
+
+## 5.4.0
+
+### Minor Changes
+
+-   [#5132](https://github.com/neo4j/graphql/pull/5132) [`899b1b4`](https://github.com/neo4j/graphql/commit/899b1b408f72171f832d0ba161640af0cb228473) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Allows `@populatedBy` to be used on fields of list type
+
+-   [#5136](https://github.com/neo4j/graphql/pull/5136) [`8e3ffea`](https://github.com/neo4j/graphql/commit/8e3ffeaf9c80d6a9aa7952bdca5eacaba573d341) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Allows `@populatedBy` to be used on temporal fields
+
+### Patch Changes
+
+-   [#5132](https://github.com/neo4j/graphql/pull/5132) [`899b1b4`](https://github.com/neo4j/graphql/commit/899b1b408f72171f832d0ba161640af0cb228473) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Adds schema validation so that `@populatedBy` can only be used on fields of supported types
+
+-   [#5132](https://github.com/neo4j/graphql/pull/5132) [`899b1b4`](https://github.com/neo4j/graphql/commit/899b1b408f72171f832d0ba161640af0cb228473) Thanks [@darrellwarde](https://github.com/darrellwarde)! - Fixes bug where non-numeric strings would evaluate to 0 as a `BigInt`
+
+## 5.3.6
+
+### Patch Changes
+
+-   [#5103](https://github.com/neo4j/graphql/pull/5103) [`05d83b2`](https://github.com/neo4j/graphql/commit/05d83b25928b7870df89faf43f5861ed453f112e) Thanks [@angrykoala](https://github.com/angrykoala)! - Optimise schema generation for aggregations, reducing schema generation time
+
+-   [#5085](https://github.com/neo4j/graphql/pull/5085) [`c82f7b8`](https://github.com/neo4j/graphql/commit/c82f7b8777319e414c86260b196276ffb9f1dae3) Thanks [@angrykoala](https://github.com/angrykoala)! - Validation warning on objects without resolver only appear under env variable `DEBUG=@neo4j/graphql:graphql`
+
+-   [#5104](https://github.com/neo4j/graphql/pull/5104) [`bcc3719`](https://github.com/neo4j/graphql/commit/bcc3719352f95722a03e3ff5ee89fdb66d2a6618) Thanks [@angrykoala](https://github.com/angrykoala)! - Add feature option `excludeDeprecatedFields` to reduce the schema size by removing autogenerated fields that have been deprecated:
+
+    Usage:
+
+    ```js
+    const neoSchema = new Neo4jGraphQL({
+        typeDefs,
+        driver,
+        features: {
+            excludeDeprecatedFields: {
+                bookmark: true,
+                negationFilters: true,
+                arrayFilters: true,
+                stringAggregation: true,
+                aggregationFilters: true,
+            },
+        },
+    });
+    ```
+
+    This flag will remove the fields marked as `@deprecated` that have been autogenerated by the `@neo4j/graphql` library to reduce the schema size and hence server startup time and performance. Note that user-defined deprecated fields are not removed. Some autogenerated fields may still be generated, particularly those that do not affect schema size.
+
+## 5.3.5
+
+### Patch Changes
+
+-   [#5072](https://github.com/neo4j/graphql/pull/5072) [`aec402e`](https://github.com/neo4j/graphql/commit/aec402ecd552b3e68b8f73f4d1689dd91f013470) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix authorization with unions
+
+## 5.3.4
+
+### Patch Changes
+
+-   [#5039](https://github.com/neo4j/graphql/pull/5039) [`2cff42d`](https://github.com/neo4j/graphql/commit/2cff42d9fbd2b34a6fc0c268944eaaf959afa54e) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix cypher generation on delete operations #5023
+
+-   [#5057](https://github.com/neo4j/graphql/pull/5057) [`19d12a3`](https://github.com/neo4j/graphql/commit/19d12a30668b2690fd877590e0f0be4fd070ecec) Thanks [@MacondoExpress](https://github.com/MacondoExpress)! - Fixws a bug where a custom Cypher query with an argument named phrase was interpreted as FullText query.
+
+## 5.3.3
+
+### Patch Changes
+
+-   [#4992](https://github.com/neo4j/graphql/pull/4992) [`5dcd0a7`](https://github.com/neo4j/graphql/commit/5dcd0a702bdb52e02d774af91bafb17dfc43ce4e) Thanks [@a-alle](https://github.com/a-alle)! - PopulatedBy fields part of inputs for operations not defined in directive argument
+
+-   [#4979](https://github.com/neo4j/graphql/pull/4979) [`b730146`](https://github.com/neo4j/graphql/commit/b730146dba595ea5c3674ab51ec911d42b01ca88) Thanks [@a-alle](https://github.com/a-alle)! - EventPayload type for interface excludes fields that any of its implementations define as custom resolved
+
+-   [#5022](https://github.com/neo4j/graphql/pull/5022) [`6b6f636`](https://github.com/neo4j/graphql/commit/6b6f63607345efe0a926d675432a6a6bd7b08d32) Thanks [@angrykoala](https://github.com/angrykoala)! - Fix aggregation filtering with multiple labels #5013
+
+-   [#4916](https://github.com/neo4j/graphql/pull/4916) [`cb83cf5`](https://github.com/neo4j/graphql/commit/cb83cf5242b93992a307de9608eab663b7c18b2e) Thanks [@a-alle](https://github.com/a-alle)! - Fix aliased fields case on interface relationship connection filters
+
 ## 5.3.2
 
 ### Patch Changes

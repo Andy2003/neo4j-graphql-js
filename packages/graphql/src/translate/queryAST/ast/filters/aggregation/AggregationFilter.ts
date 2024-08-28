@@ -18,16 +18,16 @@
  */
 
 import Cypher from "@neo4j/cypher-builder";
-import { Filter } from "../Filter";
-import type { CountFilter } from "./CountFilter";
-import type { AggregationPropertyFilter } from "./AggregationPropertyFilter";
-import type { LogicalFilter } from "../LogicalFilter";
-import type { QueryASTContext } from "../../QueryASTContext";
-import type { RelationshipAdapter } from "../../../../../schema-model/relationship/model-adapters/RelationshipAdapter";
-import type { QueryASTNode } from "../../QueryASTNode";
-import { hasTarget } from "../../../utils/context-has-target";
-import { createNodeFromEntity } from "../../../utils/create-node-from-entity";
 import { InterfaceEntityAdapter } from "../../../../../schema-model/entity/model-adapters/InterfaceEntityAdapter";
+import type { RelationshipAdapter } from "../../../../../schema-model/relationship/model-adapters/RelationshipAdapter";
+import { hasTarget } from "../../../utils/context-has-target";
+import { getEntityLabels } from "../../../utils/create-node-from-entity";
+import type { QueryASTContext } from "../../QueryASTContext";
+import type { QueryASTNode } from "../../QueryASTNode";
+import { Filter } from "../Filter";
+import type { LogicalFilter } from "../LogicalFilter";
+import type { AggregationPropertyFilter } from "./AggregationPropertyFilter";
+import type { CountFilter } from "./CountFilter";
 
 export class AggregationFilter extends Filter {
     private relationship: RelationshipAdapter;
@@ -54,27 +54,26 @@ export class AggregationFilter extends Filter {
         this.subqueryReturnVariable = new Cypher.Variable();
         const relatedEntity = this.relationship.target;
 
-        let relatedNode: Cypher.Node;
+        const relatedNode: Cypher.Node = new Cypher.Node();
+        let relatedNodeLabels: string[] = [];
         let labelsFilter: Cypher.Predicate | undefined;
 
         if (relatedEntity instanceof InterfaceEntityAdapter) {
-            relatedNode = new Cypher.Node();
             const labelsForImplementations = relatedEntity.concreteEntities.map((e) =>
-                relatedNode.hasLabel(e.getLabels().join(":"))
+                relatedNode.hasLabels(...e.getLabels())
             );
             labelsFilter = Cypher.or(...labelsForImplementations);
         } else {
-            relatedNode = createNodeFromEntity(relatedEntity, context.neo4jGraphQLContext);
+            relatedNodeLabels = getEntityLabels(relatedEntity, context.neo4jGraphQLContext);
         }
-        const relationshipTarget = new Cypher.Relationship({
-            type: this.relationship.type,
-        });
+        const relationshipTarget = new Cypher.Relationship();
 
         const pattern = new Cypher.Pattern(context.target)
-            .withoutLabels()
-            .related(relationshipTarget)
-            .withDirection(this.relationship.getCypherDirection())
-            .to(relatedNode);
+            .related(relationshipTarget, {
+                direction: this.relationship.getCypherDirection(),
+                type: this.relationship.type,
+            })
+            .to(relatedNode, { labels: relatedNodeLabels });
 
         const nestedContext = context.push({
             target: relatedNode,

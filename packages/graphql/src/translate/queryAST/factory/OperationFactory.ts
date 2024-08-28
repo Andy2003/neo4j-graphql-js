@@ -26,7 +26,7 @@ import type { ConcreteEntityAdapter } from "../../../schema-model/entity/model-a
 import type { InterfaceEntityAdapter } from "../../../schema-model/entity/model-adapters/InterfaceEntityAdapter";
 import type { UnionEntityAdapter } from "../../../schema-model/entity/model-adapters/UnionEntityAdapter";
 import type { RelationshipAdapter } from "../../../schema-model/relationship/model-adapters/RelationshipAdapter";
-import type { ConnectionQueryArgs, GraphQLOptionsArg } from "../../../types";
+import type { GraphQLOptionsArg } from "../../../types";
 import type { Neo4jGraphQLTranslationContext } from "../../../types/neo4j-graphql-translation-context";
 import { filterTruthy, isRecord } from "../../../utils/utils";
 import type { Filter } from "../ast/filters/Filter";
@@ -41,7 +41,8 @@ import type { CompositeCypherOperation } from "../ast/operations/composite/Compo
 import type { CompositeReadOperation } from "../ast/operations/composite/CompositeReadOperation";
 import type { Operation } from "../ast/operations/operations";
 import type { FulltextSelection } from "../ast/selection/FulltextSelection";
-import { assertIsConcreteEntity } from "../utils/is-concrete-entity";
+import type { VectorSelection } from "../ast/selection/VectorSelection";
+import { assertIsConcreteEntity, isConcreteEntity } from "../utils/is-concrete-entity";
 import { isInterfaceEntity } from "../utils/is-interface-entity";
 import { isUnionEntity } from "../utils/is-union-entity";
 import type { AuthorizationFactory } from "./AuthorizationFactory";
@@ -55,6 +56,7 @@ import { DeleteFactory } from "./Operations/DeleteFactory";
 import { FulltextFactory } from "./Operations/FulltextFactory";
 import { ReadFactory } from "./Operations/ReadFactory";
 import { UpdateFactory } from "./Operations/UpdateFactory";
+import { VectorFactory } from "./Operations/VectorFactory";
 import type { QueryASTFactory } from "./QueryASTFactory";
 import type { SortAndPaginationFactory } from "./SortAndPaginationFactory";
 import { parseTopLevelOperationField } from "./parsers/parse-operation-fields";
@@ -74,6 +76,7 @@ export class OperationsFactory {
     private customCypherFactory: CustomCypherFactory;
     private connectionFactory: ConnectionFactory;
     private readFactory: ReadFactory;
+    private vectorFactory: VectorFactory;
 
     constructor(queryASTFactory: QueryASTFactory) {
         this.filterFactory = queryASTFactory.filterFactory;
@@ -88,6 +91,7 @@ export class OperationsFactory {
         this.customCypherFactory = new CustomCypherFactory(queryASTFactory);
         this.connectionFactory = new ConnectionFactory(queryASTFactory);
         this.readFactory = new ReadFactory(queryASTFactory);
+        this.vectorFactory = new VectorFactory(queryASTFactory);
     }
 
     public createTopLevelOperation({
@@ -96,18 +100,23 @@ export class OperationsFactory {
         context,
         varName,
         reference,
+        resolveAsUnwind = false,
     }: {
         entity?: EntityAdapter;
         resolveTree: ResolveTree;
         context: Neo4jGraphQLTranslationContext;
         varName?: string;
         reference?: any;
+        resolveAsUnwind?: boolean;
     }): Operation {
         // Handles deprecated top level fulltext
-        if (context.resolveTree.args.phrase) {
-            if (!context.fulltext) {
-                throw new Error("Failed to get context fulltext");
-            }
+        if (
+            entity &&
+            isConcreteEntity(entity) &&
+            Boolean(entity.annotations.fulltext) &&
+            context.fulltext &&
+            context.resolveTree.args.phrase
+        ) {
             const indexName = context.fulltext.indexName ?? context.fulltext.name;
             if (indexName === undefined) {
                 throw new Error("The name of the fulltext index should be defined using the indexName argument.");
@@ -115,7 +124,8 @@ export class OperationsFactory {
             assertIsConcreteEntity(entity);
             return this.fulltextFactory.createFulltextOperation(entity, resolveTree, context);
         }
-        const operationMatch = parseTopLevelOperationField(resolveTree.name, context.schemaModel, entity);
+
+        const operationMatch = parseTopLevelOperationField(resolveTree.name, context, entity);
         switch (operationMatch) {
             case "READ": {
                 if (context.resolveTree.args.fulltext || context.resolveTree.args.phrase) {
@@ -132,6 +142,16 @@ export class OperationsFactory {
                     varName,
                     reference,
                 });
+            }
+            case "VECTOR": {
+                if (!entity) {
+                    throw new Error("Entity is required for top level connection read operations");
+                }
+                if (!isConcreteEntity(entity)) {
+                    throw new Error("Vector operations are only supported on concrete entities");
+                }
+
+                return this.vectorFactory.createVectorOperation(entity, resolveTree, context);
             }
             case "CONNECTION": {
                 if (!entity) {
@@ -153,6 +173,9 @@ export class OperationsFactory {
             }
             case "CREATE": {
                 assertIsConcreteEntity(entity);
+                if (resolveAsUnwind) {
+                    return this.createFactory.createUnwindCreateOperation(entity, resolveTree, context);
+                }
                 return this.createFactory.createCreateOperation(entity, resolveTree, context);
             }
             case "UPDATE": {
@@ -171,6 +194,9 @@ export class OperationsFactory {
             case "CUSTOM_CYPHER": {
                 return this.customCypherFactory.createTopLevelCustomCypherOperation({ entity, resolveTree, context });
             }
+            default: {
+                throw new Error(`Unsupported top level operation: ${resolveTree.name}`);
+            }
         }
     }
     /**
@@ -186,11 +212,16 @@ export class OperationsFactory {
     }): ReadOperation | CompositeReadOperation {
         return this.readFactory.createReadOperation(arg);
     }
+
     public getFulltextSelection(
         entity: ConcreteEntityAdapter,
         context: Neo4jGraphQLTranslationContext
     ): FulltextSelection {
         return this.fulltextFactory.getFulltextSelection(entity, context);
+    }
+
+    public getVectorSelection(entity: ConcreteEntityAdapter, context: Neo4jGraphQLTranslationContext): VectorSelection {
+        return this.vectorFactory.getVectorSelection(entity, context);
     }
 
     public createAggregationOperation(
@@ -201,13 +232,6 @@ export class OperationsFactory {
         return this.aggregateFactory.createAggregationOperation(entityOrRel, resolveTree, context);
     }
 
-    public getConnectionOptions(
-        entity: ConcreteEntityAdapter | InterfaceEntityAdapter,
-        options: Record<string, any>
-    ): Pick<ConnectionQueryArgs, "first" | "after" | "sort"> | undefined {
-        return this.connectionFactory.getConnectionOptions(entity, options);
-    }
-
     public splitConnectionFields(rawFields: Record<string, ResolveTree>): {
         node: ResolveTree | undefined;
         edge: ResolveTree | undefined;
@@ -215,6 +239,7 @@ export class OperationsFactory {
     } {
         return this.connectionFactory.splitConnectionFields(rawFields);
     }
+
     public createConnectionOperationAST(arg: {
         relationship?: RelationshipAdapter;
         target: ConcreteEntityAdapter;
@@ -242,6 +267,18 @@ export class OperationsFactory {
         partialOf?: InterfaceEntityAdapter | UnionEntityAdapter;
     }): T {
         return this.readFactory.hydrateReadOperation(arg);
+    }
+
+    public hydrateConnectionOperation<T extends ConnectionReadOperation>(arg: {
+        relationship?: RelationshipAdapter;
+        target: ConcreteEntityAdapter;
+        resolveTree: ResolveTree;
+        context: Neo4jGraphQLTranslationContext;
+        operation: T;
+        whereArgs: Record<string, any>;
+        resolveTreeEdgeFields: Record<string, ResolveTree>;
+    }): T {
+        return this.connectionFactory.hydrateConnectionOperationAST(arg);
     }
 
     public createCustomCypherOperation(arg: {
@@ -294,7 +331,7 @@ export class OperationsFactory {
             });
             operation.addFilters(...filters);
         } else {
-            const filters = this.filterFactory.createNodeFilters(entity, whereArgs);
+            const filters = this.filterFactory.createNodeFilters(entity, whereArgs, context);
             operation.addFilters(...filters);
         }
 

@@ -30,6 +30,7 @@ export const DEBUG_EXECUTE = `${DEBUG_PREFIX}:execution`;
 export const DEBUG_GENERATE = `${DEBUG_PREFIX}:generate`;
 export const DEBUG_GRAPHQL = `${DEBUG_PREFIX}:graphql`;
 export const DEBUG_TRANSLATE = `${DEBUG_PREFIX}:translate`;
+
 export const RELATIONSHIP_REQUIREMENT_PREFIX = "@neo4j/graphql/RELATIONSHIP-REQUIRED";
 
 export const RESERVED_TYPE_NAMES = [
@@ -96,3 +97,4 @@ export const DBMS_COMPONENTS_QUERY =
 export const DEPRECATED = "deprecated";
 export const SHAREABLE = "shareable";
 export const PROPAGATED_DIRECTIVES = [SHAREABLE, DEPRECATED] as const;
+export const SCORE_FIELD = "score";

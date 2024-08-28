@@ -46,12 +46,15 @@ import { isUnionEntity } from "../../utils/is-union-entity";
 import type { QueryASTFactory } from "../QueryASTFactory";
 import { findFieldsByNameInFieldsByTypeNameField } from "../parsers/find-fields-by-name-in-fields-by-type-name-field";
 import { getFieldsByTypeName } from "../parsers/get-fields-by-type-name";
+import { FulltextFactory } from "./FulltextFactory";
 
 export class ConnectionFactory {
     private queryASTFactory: QueryASTFactory;
+    private fulltextFactory: FulltextFactory;
 
     constructor(queryASTFactory: QueryASTFactory) {
         this.queryASTFactory = queryASTFactory;
+        this.fulltextFactory = new FulltextFactory(queryASTFactory);
     }
 
     public createCompositeConnectionOperationAST({
@@ -78,16 +81,26 @@ export class ConnectionFactory {
         const concreteEntities = getConcreteEntities(target, nodeWhere);
         const concreteConnectionOperations = concreteEntities.map((concreteEntity: ConcreteEntityAdapter) => {
             let selection: EntitySelection;
-
+            let resolveTreeEdgeFields: Record<string, ResolveTree>;
             if (relationship) {
                 selection = new RelationshipSelection({
                     relationship,
                     directed,
                     targetOverride: concreteEntity,
                 });
+                resolveTreeEdgeFields = this.parseConnectionFields({
+                    entityOrRel: relationship,
+                    target: concreteEntity,
+                    resolveTree,
+                });
             } else {
                 selection = new NodeSelection({
                     target: concreteEntity,
+                });
+                resolveTreeEdgeFields = this.parseConnectionFields({
+                    entityOrRel: concreteEntity,
+                    target: concreteEntity,
+                    resolveTree,
                 });
             }
 
@@ -104,6 +117,7 @@ export class ConnectionFactory {
                 context,
                 operation: connectionPartial,
                 whereArgs: resolveTreeWhere,
+                resolveTreeEdgeFields,
             });
         });
 
@@ -147,25 +161,41 @@ export class ConnectionFactory {
         });
 
         let selection: EntitySelection;
+        let resolveTreeEdgeFields: Record<string, ResolveTree>;
         if (relationship) {
             selection = new RelationshipSelection({
                 relationship,
                 directed: resolveTree.args.directed as boolean | undefined,
             });
-        } else {
-            selection = new NodeSelection({
+            resolveTreeEdgeFields = this.parseConnectionFields({
+                entityOrRel: relationship,
                 target,
+                resolveTree,
+            });
+        } else {
+            if (context.resolveTree.args.fulltext || context.resolveTree.args.phrase) {
+                selection = this.fulltextFactory.getFulltextSelection(target, context);
+            } else {
+                selection = new NodeSelection({
+                    target,
+                });
+            }
+            resolveTreeEdgeFields = this.parseConnectionFields({
+                entityOrRel: target,
+                target,
+                resolveTree,
             });
         }
         const operation = new ConnectionReadOperation({ relationship, target, selection });
 
         return this.hydrateConnectionOperationAST({
-            relationship: relationship,
+            relationship,
             target: target,
             resolveTree,
             context,
             operation,
             whereArgs: resolveTreeWhere,
+            resolveTreeEdgeFields,
         });
     }
 
@@ -186,7 +216,7 @@ export class ConnectionFactory {
         let options: Pick<ConnectionQueryArgs, "first" | "after" | "sort"> | undefined;
         const target = isRelationshipEntity(entityOrRel) ? entityOrRel.target : entityOrRel;
         if (!isUnionEntity(target)) {
-            options = this.queryASTFactory.operationsFactory.getConnectionOptions(target, resolveTree.args);
+            options = this.getConnectionOptions(target, resolveTree.args);
         } else {
             options = resolveTree.args;
         }
@@ -219,6 +249,7 @@ export class ConnectionFactory {
 
         return operation;
     }
+
     // The current top-level Connection API is inconsistent with the rest of the API making the parsing more complex than it should be.
     // This function temporary adjust some inconsistencies waiting for the new API.
     // TODO: Remove it when the new API is ready.
@@ -264,7 +295,7 @@ export class ConnectionFactory {
         };
     }
 
-    public getConnectionOptions(
+    private getConnectionOptions(
         entity: ConcreteEntityAdapter | InterfaceEntityAdapter,
         options: Record<string, any>
     ): Pick<ConnectionQueryArgs, "first" | "after" | "sort"> | undefined {
@@ -288,13 +319,14 @@ export class ConnectionFactory {
         };
     }
 
-    private hydrateConnectionOperationAST<T extends ConnectionReadOperation>({
+    public hydrateConnectionOperationAST<T extends ConnectionReadOperation>({
         relationship,
         target,
         resolveTree,
         context,
         operation,
         whereArgs,
+        resolveTreeEdgeFields,
     }: {
         relationship?: RelationshipAdapter;
         target: ConcreteEntityAdapter;
@@ -302,14 +334,9 @@ export class ConnectionFactory {
         context: Neo4jGraphQLTranslationContext;
         operation: T;
         whereArgs: Record<string, any>;
+        resolveTreeEdgeFields: Record<string, ResolveTree>;
     }): T {
         const entityOrRel = relationship ?? target;
-
-        const resolveTreeEdgeFields = this.parseConnectionFields({
-            entityOrRel,
-            target,
-            resolveTree,
-        });
 
         const nodeFieldsRaw = findFieldsByNameInFieldsByTypeNameField(resolveTreeEdgeFields, "node");
         const propertiesFieldsRaw = findFieldsByNameInFieldsByTypeNameField(resolveTreeEdgeFields, "properties");
@@ -354,6 +381,7 @@ export class ConnectionFactory {
             rel: relationship,
             entity: target,
             where: whereArgs,
+            context,
         });
 
         operation.setNodeFields(nodeFields);
@@ -381,7 +409,10 @@ export class ConnectionFactory {
         });
 
         const concreteProjectionFields = {
-            ...resolveTree.fieldsByTypeName[entityOrRel.operations.connectionFieldTypename],
+            ...(resolveTree.fieldsByTypeName[entityOrRel.operations.connectionFieldTypename] ??
+                resolveTree.fieldsByTypeName[
+                    (entityOrRel as ConcreteEntityAdapter).operations.vectorTypeNames.connection
+                ]),
         };
 
         const resolveTreeConnectionFields: Record<string, ResolveTree> = mergeDeep<Record<string, ResolveTree>[]>([

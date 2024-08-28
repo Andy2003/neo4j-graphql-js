@@ -1,5 +1,139 @@
 # @neo4j/graphql-ogm
 
+## 5.6.0
+
+### Minor Changes
+
+-   [#5474](https://github.com/neo4j/graphql/pull/5474) [`51c48d4`](https://github.com/neo4j/graphql/commit/51c48d4e9914363b634e776b632ecc434707c8ec) Thanks [@mjfwebb](https://github.com/mjfwebb)! - Enabled named import of OGM when using ES Modules
+
+### Patch Changes
+
+-   Updated dependencies []:
+    -   @neo4j/graphql@5.6.0
+
+## 5.5.6
+
+### Patch Changes
+
+-   Updated dependencies [[`24f6d79`](https://github.com/neo4j/graphql/commit/24f6d79750918c69294f2b93b9547508fd04df01), [`4f05a62`](https://github.com/neo4j/graphql/commit/4f05a629ccc6119522db165aaa07369ecc1ad5c6)]:
+    -   @neo4j/graphql@5.5.6
+
+## 5.5.5
+
+### Patch Changes
+
+-   Updated dependencies [[`1e4a451`](https://github.com/neo4j/graphql/commit/1e4a45143dc66d9829a36b0430aaffd51a4cde50)]:
+    -   @neo4j/graphql@5.5.5
+
+## 5.5.4
+
+### Patch Changes
+
+-   Updated dependencies [[`cfcc474`](https://github.com/neo4j/graphql/commit/cfcc474ebcc238d1c4bc9e7ac55674975b8aa1c3)]:
+    -   @neo4j/graphql@5.5.4
+
+## 5.5.3
+
+### Patch Changes
+
+-   Updated dependencies [[`9866da6`](https://github.com/neo4j/graphql/commit/9866da62ef06d2718dbea12e8d02715c55429d3e)]:
+    -   @neo4j/graphql@5.5.3
+
+## 5.5.2
+
+### Patch Changes
+
+-   Updated dependencies [[`a40182d`](https://github.com/neo4j/graphql/commit/a40182df5d94da27e3372d747daff87dfe669ea6)]:
+    -   @neo4j/graphql@5.5.2
+
+## 5.5.1
+
+### Patch Changes
+
+-   [#5346](https://github.com/neo4j/graphql/pull/5346) [`fd78490`](https://github.com/neo4j/graphql/commit/fd784906040fda19c27f5c67e6f1ff2b59a0837c) Thanks [@nicecatch](https://github.com/nicecatch)! - Fixed the `fulltext` argument in OGM aggregate queries
+
+-   Updated dependencies []:
+    -   @neo4j/graphql@5.5.1
+
+## 5.5.0
+
+### Patch Changes
+
+-   Updated dependencies [[`f4c41fe`](https://github.com/neo4j/graphql/commit/f4c41fef566c670fe837dddb7d4bae12f87bc001), [`a26f32f`](https://github.com/neo4j/graphql/commit/a26f32f9726c5e5befd664a87588a22f8a4a9e3e)]:
+    -   @neo4j/graphql@5.5.0
+
+## 5.4.5
+
+### Patch Changes
+
+-   Updated dependencies [[`92fdf2e`](https://github.com/neo4j/graphql/commit/92fdf2eca41d08b0a81877c7ff6a65c3ef3b7d4f)]:
+    -   @neo4j/graphql@5.4.5
+
+## 5.4.4
+
+### Patch Changes
+
+-   Updated dependencies [[`2e3aac9`](https://github.com/neo4j/graphql/commit/2e3aac9765c2e40e7fd0f1f6934bf85737473044)]:
+    -   @neo4j/graphql@5.4.4
+
+## 5.4.3
+
+### Patch Changes
+
+-   Updated dependencies [[`62a052a`](https://github.com/neo4j/graphql/commit/62a052a09804a6c4361b0f0ce0cd0d9ba89b061b)]:
+    -   @neo4j/graphql@5.4.3
+
+## 5.4.2
+
+### Patch Changes
+
+-   Updated dependencies [[`7046091`](https://github.com/neo4j/graphql/commit/70460916901c08aec69a170467c1a1cb290e9fac)]:
+    -   @neo4j/graphql@5.4.2
+
+## 5.4.1
+
+### Patch Changes
+
+-   Updated dependencies [[`97b86b5`](https://github.com/neo4j/graphql/commit/97b86b55d117d6ef0f7b0ee5b7549193c9e48481), [`1106af4`](https://github.com/neo4j/graphql/commit/1106af4554dedc35badea795725a15c96832bf49)]:
+    -   @neo4j/graphql@5.4.1
+
+## 5.4.0
+
+### Patch Changes
+
+-   Updated dependencies [[`899b1b4`](https://github.com/neo4j/graphql/commit/899b1b408f72171f832d0ba161640af0cb228473), [`899b1b4`](https://github.com/neo4j/graphql/commit/899b1b408f72171f832d0ba161640af0cb228473), [`8e3ffea`](https://github.com/neo4j/graphql/commit/8e3ffeaf9c80d6a9aa7952bdca5eacaba573d341), [`899b1b4`](https://github.com/neo4j/graphql/commit/899b1b408f72171f832d0ba161640af0cb228473)]:
+    -   @neo4j/graphql@5.4.0
+
+## 5.3.6
+
+### Patch Changes
+
+-   Updated dependencies [[`05d83b2`](https://github.com/neo4j/graphql/commit/05d83b25928b7870df89faf43f5861ed453f112e), [`c82f7b8`](https://github.com/neo4j/graphql/commit/c82f7b8777319e414c86260b196276ffb9f1dae3), [`bcc3719`](https://github.com/neo4j/graphql/commit/bcc3719352f95722a03e3ff5ee89fdb66d2a6618)]:
+    -   @neo4j/graphql@5.3.6
+
+## 5.3.5
+
+### Patch Changes
+
+-   Updated dependencies [[`aec402e`](https://github.com/neo4j/graphql/commit/aec402ecd552b3e68b8f73f4d1689dd91f013470)]:
+    -   @neo4j/graphql@5.3.5
+
+## 5.3.4
+
+### Patch Changes
+
+-   [#5041](https://github.com/neo4j/graphql/pull/5041) [`d6aaf98`](https://github.com/neo4j/graphql/commit/d6aaf98ece95a39469ae2c88cf5df3d264b21f93) Thanks [@MacondoExpress](https://github.com/MacondoExpress)! - Fix a bug that caused OGM to fail when a Schema Configuration directive was applied to a Union type.
+
+-   Updated dependencies [[`2cff42d`](https://github.com/neo4j/graphql/commit/2cff42d9fbd2b34a6fc0c268944eaaf959afa54e), [`19d12a3`](https://github.com/neo4j/graphql/commit/19d12a30668b2690fd877590e0f0be4fd070ecec)]:
+    -   @neo4j/graphql@5.3.4
+
+## 5.3.3
+
+### Patch Changes
+
+-   Updated dependencies [[`5dcd0a7`](https://github.com/neo4j/graphql/commit/5dcd0a702bdb52e02d774af91bafb17dfc43ce4e), [`b730146`](https://github.com/neo4j/graphql/commit/b730146dba595ea5c3674ab51ec911d42b01ca88), [`6b6f636`](https://github.com/neo4j/graphql/commit/6b6f63607345efe0a926d675432a6a6bd7b08d32), [`cb83cf5`](https://github.com/neo4j/graphql/commit/cb83cf5242b93992a307de9608eab663b7c18b2e)]:
+    -   @neo4j/graphql@5.3.3
+
 ## 5.3.2
 
 ### Patch Changes

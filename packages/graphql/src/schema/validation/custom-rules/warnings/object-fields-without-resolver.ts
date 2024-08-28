@@ -18,6 +18,7 @@
  */
 
 import type { IResolvers } from "@graphql-tools/utils";
+import Debug from "debug";
 import {
     Kind,
     type ASTVisitor,
@@ -26,8 +27,12 @@ import {
     type ObjectTypeDefinitionNode,
 } from "graphql";
 import type { SDLValidationContext } from "graphql/validation/ValidationContext";
-import { filterTruthy, haveSharedElement } from "../../../../utils/utils";
+import { DEBUG_GRAPHQL } from "../../../../constants";
+import { haveSharedElement } from "../../../../utils/utils";
+import { getDirectiveNames } from "../utils/get-directive-names";
 import { getInnerTypeName } from "../utils/utils";
+
+const debug = Debug(DEBUG_GRAPHQL);
 
 export const VALIDATE_OBJECT_FIELD_WARN_MSG = "Object types need a way to be resolved for field: ";
 
@@ -54,7 +59,7 @@ export function WarnObjectFieldsWithoutResolver({ customResolvers }: { customRes
 
                         if (!hasResolvableDirective && !hasCustomResolver) {
                             const fieldName = fieldNode.name.value;
-                            console.warn(`${VALIDATE_OBJECT_FIELD_WARN_MSG} ${fieldName}`);
+                            debug(`${VALIDATE_OBJECT_FIELD_WARN_MSG} ${fieldName}`);
                         }
                     }
                 }
@@ -109,9 +114,4 @@ function typeNeedsResolver(type: string, document: DocumentNode): boolean {
     } else {
         return true;
     }
-}
-
-function getDirectiveNames(field: FieldDefinitionNode | ObjectTypeDefinitionNode): string[] {
-    const fieldDirectives = field.directives ?? [];
-    return filterTruthy(fieldDirectives.map((d) => d.name.value));
 }

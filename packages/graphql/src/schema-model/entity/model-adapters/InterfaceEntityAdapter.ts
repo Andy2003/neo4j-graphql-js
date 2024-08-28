@@ -74,7 +74,7 @@ export class InterfaceEntityAdapter {
     public get plural(): string {
         if (!this._plural) {
             if (this.annotations.plural) {
-                this._plural = plural(this.annotations.plural.value);
+                this._plural = singular(this.annotations.plural.value);
             } else {
                 this._plural = plural(this.name);
             }
@@ -137,7 +137,15 @@ export class InterfaceEntityAdapter {
     }
 
     public get subscriptionEventPayloadFields(): AttributeAdapter[] {
-        return Array.from(this.attributes.values()).filter((attribute) => attribute.isEventPayloadField());
+        return Array.from(this.attributes.values()).filter((attribute) => {
+            if (!attribute.isEventPayloadField()) {
+                return false;
+            }
+            const attributeIsCustomResolvedInAnyImplementations = !!this.concreteEntities
+                .map((e) => e.findAttribute(attribute.name))
+                .find((attribute) => attribute?.isCustomResolvable());
+            return !attributeIsCustomResolvedInAnyImplementations;
+        });
     }
 
     public findAttribute(name: string): AttributeAdapter | undefined {
