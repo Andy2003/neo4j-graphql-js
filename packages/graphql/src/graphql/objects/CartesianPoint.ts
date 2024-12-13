@@ -23,7 +23,7 @@ import { numericalResolver } from "../../schema/resolvers/field/numerical";
 export const CartesianPoint = new GraphQLObjectType({
     name: "CartesianPoint",
     description:
-        "A point in a two- or three-dimensional Cartesian coordinate system or in a three-dimensional cylindrical coordinate system. For more information, see https://neo4j.com/docs/graphql/4/type-definitions/types/spatial/#cartesian-point",
+        "A point in a two- or three-dimensional Cartesian coordinate system or in a three-dimensional cylindrical coordinate system.",
     fields: {
         x: {
             type: new GraphQLNonNull(GraphQLFloat),
@@ -39,9 +39,20 @@ export const CartesianPoint = new GraphQLObjectType({
         },
         crs: {
             type: new GraphQLNonNull(GraphQLString),
+            description:
+                "The coordinate reference systems (CRS)\n" +
+                "-------------------------------------\n" +
+                "possible values:\n" +
+                "* `cartesian`: A 2D point in the Cartesian CRS is specified with a map containing x and y coordinate values\n" +
+                "* `cartesian-3d`: A 3D point in the Cartesian CRS is specified with a map containing x, y and z coordinate values",
         },
         srid: {
             type: new GraphQLNonNull(GraphQLInt),
+            description:
+                "The internal Neo4j ID for the CRS\n" +
+                "One of:\n" +
+                "* `7203`: represents CRS `cartesian`\n" +
+                "* `9157`: represents CRS `cartesian-3d`",
             resolve: (source, args, context, info) => numericalResolver(source.point, args, context, info),
         },
     },

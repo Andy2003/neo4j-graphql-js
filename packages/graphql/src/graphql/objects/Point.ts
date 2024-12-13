@@ -22,26 +22,44 @@ import { numericalResolver } from "../../schema/resolvers/field/numerical";
 
 export const Point = new GraphQLObjectType({
     name: "Point",
-    description:
-        "A point in a coordinate system. For more information, see https://neo4j.com/docs/graphql/4/type-definitions/types/spatial/#point",
+    description: "A point in a coordinate system.",
     fields: {
         longitude: {
             type: new GraphQLNonNull(GraphQLFloat),
+            description:
+                "The first element of the Coordinate for geographic CRS, degrees East of the prime meridian\n" +
+                "Range -180.0 to 180.0",
             resolve: (source) => source.point.x,
         },
         latitude: {
             type: new GraphQLNonNull(GraphQLFloat),
+            description:
+                "The second element of the Coordinate for geographic CRS, degrees North of the equator\n" +
+                "Range -90.0 to 90.0",
             resolve: (source) => source.point.y,
         },
         height: {
             type: GraphQLFloat,
+            description:
+                "The third element of the Coordinate for geographic CRS, meters above the ellipsoid defined by the datum (WGS-84)",
             resolve: (source) => source.point.z,
         },
         crs: {
             type: new GraphQLNonNull(GraphQLString),
+            description:
+                "The coordinate reference systems (CRS)\n" +
+                "-------------------------------------\n" +
+                "possible values:\n" +
+                "* `wgs-84`: A 2D geographic point in the WGS 84 CRS is specified by: longitude and latitude\n" +
+                "* `wgs-84-3d`: A 3D geographic point in the WGS 84 CRS is specified by longitude, latitude and height",
         },
         srid: {
             type: new GraphQLNonNull(GraphQLInt),
+            description:
+                "The internal Neo4j ID for the CRS\n" +
+                "One of:\n" +
+                "* `4326`: represents CRS `wgs-84`\n" +
+                "* `4979`: represents CRS `wgs-84-3d`",
             resolve: (source, args, context, info) => numericalResolver(source.point, args, context, info),
         },
     },
