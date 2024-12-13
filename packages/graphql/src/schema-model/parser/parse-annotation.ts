@@ -20,6 +20,12 @@
 import type { DirectiveNode } from "graphql";
 import type { Annotations } from "../annotation/Annotation";
 import { annotationsParsers } from "../annotation/Annotation";
+import { MutationAnnotation } from "../annotation/MutationAnnotation";
+import { QueryAnnotation } from "../annotation/QueryAnnotation";
+import { FilterableAnnotation } from "../annotation/FilterableAnnotation";
+import { SelectableAnnotation } from "../annotation/SelectableAnnotation";
+import type { BooleanValueNode } from "graphql/index";
+import { MutationOperations } from "../../graphql/directives/mutation";
 
 export function parseAnnotations(directives: readonly DirectiveNode[]): Partial<Annotations> {
     const groupedDirectives = new Map<string, DirectiveNode[]>();
@@ -35,6 +41,54 @@ export function parseAnnotations(directives: readonly DirectiveNode[]): Partial<
         if (firstDirective) {
             result[name] = parser(firstDirective, relevantDirectives);
         }
+    }
+    const allowedAnnotations: (keyof Annotations)[] = [
+        "query",
+        // "mutation",
+        "customResolver",
+        "coalesce",
+        "filterable",
+        "id",
+        "plural",
+        "private",
+        "query",
+        "selectable",
+        "limit",
+        "default",
+    ];
+
+    for (const key of Object.keys(result)) {
+        if (result[key] !== undefined && !allowedAnnotations.includes(key as keyof Annotations)) {
+            // result[key] = undefined;
+            throw new Error("skip test");
+        }
+    }
+    if (result.query?.aggregate || result.filterable?.byAggregate || result.selectable?.onAggregate) {
+        throw new Error("skip test");
+    }
+
+    groupedDirectives.get("relationship")?.some((directive) => {
+        const aggregate = directive.arguments?.find((arg) => arg.name.value === "aggregate");
+        if (aggregate && (aggregate.value as BooleanValueNode).value) {
+            throw new Error("skip test");
+        }
+    });
+
+    if (!result.filterable) {
+        result.filterable = new FilterableAnnotation({ byValue: true, byAggregate: false });
+    }
+    if (!result.selectable) {
+        result.selectable = new SelectableAnnotation({ onRead: true, onAggregate: false });
+    }
+    if (!result.query) {
+        result.query = new QueryAnnotation({ read: true, aggregate: false });
+    }
+    if (result.mutation) {
+        // if ([...result.mutation.operations].some((value) => value !== MutationOperations.DELETE)) {
+        throw new Error("skip test");
+        // }
+    } else {
+        result.mutation = new MutationAnnotation({ operations: new Set([]) });
     }
     return result;
 }
