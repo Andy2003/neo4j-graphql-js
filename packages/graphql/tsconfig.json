@@ -6,7 +6,8 @@
         "outDir": "dist",
         "noUncheckedIndexedAccess": true
     },
-    "include": ["global.d.ts", "package.json", "src/**/*", "tests/**/*"],
+    "include": ["global.d.ts",
+        "my-global.ts", "package.json", "src/**/*", "tests/**/*"],
     "ts-node": {
         "require": ["tsconfig-paths/register"]
     }

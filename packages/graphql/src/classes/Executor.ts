@@ -34,6 +34,7 @@ import { Neo4jError } from "neo4j-driver";
 import {
     AUTH_FORBIDDEN_ERROR,
     AUTH_UNAUTHENTICATED_ERROR,
+    DBMS_COMPONENTS_QUERY,
     DEBUG_EXECUTE,
     RELATIONSHIP_REQUIREMENT_PREFIX,
 } from "../constants";
@@ -127,6 +128,13 @@ export class Executor {
     ): Promise<QueryResult> {
         const params = { ...parameters, ...this.cypherParams };
 
+        if (query !== DBMS_COMPONENTS_QUERY) {
+            globalThis.customEnvironmentContext.additionalCypherQueries.push({
+                cypher: query,
+                cypherParams: params,
+                beforeRequest: globalThis.customEnvironmentContext.beforeRequest,
+            });
+        }
         try {
             if (isDriverLike(this.executionContext)) {
                 return await this.driverRun({

@@ -18,8 +18,8 @@
  */
 
 import Cypher from "@neo4j/cypher-builder";
-import type { ExecutionResult, GraphQLArgs } from "graphql";
-import { graphql as graphqlRuntime } from "graphql";
+import type { ExecutionResult, FieldNode, GraphQLArgs } from "graphql";
+import { graphql as graphqlRuntime, isNonNullType, isScalarType, Kind, parse } from "graphql";
 import * as neo4j from "neo4j-driver";
 import type { Neo4jGraphQLConstructor, Neo4jGraphQLContext } from "../../src";
 import { Neo4jGraphQL } from "../../src";
@@ -27,6 +27,7 @@ import { Neo4jDatabaseInfo } from "../../src/classes";
 import type { Neo4jEdition } from "../../src/classes/Neo4jDatabaseInfo";
 import { createBearerToken } from "./create-bearer-token";
 import { UniqueType } from "./graphql-types";
+import { TypeInfo, visit, visitWithTypeInfo } from "graphql/index";
 
 const INT_TEST_DB_NAME = "neo4jgraphqlinttestdatabase";
 const DEFAULT_DB = "neo4j";
@@ -42,6 +43,7 @@ export class TestHelper {
     private customDB: string | undefined;
 
     private cdc: boolean;
+
     constructor({ cdc = false }: { cdc: boolean } = { cdc: false }) {
         this.cdc = cdc;
     }
@@ -76,6 +78,11 @@ export class TestHelper {
 
     public async executeCypher(query: string, params: Record<string, unknown> = {}): Promise<neo4j.QueryResult> {
         const driver = await this.getDriver();
+        globalThis.customEnvironmentContext.additionalCypherQueries.push({
+            cypher: query,
+            cypherParams: params,
+            beforeRequest: globalThis.customEnvironmentContext.beforeRequest,
+        });
         return driver.executeQuery(query, params, { database: this.database });
     }
 
@@ -90,13 +97,50 @@ export class TestHelper {
             throw new Error("contextValue is a promise. Did you forget to use await with 'getContextValue'?");
         }
         const schema = await this.neo4jGraphQL.getSchema();
-
-        return graphqlRuntime({
+        globalThis.customEnvironmentContext.beforeRequest = false;
+        const result = await graphqlRuntime({
             schema,
             ...args,
             source: query,
             contextValue: await this.getContextValue(args.contextValue as Partial<Neo4jGraphQLContext> | undefined),
         });
+        const typeInfo = new TypeInfo(schema);
+        const resolvedScalarTypes = {};
+        visit(
+            parse(query),
+            visitWithTypeInfo(typeInfo, {
+                Field(node, key, parent, path, ancestors) {
+                    let fieldType = typeInfo.getType();
+                    if (isNonNullType(fieldType)) {
+                        fieldType = fieldType.ofType;
+                    }
+                    if (isScalarType(fieldType)) {
+                        const path = [...ancestors, node]
+                            .filter((x): x is FieldNode => x && "kind" in x && x.kind === Kind.FIELD)
+                            .map((x) => x.alias?.value ?? x.name?.value);
+                        let current = resolvedScalarTypes;
+                        for (let i = 0; i < path.length; i++) {
+                            const pathElement = path[i]!;
+                            if (i === path.length - 1) {
+                                current[pathElement] = fieldType.name;
+                            } else {
+                                current[pathElement] = current[pathElement] || {};
+                                current = current[pathElement];
+                            }
+                        }
+                    }
+                },
+            })
+        );
+        globalThis.customEnvironmentContext.testDebug.push({
+            graphqlRequest: { query, options: args },
+            response: result,
+            resolvedScalarTypes,
+            cypherRequest: globalThis.customEnvironmentContext.additionalCypherQueries.filter(
+                (x) => !x.beforeRequest
+            )[0],
+        });
+        return result;
     }
 
     public async executeGraphQLWithToken(
