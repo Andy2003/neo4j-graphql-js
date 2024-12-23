@@ -91,9 +91,20 @@ class Neo4jGraphQL {
     private validate: boolean;
 
     constructor(input: Neo4jGraphQLConstructor) {
-        const { driver, features, typeDefs, resolvers, debug, validate = true } = input;
+        const { driver, typeDefs, resolvers, debug, validate = true } = input;
 
         this.driver = driver;
+        const features = {
+            ...input.features,
+            subscriptions: false,
+            excludeDeprecatedFields: {
+                bookmark: true,
+                negationFilters: true,
+                arrayFilters: true,
+                stringAggregation: true,
+                aggregationFilters: true,
+            },
+        };
         this.features = this.parseNeo4jFeatures(features);
 
         this.typeDefs = typeDefs;

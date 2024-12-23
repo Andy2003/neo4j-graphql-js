@@ -182,6 +182,7 @@ function generateInterfaceEntity(
         }
         const isRelationshipAttribute = findDirective(fieldDefinition.directives, declareRelationshipDirective.name);
         if (isRelationshipAttribute) {
+            throw new Error("skip test");
             return;
         }
         return parseAttribute(fieldDefinition, definitionCollection, definition.fields);
@@ -311,7 +312,13 @@ function getFieldDeclaredAsRelationship(
     const fields = interfaceDef?.fields || [];
     return fields.find(
         (field) =>
-            field.name.value === fieldName && field.directives?.some((d) => d.name.value === "declareRelationship")
+            field.name.value === fieldName &&
+            field.directives?.some((d) => {
+                if (d.name.value === "declareRelationship") {
+                    throw new Error("skip test");
+                }
+                return false;
+            })
     );
 }
 function getDefinitionNodeFromNamedNode(
@@ -438,8 +445,8 @@ function generateRelationshipField(
         direction,
         isList: Boolean(fieldTypeMeta.array),
         queryDirection,
-        nestedOperations,
-        aggregate,
+        nestedOperations: [],
+        aggregate: false,
         isNullable: !fieldTypeMeta.required,
         description: field.description?.value,
         annotations: annotations,
@@ -461,37 +468,39 @@ function generateRelationshipDeclaration(
     const declareRelationshipUsage = findDirective(field.directives, "declareRelationship");
     if (!declareRelationshipUsage) {
         return;
+    } else {
+        throw new Error("skip test");
     }
-    const fieldName = field.name.value;
-    const relatedEntityName = fieldTypeMeta.name;
-    const relatedToEntity = schema.getEntity(relatedEntityName);
-    if (!relatedToEntity) {
-        throw new Error(`Entity ${relatedEntityName} Not Found`);
-    }
-    const { nestedOperations, aggregate } = parseArguments<{
-        nestedOperations: NestedOperation[];
-        aggregate: boolean;
-    }>(declareRelationshipDirective, declareRelationshipUsage);
-
-    const annotations = parseAnnotations(field.directives || []);
-    const relationshipImplementations = source.concreteEntities
-        .map((concreteEntity) => concreteEntity.findRelationship(fieldName))
-        .filter((x) => x) as Relationship[];
-
-    return new RelationshipDeclaration({
-        name: fieldName,
-        source,
-        target: relatedToEntity,
-        isList: Boolean(fieldTypeMeta.array),
-        nestedOperations,
-        aggregate,
-        isNullable: !fieldTypeMeta.required,
-        description: field.description?.value,
-        args: parseAttributeArguments(field.arguments || [], definitionCollection),
-        annotations,
-        relationshipImplementations,
-        firstDeclaredInTypeName,
-    });
+    // const fieldName = field.name.value;
+    // const relatedEntityName = fieldTypeMeta.name;
+    // const relatedToEntity = schema.getEntity(relatedEntityName);
+    // if (!relatedToEntity) {
+    //     throw new Error(`Entity ${relatedEntityName} Not Found`);
+    // }
+    // const { nestedOperations, aggregate } = parseArguments<{
+    //     nestedOperations: NestedOperation[];
+    //     aggregate: boolean;
+    // }>(declareRelationshipDirective, declareRelationshipUsage);
+    //
+    // const annotations = parseAnnotations(field.directives || []);
+    // const relationshipImplementations = source.concreteEntities
+    //     .map((concreteEntity) => concreteEntity.findRelationship(fieldName))
+    //     .filter((x) => x) as Relationship[];
+    //
+    // return new RelationshipDeclaration({
+    //     name: fieldName,
+    //     source,
+    //     target: relatedToEntity,
+    //     isList: Boolean(fieldTypeMeta.array),
+    //     nestedOperations: [],
+    //     aggregate: false,
+    //     isNullable: !fieldTypeMeta.required,
+    //     description: field.description?.value,
+    //     args: parseAttributeArguments(field.arguments || [], definitionCollection),
+    //     annotations,
+    //     relationshipImplementations,
+    //     firstDeclaredInTypeName,
+    // });
 }
 
 function generateConcreteEntity(
