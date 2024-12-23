@@ -60,8 +60,9 @@ export async function translateQuery(
         neo4jVersion?: string;
         contextValues?: Record<string, any>;
         subgraph?: boolean;
-    }
+    },
 ): Promise<{ cypher: string; params: Record<string, any> }> {
+    globalThis.customEnvironmentContext.beforeRequest = false;
     const driverBuilder = new DriverBuilder();
     const neo4jDatabaseInfo = new Neo4jDatabaseInfo(options?.neo4jVersion ?? "4.4");
     let contextValue: Record<string, any> = {
@@ -123,6 +124,14 @@ export async function translateQuery(
         }
     }
 
+    globalThis.customEnvironmentContext.testDebug.push({
+        graphqlRequest: { query, options },
+        cypherRequest: {
+            cypher: driverBuilder.runFunction.calls[0]![0],
+            cypherParams: driverBuilder.runFunction.calls[0]![1],
+            beforeRequest: false,
+        },
+    });
     return {
         cypher,
         params,

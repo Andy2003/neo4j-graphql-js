@@ -19,7 +19,6 @@
 
 import camelcase from "camelcase";
 import pluralize from "pluralize";
-import { generate } from "randomstring";
 import { leadingUnderscores } from "../../src/utils/leading-underscore";
 import { upperFirst } from "../../src/utils/upper-first";
 
@@ -49,11 +48,12 @@ export class UniqueType {
     public readonly name: string;
 
     constructor(baseName: string) {
-        this.name = `${generate({
-            length: 8,
-            charset: "alphabetic",
-            readable: true,
-        })}${baseName}`;
+        // this.name = `${generate({
+        //     length: 8,
+        //     charset: "alphabetic",
+        //     readable: true,
+        // })}${baseName}`;
+        this.name = baseName;
     }
 
     public get plural(): string {

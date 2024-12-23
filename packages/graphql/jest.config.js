@@ -5,7 +5,7 @@ module.exports = {
     ...globalConf,
     displayName: "@neo4j/graphql",
     globalSetup: path.join(__dirname, "jest.global-setup.js"),
-    setupFilesAfterEnv: ["jest-extended/all"],
+    setupFilesAfterEnv: ["jest-extended/all", "<rootDir>/packages/graphql/mockRandom.ts"],
     roots: ["<rootDir>/packages/graphql/src/", "<rootDir>/packages/graphql/tests/"],
     coverageDirectory: "<rootDir>/packages/graphql/coverage/",
     transform: {
@@ -16,4 +16,5 @@ module.exports = {
             },
         ],
     },
+    testEnvironment: "<rootDir>/packages/graphql/my-custom-environment.ts",
 };
