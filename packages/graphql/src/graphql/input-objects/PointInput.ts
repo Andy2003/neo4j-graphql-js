@@ -25,12 +25,20 @@ export const PointInput = new GraphQLInputObjectType({
     fields: {
         longitude: {
             type: new GraphQLNonNull(GraphQLFloat),
+            description:
+                "The first element of the Coordinate for geographic CRS, degrees East of the prime meridian\n" +
+                "Range -180.0 to 180.0",
         },
         latitude: {
             type: new GraphQLNonNull(GraphQLFloat),
+            description:
+                "The second element of the Coordinate for geographic CRS, degrees North of the equator\n" +
+                "Range -90.0 to 90.0",
         },
         height: {
             type: GraphQLFloat,
+            description:
+                "The third element of the Coordinate for geographic CRS, meters above the ellipsoid defined by the datum (WGS-84)",
         },
     },
 });

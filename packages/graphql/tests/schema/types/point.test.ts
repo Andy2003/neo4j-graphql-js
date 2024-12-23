@@ -133,14 +133,36 @@ describe("Point", () => {
               startCursor: String
             }
 
-            \\"\\"\\"
-            A point in a coordinate system. For more information, see https://neo4j.com/docs/graphql/4/type-definitions/types/spatial/#point
-            \\"\\"\\"
+            \\"\\"\\"A point in a coordinate system.\\"\\"\\"
             type Point {
+              \\"\\"\\"
+              The coordinate reference systems (CRS)
+              -------------------------------------
+              possible values:
+              * \`wgs-84\`: A 2D geographic point in the WGS 84 CRS is specified by: longitude and latitude
+              * \`wgs-84-3d\`: A 3D geographic point in the WGS 84 CRS is specified by longitude, latitude and height
+              \\"\\"\\"
               crs: String!
+              \\"\\"\\"
+              The third element of the Coordinate for geographic CRS, meters above the ellipsoid defined by the datum (WGS-84)
+              \\"\\"\\"
               height: Float
+              \\"\\"\\"
+              The second element of the Coordinate for geographic CRS, degrees North of the equator
+              Range -90.0 to 90.0
+              \\"\\"\\"
               latitude: Float!
+              \\"\\"\\"
+              The first element of the Coordinate for geographic CRS, degrees East of the prime meridian
+              Range -180.0 to 180.0
+              \\"\\"\\"
               longitude: Float!
+              \\"\\"\\"
+              The internal Neo4j ID for the CRS
+              One of:
+              * \`4326\`: represents CRS \`wgs-84\`
+              * \`4979\`: represents CRS \`wgs-84-3d\`
+              \\"\\"\\"
               srid: Int!
             }
 
@@ -153,8 +175,19 @@ describe("Point", () => {
 
             \\"\\"\\"Input type for a point\\"\\"\\"
             input PointInput {
+              \\"\\"\\"
+              The third element of the Coordinate for geographic CRS, meters above the ellipsoid defined by the datum (WGS-84)
+              \\"\\"\\"
               height: Float
+              \\"\\"\\"
+              The second element of the Coordinate for geographic CRS, degrees North of the equator
+              Range -90.0 to 90.0
+              \\"\\"\\"
               latitude: Float!
+              \\"\\"\\"
+              The first element of the Coordinate for geographic CRS, degrees East of the prime meridian
+              Range -180.0 to 180.0
+              \\"\\"\\"
               longitude: Float!
             }
 
@@ -206,10 +239,23 @@ describe("Point", () => {
             }
 
             \\"\\"\\"
-            A point in a two- or three-dimensional Cartesian coordinate system or in a three-dimensional cylindrical coordinate system. For more information, see https://neo4j.com/docs/graphql/4/type-definitions/types/spatial/#cartesian-point
+            A point in a two- or three-dimensional Cartesian coordinate system or in a three-dimensional cylindrical coordinate system.
             \\"\\"\\"
             type CartesianPoint {
+              \\"\\"\\"
+              The coordinate reference systems (CRS)
+              -------------------------------------
+              possible values:
+              * \`cartesian\`: A 2D point in the Cartesian CRS is specified with a map containing x and y coordinate values
+              * \`cartesian-3d\`: A 3D point in the Cartesian CRS is specified with a map containing x, y and z coordinate values
+              \\"\\"\\"
               crs: String!
+              \\"\\"\\"
+              The internal Neo4j ID for the CRS
+              One of:
+              * \`7203\`: represents CRS \`cartesian\`
+              * \`9157\`: represents CRS \`cartesian-3d\`
+              \\"\\"\\"
               srid: Int!
               x: Float!
               y: Float!
@@ -452,21 +498,54 @@ describe("Point", () => {
               startCursor: String
             }
 
-            \\"\\"\\"
-            A point in a coordinate system. For more information, see https://neo4j.com/docs/graphql/4/type-definitions/types/spatial/#point
-            \\"\\"\\"
+            \\"\\"\\"A point in a coordinate system.\\"\\"\\"
             type Point {
+              \\"\\"\\"
+              The coordinate reference systems (CRS)
+              -------------------------------------
+              possible values:
+              * \`wgs-84\`: A 2D geographic point in the WGS 84 CRS is specified by: longitude and latitude
+              * \`wgs-84-3d\`: A 3D geographic point in the WGS 84 CRS is specified by longitude, latitude and height
+              \\"\\"\\"
               crs: String!
+              \\"\\"\\"
+              The third element of the Coordinate for geographic CRS, meters above the ellipsoid defined by the datum (WGS-84)
+              \\"\\"\\"
               height: Float
+              \\"\\"\\"
+              The second element of the Coordinate for geographic CRS, degrees North of the equator
+              Range -90.0 to 90.0
+              \\"\\"\\"
               latitude: Float!
+              \\"\\"\\"
+              The first element of the Coordinate for geographic CRS, degrees East of the prime meridian
+              Range -180.0 to 180.0
+              \\"\\"\\"
               longitude: Float!
+              \\"\\"\\"
+              The internal Neo4j ID for the CRS
+              One of:
+              * \`4326\`: represents CRS \`wgs-84\`
+              * \`4979\`: represents CRS \`wgs-84-3d\`
+              \\"\\"\\"
               srid: Int!
             }
 
             \\"\\"\\"Input type for a point\\"\\"\\"
             input PointInput {
+              \\"\\"\\"
+              The third element of the Coordinate for geographic CRS, meters above the ellipsoid defined by the datum (WGS-84)
+              \\"\\"\\"
               height: Float
+              \\"\\"\\"
+              The second element of the Coordinate for geographic CRS, degrees North of the equator
+              Range -90.0 to 90.0
+              \\"\\"\\"
               latitude: Float!
+              \\"\\"\\"
+              The first element of the Coordinate for geographic CRS, degrees East of the prime meridian
+              Range -180.0 to 180.0
+              \\"\\"\\"
               longitude: Float!
             }
 
@@ -510,10 +589,23 @@ describe("Point", () => {
             }
 
             \\"\\"\\"
-            A point in a two- or three-dimensional Cartesian coordinate system or in a three-dimensional cylindrical coordinate system. For more information, see https://neo4j.com/docs/graphql/4/type-definitions/types/spatial/#cartesian-point
+            A point in a two- or three-dimensional Cartesian coordinate system or in a three-dimensional cylindrical coordinate system.
             \\"\\"\\"
             type CartesianPoint {
+              \\"\\"\\"
+              The coordinate reference systems (CRS)
+              -------------------------------------
+              possible values:
+              * \`cartesian\`: A 2D point in the Cartesian CRS is specified with a map containing x and y coordinate values
+              * \`cartesian-3d\`: A 3D point in the Cartesian CRS is specified with a map containing x, y and z coordinate values
+              \\"\\"\\"
               crs: String!
+              \\"\\"\\"
+              The internal Neo4j ID for the CRS
+              One of:
+              * \`7203\`: represents CRS \`cartesian\`
+              * \`9157\`: represents CRS \`cartesian-3d\`
+              \\"\\"\\"
               srid: Int!
               x: Float!
               y: Float!
