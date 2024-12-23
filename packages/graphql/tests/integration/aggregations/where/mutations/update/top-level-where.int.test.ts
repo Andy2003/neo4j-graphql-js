@@ -55,11 +55,11 @@ describe("Delete using top level aggregate where", () => {
         `;
 
         await testHelper.executeCypher(`
-            CREATE (post1:${postType.name} { id: randomUUID(), content: "${content1}" })<-[:LIKES]-(user1:${userType.name} { testString: "${testString1}" })
-            CREATE (post2:${postType.name} { id: randomUUID(), content: "${content2}" })<-[:LIKES]-(user2:${userType.name} { testString: "${testString2}" })
-            CREATE (post3:${postType.name} { id: randomUUID(), content: "${content3}" })<-[:LIKES]-(user3:${userType.name} { testString: "${testString3}" })
-            CREATE (post4:${postType.name} { id: randomUUID(), content: "${content4}" })<-[:LIKES]-(user4:${userType.name} { testString: "${testString4}" })
-            CREATE (post5:${postType.name} { id: randomUUID(), content: "${content5}" })<-[:LIKES]-(user5:${userType.name} { testString: "${testString5}" })
+            CREATE (post1:${postType.name} { id: "A", content: "${content1}" })<-[:LIKES]-(user1:${userType.name} { testString: "${testString1}" })
+            CREATE (post2:${postType.name} { id: "B", content: "${content2}" })<-[:LIKES]-(user2:${userType.name} { testString: "${testString2}" })
+            CREATE (post3:${postType.name} { id: "C", content: "${content3}" })<-[:LIKES]-(user3:${userType.name} { testString: "${testString3}" })
+            CREATE (post4:${postType.name} { id: "D", content: "${content4}" })<-[:LIKES]-(user4:${userType.name} { testString: "${testString4}" })
+            CREATE (post5:${postType.name} { id: "E", content: "${content5}" })<-[:LIKES]-(user5:${userType.name} { testString: "${testString5}" })
             MERGE (post1)<-[:LIKES]-(user2)
             MERGE (post1)<-[:LIKES]-(user3)
             MERGE (post2)<-[:LIKES]-(user4)
@@ -80,7 +80,7 @@ describe("Delete using top level aggregate where", () => {
         const query = `
             mutation {
                 ${postType.operations.update}(
-                    where: { 
+                    where: {
                         likesAggregate: {
                             count: 3
                             node: {
@@ -111,7 +111,7 @@ describe("Delete using top level aggregate where", () => {
     test("Top-level OR", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         OR: [
                             { count: 3 }
@@ -144,7 +144,7 @@ describe("Delete using top level aggregate where", () => {
     test("Top-level AND", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         AND: [
                             { count: 3 }
@@ -177,7 +177,7 @@ describe("Delete using top level aggregate where", () => {
     test("AND within an AND", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         AND: [
                             { count_LTE: 2 }
@@ -219,7 +219,7 @@ describe("Delete using top level aggregate where", () => {
     test("AND within an AND, with NOT", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         AND: [
                             { NOT: { count_GT: 2 } }
@@ -261,7 +261,7 @@ describe("Delete using top level aggregate where", () => {
     test("OR within an OR", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         OR: [
                             { count_LTE: 2 }
@@ -303,7 +303,7 @@ describe("Delete using top level aggregate where", () => {
     test("OR within an OR, with NOT", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         OR: [
                             { NOT: { count_GT: 2 } }
@@ -345,7 +345,7 @@ describe("Delete using top level aggregate where", () => {
     test("OR within an AND", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         AND: [
                             { count_LTE: 2 }
@@ -387,7 +387,7 @@ describe("Delete using top level aggregate where", () => {
     test("AND within an OR", async () => {
         const query = `
             mutation {
-                ${postType.operations.update}(where: { 
+                ${postType.operations.update}(where: {
                     likesAggregate: {
                         OR: [
                             { count_GTE: 2 }

@@ -45,7 +45,7 @@ describe("integration/rfcs/query-limits", () => {
                 `
                         WITH [1,2,3,4,5] AS iterate
                         UNWIND iterate AS i
-                        CREATE (:${randomType.name} {id: randomUUID()})
+                        CREATE (:${randomType.name} {id: "A"})
                     `,
                 {}
             );
@@ -95,7 +95,7 @@ describe("integration/rfcs/query-limits", () => {
                         CREATE (movie:${randomType1.name} {id: "${movieId}"})
                         WITH movie, [1,2,3,4,5] AS iterate
                         UNWIND iterate AS i
-                        MERGE (movie)<-[:ACTED_IN]-(:${randomType2.name} {id: randomUUID()})
+                        MERGE (movie)<-[:ACTED_IN]-(:${randomType2.name} {id: "A"})
                     `,
                 {}
             );
@@ -146,7 +146,7 @@ describe("integration/rfcs/query-limits", () => {
                         CREATE (movie:${randomType1.name} {id: "${movieId}"})
                         WITH movie, [1,2,3,4,5] AS iterate
                         UNWIND iterate AS i
-                        MERGE (movie)<-[:ACTED_IN]-(:${randomType2.name} {id: randomUUID()})
+                        MERGE (movie)<-[:ACTED_IN]-(:${randomType2.name} {id: "A")})
                     `,
                 {}
             );

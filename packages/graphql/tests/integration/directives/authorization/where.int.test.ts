@@ -355,7 +355,7 @@ describe("auth/where", () => {
                     CREATE (u:${User} {id: "${userId}"})
                     CREATE (p1:${Post} {id: "${postId1}"})
                     CREATE (p2:${Post} {id: "${postId2}"})
-                    CREATE (:${Post} {id: randomUUID()})
+                    CREATE (:${Post} {id: "A"})
                     MERGE (u)-[:HAS_CONTENT]->(p1)
                     MERGE (u)-[:HAS_CONTENT]->(p2)
                 `);

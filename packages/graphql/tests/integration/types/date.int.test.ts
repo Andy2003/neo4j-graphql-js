@@ -43,7 +43,7 @@ describe("Date", () => {
                 }
             `;
 
-            const date = new Date();
+            const date = new Date(2024, 11, 24, 18, 0, 0, 0);
 
             await testHelper.initNeo4jGraphQL({ typeDefs });
 
@@ -86,7 +86,7 @@ describe("Date", () => {
                 }
             `;
 
-            const date = new Date();
+            const date = new Date(2024, 11, 24, 18, 0, 0, 0);
 
             await testHelper.initNeo4jGraphQL({ typeDefs });
 
@@ -137,7 +137,7 @@ describe("Date", () => {
                 }
             `;
 
-            const date = new Date();
+            const date = new Date(2024, 11, 24, 18, 0, 0, 0);
 
             await testHelper.initNeo4jGraphQL({ typeDefs });
 
@@ -177,7 +177,7 @@ describe("Date", () => {
                 }
             `;
 
-            const date = new Date();
+            const date = new Date(2024, 11, 24, 18, 0, 0, 0);
 
             await testHelper.initNeo4jGraphQL({ typeDefs });
 

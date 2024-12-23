@@ -40,8 +40,8 @@ describe("aggregations-top_level-basic", () => {
         await testHelper.initNeo4jGraphQL({ typeDefs });
 
         await testHelper.executeCypher(`
-            CREATE (:${randomType.name} {id: randomUUID()})
-            CREATE (:${randomType.name} {id: randomUUID()})
+            CREATE (:${randomType.name} {id: "A"})
+            CREATE (:${randomType.name} {id: "B"})
         `);
 
         const query = `

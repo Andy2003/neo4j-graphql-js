@@ -55,9 +55,9 @@ describe("https://github.com/neo4j/graphql/issues/360", () => {
 
         await testHelper.executeCypher(
             `
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "A", name: "name1", start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "B", name: "name2", start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "C", name: "name3", start: datetime(), end: datetime()})
                 `
         );
 
@@ -94,9 +94,9 @@ describe("https://github.com/neo4j/graphql/issues/360", () => {
 
         await testHelper.executeCypher(
             `
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "A", name: "name1", start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "B", name: "name2", start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "C", name: "name3", start: datetime(), end: datetime()})
                 `
         );
 
@@ -123,8 +123,8 @@ describe("https://github.com/neo4j/graphql/issues/360", () => {
             typeDefs,
         });
 
-        const rangeStart = new Date().toISOString();
-        const rangeEnd = new Date().toISOString();
+        const rangeStart = new Date(2024, 11, 24, 18, 42, 24, 123).toISOString();
+        const rangeEnd = new Date(2024, 11, 24, 18, 42, 24, 456).toISOString();
 
         const query = `
             query ($rangeStart: DateTime, $rangeEnd: DateTime, $activity: String) {
@@ -136,9 +136,9 @@ describe("https://github.com/neo4j/graphql/issues/360", () => {
 
         await testHelper.executeCypher(
             `
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime($rangeStart), end: datetime($rangeEnd)})
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime($rangeStart), end: datetime($rangeEnd)})
-                    CREATE (:${type.name} {id: randomUUID(), name: randomUUID(), start: datetime(), end: datetime()})
+                    CREATE (:${type.name} {id: "A", name: "name1", start: datetime($rangeStart), end: datetime($rangeEnd)})
+                    CREATE (:${type.name} {id: "B", name: "name2", start: datetime($rangeStart), end: datetime($rangeEnd)})
+                    CREATE (:${type.name} {id: "C", name: "name3", start: datetime(), end: datetime()})
                 `,
             { rangeStart, rangeEnd }
         );

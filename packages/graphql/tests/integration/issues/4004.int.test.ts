@@ -69,10 +69,10 @@ describe("https://github.com/neo4j/graphql/issues/4004", () => {
 
         await testHelper.executeCypher(
             `
-                    CREATE (m:${typeSeries.name} { id: randomUUID() })
-                    CREATE (m)<-[:IN_SERIES]-(:${typeEpisode.name} { id: randomUUID() })
-                    CREATE (m)<-[:IN_SERIES]-(:${typeEpisode.name} { id: randomUUID() })
-                    CREATE (m)<-[:IN_SERIES]-(:${typeEpisode.name} { id: randomUUID() })
+                    CREATE (m:${typeSeries.name} { id: "A })
+                    CREATE (m)<-[:IN_SERIES]-(:${typeEpisode.name} { id: "B" })
+                    CREATE (m)<-[:IN_SERIES]-(:${typeEpisode.name} { id: "C" })
+                    CREATE (m)<-[:IN_SERIES]-(:${typeEpisode.name} { id: "D" })
                 `
         );
 

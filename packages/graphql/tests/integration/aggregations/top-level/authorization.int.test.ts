@@ -109,7 +109,7 @@ describe("aggregations-top_level authorization", () => {
         });
 
         await testHelper.executeCypher(`
-                CREATE (:User {id: "${userId}"})-[:POSTED]->(:Post {content: randomUUID()})
+                CREATE (:User {id: "${userId}"})-[:POSTED]->(:Post {content: "lorem ipsum"})
             `);
 
         const token = createBearerToken(secret, { sub: userId });
@@ -286,7 +286,7 @@ describe("aggregations-top_level authorization", () => {
             type Movie {
                 id: ID
                 director: Person! @relationship(type: "DIRECTED", direction: IN)
-                imdbRatingFloat: Float  @authorization(validate: [ {  when: BEFORE, where: { node: { director: { id: "$jwt.sub" } } } }])              
+                imdbRatingFloat: Float  @authorization(validate: [ {  when: BEFORE, where: { node: { director: { id: "$jwt.sub" } } } }])
             }
 
             type Person {

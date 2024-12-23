@@ -333,7 +333,7 @@ describe("delete", () => {
         await testHelper.executeCypher(
             `
                     CREATE (:${Movie} {id: $title})<-[:ACTED_IN]-(:${Actor} {name: $name})
-                    CREATE (:${Movie} {id: $title})<-[:ACTED_IN]-(:${Actor} {name: randomUUID()})
+                    CREATE (:${Movie} {id: $title})<-[:ACTED_IN]-(:${Actor} {name: "foo"})
                 `,
             {
                 title,
