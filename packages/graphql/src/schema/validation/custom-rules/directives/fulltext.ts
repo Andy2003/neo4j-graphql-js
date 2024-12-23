@@ -53,19 +53,19 @@ export function verifyFulltext({
         return false;
     });
     indexesValue.forEach((index) => {
-        const indexName = index.indexName || index.name;
-        const names = indexesValue.filter((i) => indexName === (i.indexName || i.name));
+        const names = indexesValue.filter((i) => index.indexName === i.indexName);
         if (names.length > 1) {
-            throw new DocumentValidationError(`@fulltext.indexes invalid value for: ${indexName}. Duplicate name.`, [
-                "indexes",
-            ]);
+            throw new DocumentValidationError(
+                `@fulltext.indexes invalid value for: ${index.indexName}. Duplicate name.`,
+                ["indexes"]
+            );
         }
 
         (index.fields || []).forEach((field) => {
             const foundField = compatibleFields?.some((f) => f.name.value === field);
             if (!foundField) {
                 throw new DocumentValidationError(
-                    `@fulltext.indexes invalid value for: ${indexName}. Field ${field} is not of type String or ID.`,
+                    `@fulltext.indexes invalid value for: ${index.indexName}. Field ${field} is not of type String or ID.`,
                     ["indexes"]
                 );
             }

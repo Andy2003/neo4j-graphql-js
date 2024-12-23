@@ -25,7 +25,7 @@ describe("Cypher -> fulltext -> Additional Labels", () => {
     test("simple match with single fulltext property and static additionalLabels", async () => {
         const typeDefs = /* GraphQL */ `
             type Movie
-                @fulltext(indexes: [{ name: "MovieTitle", fields: ["title"] }])
+                @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
                 @node(labels: ["Movie", "AnotherLabel"]) {
                 title: String
             }
@@ -63,7 +63,7 @@ describe("Cypher -> fulltext -> Additional Labels", () => {
     test("simple match with single fulltext property and jwt additionalLabels", async () => {
         const typeDefs = /* GraphQL */ `
             type Movie
-                @fulltext(indexes: [{ name: "MovieTitle", fields: ["title"] }])
+                @fulltext(indexes: [{ indexName: "MovieTitle", fields: ["title"] }])
                 @node(labels: ["Movie", "$jwt.label"]) {
                 title: String
             }
