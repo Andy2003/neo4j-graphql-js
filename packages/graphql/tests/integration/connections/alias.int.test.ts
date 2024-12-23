@@ -375,9 +375,9 @@ describe("Connections Alias", () => {
         await testHelper.executeCypher(
             `
                     CREATE (m:${typeMovie.name} {title: $movieTitle})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "A"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "B"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "C"})
                 `,
             {
                 movieTitle,
@@ -425,9 +425,9 @@ describe("Connections Alias", () => {
         await testHelper.executeCypher(
             `
                     CREATE (m:${typeMovie.name} {title: $movieTitle})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "A"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "B"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "C"})
                 `,
             {
                 movieTitle,
@@ -475,9 +475,9 @@ describe("Connections Alias", () => {
         await testHelper.executeCypher(
             `
                     CREATE (m:${typeMovie.name} {title: $movieTitle})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "A"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "B"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "C"})
                 `,
             {
                 movieTitle,
@@ -527,9 +527,9 @@ describe("Connections Alias", () => {
         await testHelper.executeCypher(
             `
                     CREATE (m:${typeMovie.name} {title: $movieTitle})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "A"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "B"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "C"})
                 `,
             {
                 movieTitle,
@@ -579,9 +579,9 @@ describe("Connections Alias", () => {
         await testHelper.executeCypher(
             `
                     CREATE (m:${typeMovie.name} {title: $movieTitle})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: randomUUID()})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "A"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "B"})
+                    CREATE (m)<-[:ACTED_IN]-(:${typeActor.name} {name: "C"})
                 `,
             {
                 movieTitle,
@@ -635,9 +635,9 @@ describe("Connections Alias", () => {
         await testHelper.executeCypher(
             `
                     CREATE (m:${typeMovie.name} {title: $movieTitle})
-                    CREATE (m)<-[:ACTED_IN {roles: [randomUUID()]}]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN {roles: [randomUUID()]}]-(:${typeActor.name} {name: randomUUID()})
-                    CREATE (m)<-[:ACTED_IN {roles: [randomUUID()]}]-(:${typeActor.name} {name: randomUUID()})
+                    CREATE (m)<-[:ACTED_IN {roles: ["R1"]}]-(:${typeActor.name} {name: "A"})
+                    CREATE (m)<-[:ACTED_IN {roles: ["R2"]}]-(:${typeActor.name} {name: "B"})
+                    CREATE (m)<-[:ACTED_IN {roles: ["R3"]}]-(:${typeActor.name} {name: "B"})
                 `,
             {
                 movieTitle,

@@ -819,25 +819,25 @@ describe("Advanced Filtering", () => {
             let value: number;
 
             if (type === "Int") {
-                value = Math.floor(Math.random() * 9999);
+                value = 42;
             } else {
-                value = Math.floor(Math.random() * 9999) + 0.5;
+                value = 4.2;
             }
 
             let randomValue1: number;
 
             if (type === "Int") {
-                randomValue1 = Math.floor(Math.random() * 9999);
+                randomValue1 = 84;
             } else {
-                randomValue1 = Math.floor(Math.random() * 9999) + 0.5;
+                randomValue1 = 8.4;
             }
 
             let randomValue2: number;
 
             if (type === "Int") {
-                randomValue2 = Math.floor(Math.random() * 9999);
+                randomValue2 = 69;
             } else {
-                randomValue2 = Math.floor(Math.random() * 9999) + 0.5;
+                randomValue2 = 6.9;
             }
 
             await testHelper.executeCypher(
@@ -877,25 +877,25 @@ describe("Advanced Filtering", () => {
             let value: number;
 
             if (type === "Int") {
-                value = Math.floor(Math.random() * 9999);
+                value = 42;
             } else {
-                value = Math.floor(Math.random() * 9999) + 0.5;
+                value = 4.2;
             }
 
             let randomValue1: number;
 
             if (type === "Int") {
-                randomValue1 = Math.floor(Math.random() * 99999);
+                randomValue1 = 84;
             } else {
-                randomValue1 = Math.floor(Math.random() * 99999) + 0.5;
+                randomValue1 = 8.4;
             }
 
             let randomValue2: number;
 
             if (type === "Int") {
-                randomValue2 = Math.floor(Math.random() * 99999);
+                randomValue2 = 69;
             } else {
-                randomValue2 = Math.floor(Math.random() * 99999) + 0.5;
+                randomValue2 = 6.9;
             }
 
             await testHelper.executeCypher(
@@ -937,9 +937,9 @@ describe("Advanced Filtering", () => {
             let value: number;
 
             if (type === "Int") {
-                value = Math.floor(Math.random() * 9999);
+                value = 42;
             } else {
-                value = Math.floor(Math.random() * 9999) + 0.5;
+                value = 4.2;
             }
 
             const lessThanValue = value - (value + 1);
@@ -982,9 +982,9 @@ describe("Advanced Filtering", () => {
             let value: number;
 
             if (type === "Int") {
-                value = Math.floor(Math.random() * 9999);
+                value = 42;
             } else {
-                value = Math.floor(Math.random() * 9999) + 0.5;
+                value = 4.2;
             }
 
             const lessThanValue = value - (value + 1);
@@ -1026,9 +1026,9 @@ describe("Advanced Filtering", () => {
             let value: number;
 
             if (type === "Int") {
-                value = Math.floor(Math.random() * 9999);
+                value = 42;
             } else {
-                value = Math.floor(Math.random() * 9999) + 0.5;
+                value = 4.2;
             }
 
             const graterThanValue = value + 1;
@@ -1071,9 +1071,9 @@ describe("Advanced Filtering", () => {
             let value: number;
 
             if (type === "Int") {
-                value = Math.floor(Math.random() * 9999);
+                value = 42;
             } else {
-                value = Math.floor(Math.random() * 9999) + 0.5;
+                value = 4.2;
             }
 
             const greaterThan = value + 1;
@@ -1593,7 +1593,7 @@ describe("Advanced Filtering", () => {
                 await testHelper.executeCypher(
                     `
                             CREATE (:${randomType1.name} {id: $rootId1})-[:IN_GENRE {id: $actedInId}]->(:${randomType2.name} {id: $relationId1})
-                            CREATE (:${randomType1.name} {id: $rootId2})-[:IN_GENRE {id: randomUUID()}]->(:${randomType2.name} {id: $relationId2})
+                            CREATE (:${randomType1.name} {id: $rootId2})-[:IN_GENRE {id: "A"}]->(:${randomType2.name} {id: $relationId2})
                         `,
                     { rootId1, rootId2, relationId1, relationId2, actedInId }
                 );

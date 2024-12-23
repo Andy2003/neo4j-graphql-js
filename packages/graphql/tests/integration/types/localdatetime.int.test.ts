@@ -31,11 +31,11 @@ describe("LocalDateTime", () => {
         Movie = testHelper.createUniqueType("Movie");
 
         const typeDefs = /* GraphQL */ `
-        type ${Movie} {
-            id: ID!
-            localDT: LocalDateTime
-            localDTs: [LocalDateTime!]
-        }
+            type ${Movie} {
+                id: ID!
+                localDT: LocalDateTime
+                localDTs: [LocalDateTime!]
+            }
         `;
 
         await testHelper.initNeo4jGraphQL({ typeDefs });
@@ -52,15 +52,15 @@ describe("LocalDateTime", () => {
             const parsedLocalDateTime = parseLocalDateTime(localDT);
 
             const mutation = /* GraphQL */ `
-                    mutation ($id: ID!, $localDT: LocalDateTime!) {
-                        ${Movie.operations.create}(input: { id: $id, localDT: $localDT }) {
-                            ${Movie.plural} {
-                                id
-                                localDT
-                            }
-                        }
-                    }
-                `;
+                mutation ($id: ID!, $localDT: LocalDateTime!) {
+                    ${Movie.operations.create}(input: { id: $id, localDT: $localDT }) {
+                ${Movie.plural} {
+                id
+                localDT
+                }
+                }
+                }
+            `;
 
             const graphqlResult = await testHelper.executeGraphQL(mutation, {
                 variableValues: { id, localDT },
@@ -96,15 +96,15 @@ describe("LocalDateTime", () => {
             const parsedLocalDateTimes = localDTs.map((localDT) => parseLocalDateTime(localDT));
 
             const mutation = /* GraphQL */ `
-                    mutation ($id: ID!, $localDTs: [LocalDateTime!]!) {
-                        ${Movie.operations.create}(input: { id: $id, localDTs: $localDTs }) {
-                            ${Movie.plural} {
-                                id
-                                localDTs
-                            }
-                        }
-                    }
-                `;
+                mutation ($id: ID!, $localDTs: [LocalDateTime!]!) {
+                    ${Movie.operations.create}(input: { id: $id, localDTs: $localDTs }) {
+                ${Movie.plural} {
+                id
+                localDTs
+                }
+                }
+                }
+            `;
 
             const graphqlResult = await testHelper.executeGraphQL(mutation, {
                 variableValues: { id, localDTs },
@@ -167,15 +167,15 @@ describe("LocalDateTime", () => {
             );
 
             const mutation = /* GraphQL */ `
-                    mutation ($id: ID!, $localDT: LocalDateTime) {
-                        ${Movie.operations.update}(where: { id: $id }, update: { localDT: $localDT }) {
-                            ${Movie.plural} {
-                                id
-                                localDT
-                            }
-                        }
-                    }
-                `;
+                mutation ($id: ID!, $localDT: LocalDateTime) {
+                    ${Movie.operations.update}(where: { id: $id }, update: { localDT: $localDT }) {
+                    ${Movie.plural} {
+                    id
+                    localDT
+                }
+                }
+                }
+            `;
 
             const graphqlResult = await testHelper.executeGraphQL(mutation, {
                 variableValues: { id, localDT },
@@ -225,9 +225,9 @@ describe("LocalDateTime", () => {
             const query = /* GraphQL */ `
                 query ($localDT: LocalDateTime!) {
                     ${Movie.plural}(where: { localDT: $localDT }) {
-                        id
-                        localDT
-                    }
+                    id
+                    localDT
+                }
                 }
             `;
 
@@ -259,7 +259,7 @@ describe("LocalDateTime", () => {
                 );
 
                 const presentId = generate({ readable: false });
-                const present = new Date().toISOString().split("Z")[0];
+                const present = new Date(2024, 11, 24, 18, 42, 24, 123).toISOString().split("Z")[0];
                 const parsedPresent = parseLocalDateTime(present);
                 const neo4jPresent = new neo4jDriver.types.LocalDateTime(
                     parsedPresent.year,
@@ -301,13 +301,13 @@ describe("LocalDateTime", () => {
                 );
 
                 const query = /* GraphQL */ `
-                        query ($where: ${Movie.name}Where!) {
-                            ${Movie.plural}(where: $where, options: { sort: [{ localDT: ASC }] }) {
-                                id
-                                localDT
-                            }
-                        }
-                    `;
+                    query ($where: ${Movie.name}Where!) {
+                    ${Movie.plural}(where: $where, options: { sort: [{ localDT: ASC }] }) {
+                    id
+                    localDT
+                    }
+                    }
+                `;
 
                 const graphqlResult = await testHelper.executeGraphQL(query, {
                     variableValues: {
@@ -371,7 +371,7 @@ describe("LocalDateTime", () => {
             );
 
             const presentId = generate({ readable: false });
-            const present = new Date().toISOString().split("Z")[0];
+            const present = new Date(2024, 11, 24, 18, 42, 24, 123).toISOString().split("Z")[0];
             const parsedPresent = parseLocalDateTime(present);
             const neo4jPresent = new neo4jDriver.types.LocalDateTime(
                 parsedPresent.year,
@@ -413,16 +413,16 @@ describe("LocalDateTime", () => {
             );
 
             const query = /* GraphQL */ `
-                        query ($futureId: ID!, $presentId: ID!, $pastId: ID!, $sort: SortDirection!) {
-                            ${Movie.plural}(
-                                where: { id_IN: [$futureId, $presentId, $pastId] }
-                                options: { sort: [{ localDT: $sort }] }
-                            ) {
-                                id
-                                localDT
-                            }
-                        }
-                    `;
+                query ($futureId: ID!, $presentId: ID!, $pastId: ID!, $sort: SortDirection!) {
+                    ${Movie.plural}(
+                    where: { id_IN: [$futureId, $presentId, $pastId] }
+                    options: { sort: [{ localDT: $sort }] }
+                    ) {
+                    id
+                    localDT
+                }
+                }
+            `;
 
             const graphqlResult = await testHelper.executeGraphQL(query, {
                 variableValues: {

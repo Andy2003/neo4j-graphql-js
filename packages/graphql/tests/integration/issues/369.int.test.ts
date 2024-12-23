@@ -164,8 +164,8 @@ describe("https://github.com/neo4j/graphql/issues/369", () => {
         await testHelper.executeCypher(
             `
                     CREATE (d:${Dato} {uuid: $datoUUID})-[:DEPENDE {uuid: $relUUID}]->(:${Dato} {uuid: $datoToUUID})
-                    CREATE (d)-[:DEPENDE {uuid: randomUUID()}]->(:Dato {uuid: randomUUID()})
-                    CREATE (d)-[:DEPENDE {uuid: randomUUID()}]->(:Dato {uuid: randomUUID()})
+                    CREATE (d)-[:DEPENDE {uuid: "uid-1"}]->(:Dato {uuid: "uid-3"})
+                    CREATE (d)-[:DEPENDE {uuid: "uid-2"}]->(:Dato {uuid: "uid-4"})
                 `,
             {
                 datoUUID,

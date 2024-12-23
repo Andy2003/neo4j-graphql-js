@@ -428,7 +428,7 @@ describe("Global node resolution", () => {
             },
         });
 
-        const mutation = `CREATE (this:${typeUser.name} { id: randomUUID(), name: "Johnny Appleseed" })-[:CREATED]->(film:${typeFilm.name} { title: randomUUID() }) RETURN this { id: this.dbId, film: film }`;
+        const mutation = `CREATE (this:${typeUser.name} { id: "A", name: "Johnny Appleseed" })-[:CREATED]->(film:${typeFilm.name} { title: "title 1" }) RETURN this { id: this.dbId, film: film }`;
         const { records } = await testHelper.executeCypher(mutation);
 
         const record = records[0]?.toObject();
@@ -474,7 +474,7 @@ describe("Global node resolution", () => {
             },
         });
 
-        const mutation = `CREATE (this:${typeUser.name} { id: randomUUID(), name: "Johnny Appleseed" }) RETURN this`;
+        const mutation = `CREATE (this:${typeUser.name} { id: "A", name: "Johnny Appleseed" }) RETURN this`;
         const { records } = await testHelper.executeCypher(mutation);
 
         const record = records[0]?.toObject();
@@ -526,7 +526,7 @@ describe("Global node resolution", () => {
                 },
             },
         });
-        const mutation = `CREATE (this:${typeUser.name} { id: randomUUID(), name: "Johnny Appleseed" }) RETURN this`;
+        const mutation = `CREATE (this:${typeUser.name} { id: "A", name: "Johnny Appleseed" }) RETURN this`;
         const { records } = await testHelper.executeCypher(mutation);
 
         const record = records[0]?.toObject();

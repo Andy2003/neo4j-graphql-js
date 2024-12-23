@@ -42,8 +42,8 @@ describe("Aggregate -> count", () => {
 
         await testHelper.executeCypher(
             `
-                    CREATE (:${randomType.name} {id: randomUUID()})
-                    CREATE (:${randomType.name} {id: randomUUID()})
+                    CREATE (:${randomType.name} {id: "A"})
+                    CREATE (:${randomType.name} {id: "B"})
                 `
         );
 

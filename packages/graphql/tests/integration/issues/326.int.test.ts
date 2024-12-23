@@ -35,7 +35,7 @@ describe("https://github.com/neo4j/graphql/issues/326", () => {
         });
         await testHelper.executeCypher(
             `
-                    CREATE (:${User.name} {id: $id, email: randomUUID()})
+                    CREATE (:${User.name} {id: $id, email: "mail"})
                 `,
             { id }
         );

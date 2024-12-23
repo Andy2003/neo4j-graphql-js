@@ -46,7 +46,7 @@ describe("https://github.com/neo4j/graphql/issues/283", () => {
                     SET
                       post = $input,
                       post.datetime = datetime(),
-                      post.id = randomUUID()
+                      post.id = "A"
                     RETURN post
                     """
                     columnName: "post"
